@@ -1,0 +1,64 @@
+name: Update arXiv CS Daily Feed
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch latest 30-day papers (cs.RO/cs.CV/cs.CL/cs.SY)
+        run: python scripts/fetch_cs_ro.py --window-days 30
+
+      - name: Commit updated JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/latest_cs_daily.json
+          if git diff --cached --quiet; then
+            echo "No updates."
+          else
+            git commit -m "chore: update daily CS feed"
+            git push
+          fi
+
+      - name: Prepare static files
+        run: |
+          rm -rf public
+          mkdir -p public/data
+          cp site/index.html public/index.html
+          cp site/styles.css public/styles.css
+          cp site/app.js public/app.js
+          cp data/latest_cs_daily.json public/data/latest_cs_daily.json
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

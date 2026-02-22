@@ -1,0 +1,52 @@
+name: Deploy Website to GitHub Pages
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "site/**"
+      - "data/latest_cs_daily.json"
+      - ".github/workflows/deploy-pages.yml"
+      - ".github/workflows/update-cs-ro.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare static files
+        run: |
+          rm -rf public
+          mkdir -p public/data
+          cp site/index.html public/index.html
+          cp site/styles.css public/styles.css
+          cp site/app.js public/app.js
+          cp data/latest_cs_daily.json public/data/latest_cs_daily.json
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

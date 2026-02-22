@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>myArxiv | Daily CS Paper Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="bg-grid"></div>
+
+    <main class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">myArxiv · Multi-Domain Intelligence Feed</p>
+        <h1>每日 CS 论文雷达</h1>
+        <p class="hero-text">
+          自动聚合 arXiv `cs.RO` / `cs.CV` / `cs.CL` / `cs.SY` 最近 30 天论文，支持领域选择、关键词搜索、按日期归档，以及一键切换“最近 1 天”。
+        </p>
+        <div class="meta-row">
+          <span id="fetchedAt">最近更新：载入中...</span>
+          <a id="fieldOriginLink" class="meta-link" href="https://arxiv.org/list/cs.RO/recent" target="_blank" rel="noreferrer">
+            查看当前领域原站
+          </a>
+        </div>
+      </header>
+
+      <section class="panel controls">
+        <label for="fieldSelect">
+          <span>领域</span>
+          <select id="fieldSelect"></select>
+        </label>
+
+        <label for="searchInput">
+          <span>搜索</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="输入标题、作者或关键词..."
+            autocomplete="off"
+          />
+        </label>
+
+        <label for="sortSelect">
+          <span>排序</span>
+          <select id="sortSelect">
+            <option value="published">按发布时间（新到旧）</option>
+            <option value="updated">按更新时间（新到旧）</option>
+            <option value="title">按标题（A-Z）</option>
+          </select>
+        </label>
+
+        <div class="range-wrap">
+          <span>快捷范围</span>
+          <div class="range-switch" role="group" aria-label="时间范围">
+            <button id="rangeMonthBtn" class="range-btn is-active" type="button">最近30天</button>
+            <button id="rangeDayBtn" class="range-btn" type="button">最近1天</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats" id="stats"></section>
+
+      <section id="paperGroups" class="paper-groups" aria-live="polite"></section>
+      <p id="emptyState" class="empty hidden">没有匹配的论文，换个关键词试试。</p>
+      <p id="errorState" class="error hidden">数据加载失败，请稍后刷新页面。</p>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
