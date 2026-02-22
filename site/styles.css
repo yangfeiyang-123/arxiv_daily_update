@@ -129,7 +129,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 220px 220px;
+  grid-template-columns: 220px minmax(0, 1fr) 220px 220px 280px;
   gap: 12px;
 }
 
@@ -184,6 +184,48 @@ select {
   background: linear-gradient(120deg, rgba(51, 209, 198, 0.24), rgba(255, 138, 61, 0.24));
   border-color: rgba(51, 209, 198, 0.5);
   color: var(--ink);
+}
+
+.manual-wrap {
+  display: grid;
+  align-content: start;
+}
+
+.manual-wrap span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.manual-btn {
+  border: 1px solid rgba(255, 138, 61, 0.45);
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(255, 138, 61, 0.2), rgba(51, 209, 198, 0.2));
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.manual-btn:hover {
+  border-color: rgba(255, 138, 61, 0.75);
+  transform: translateY(-1px);
+}
+
+.manual-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.manual-msg {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 input:focus,

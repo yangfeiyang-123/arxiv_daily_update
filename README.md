@@ -18,6 +18,7 @@
 - 响应式网页展示（桌面 + 手机）
 - 在网页中切换领域查看对应论文
 - 一键切换 `最近30天` / `最近1天`
+- 网页内 `一键触发更新`（触发 GitHub Actions）
 - 按标题/作者/关键词搜索
 - 按发布时间、更新时间、标题排序
 - 结果按日期自动分组展示
@@ -95,6 +96,16 @@ make serve
    - `https://<你的GitHub用户名>.github.io/<仓库名>/`
 
 之后你每次 push，或每天定时更新数据，网站都会自动更新。
+
+### 网页内一键触发更新（可选）
+
+网站上有 `一键触发更新` 按钮，可直接触发 `update-cs-ro.yml`。
+
+- 首次点击会提示输入 GitHub PAT（仅保存到当前浏览器）
+- Token 需要对仓库 `arxiv_daily_update` 具备：
+  - `Actions/Workflows: Read and write`
+  - `Contents: Read and write`
+- 触发后会自动打开 Actions 页面查看进度
 
 ### 一次性推送命令（最短）
 

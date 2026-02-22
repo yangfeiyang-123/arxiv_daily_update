@@ -3,6 +3,12 @@ const dataUrl = window.location.pathname.includes("/site/")
   : "./data/latest_cs_daily.json";
 const DISPLAY_TIMEZONE = "UTC";
 const DISPLAY_TIMEZONE_LABEL = "UTC";
+const GITHUB_OWNER = "yangfeiyang-123";
+const GITHUB_REPO = "arxiv_daily_update";
+const WORKFLOW_FILE = "update-cs-ro.yml";
+const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
+const WORKFLOW_DISPATCH_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches`;
+const TOKEN_STORAGE_KEY = "myarxiv_github_token";
 
 const state = {
   fields: new Map(),
@@ -26,6 +32,8 @@ const emptyState = document.getElementById("emptyState");
 const errorState = document.getElementById("errorState");
 const rangeMonthBtn = document.getElementById("rangeMonthBtn");
 const rangeDayBtn = document.getElementById("rangeDayBtn");
+const triggerUpdateBtn = document.getElementById("triggerUpdateBtn");
+const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -98,6 +106,69 @@ function updateRangeButtons() {
   const monthActive = state.rangeMode === "month";
   rangeMonthBtn.classList.toggle("is-active", monthActive);
   rangeDayBtn.classList.toggle("is-active", !monthActive);
+}
+
+function setTriggerMessage(text) {
+  triggerUpdateMsg.textContent = text;
+}
+
+async function triggerWorkflowDispatch() {
+  const cached = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+  const token =
+    cached ||
+    window
+      .prompt(
+        "请输入 GitHub PAT（需要该仓库 Actions/Workflows 写权限）。\\n留空则仅打开手动触发页面。"
+      )
+      ?.trim();
+
+  if (!token) {
+    setTriggerMessage("未提供 Token，已打开 GitHub 工作流页面。");
+    window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  triggerUpdateBtn.disabled = true;
+  triggerUpdateBtn.textContent = "触发中...";
+  setTriggerMessage("正在向 GitHub 发送更新请求...");
+
+  try {
+    const resp = await fetch(WORKFLOW_DISPATCH_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ref: "main" }),
+    });
+
+    if (resp.status === 204) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      setTriggerMessage("已触发更新任务。正在打开 Actions 页面查看进度...");
+      window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (resp.status === 401 || resp.status === 403) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      setTriggerMessage("Token 无效或权限不足，请重新点击按钮并输入新的 Token。");
+      return;
+    }
+
+    const detail = await resp.text();
+    setTriggerMessage(`触发失败（HTTP ${resp.status}）。请到 Actions 页面手动运行。`);
+    console.error("dispatch failed:", detail);
+    window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+  } catch (err) {
+    console.error(err);
+    setTriggerMessage("网络错误，已为你打开 Actions 页面手动触发。");
+    window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+  } finally {
+    triggerUpdateBtn.disabled = false;
+    triggerUpdateBtn.textContent = "一键触发更新";
+  }
 }
 
 function getCurrentField() {
@@ -309,6 +380,10 @@ function bindEvents() {
     state.rangeMode = "latest_day";
     updateRangeButtons();
     applyFilters();
+  });
+
+  triggerUpdateBtn.addEventListener("click", () => {
+    triggerWorkflowDispatch();
   });
 }
 
