@@ -290,6 +290,29 @@ select:focus {
   gap: 14px;
 }
 
+.more-wrap {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.load-more-btn {
+  border: 1px solid rgba(51, 209, 198, 0.45);
+  border-radius: 12px;
+  background: rgba(8, 25, 41, 0.92);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+  border-color: rgba(51, 209, 198, 0.8);
+  transform: translateY(-1px);
+}
+
 .date-group {
   background: rgba(6, 20, 31, 0.58);
   border: 1px solid var(--line);

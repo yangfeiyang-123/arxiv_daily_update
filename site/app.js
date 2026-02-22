@@ -9,6 +9,8 @@ const WORKFLOW_FILE = "update-cs-ro.yml";
 const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
+const INITIAL_VISIBLE_COUNT = 120;
+const VISIBLE_STEP = 120;
 
 const state = {
   fields: new Map(),
@@ -19,6 +21,7 @@ const state = {
   keyword: "",
   rangeMode: "month",
   windowDays: 30,
+  visibleCount: INITIAL_VISIBLE_COUNT,
 };
 
 const fieldSelect = document.getElementById("fieldSelect");
@@ -34,6 +37,8 @@ const rangeMonthBtn = document.getElementById("rangeMonthBtn");
 const rangeDayBtn = document.getElementById("rangeDayBtn");
 const triggerUpdateBtn = document.getElementById("triggerUpdateBtn");
 const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
+const moreWrap = document.getElementById("moreWrap");
+const loadMoreBtn = document.getElementById("loadMoreBtn");
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -257,6 +262,7 @@ function applyFilters() {
     list.sort(byDateDesc(state.sortBy));
   }
 
+  state.visibleCount = INITIAL_VISIBLE_COUNT;
   state.filtered = list;
 
   renderStats();
@@ -280,7 +286,7 @@ function renderStats() {
     </article>
     <article class="stat">
       <div class="stat-label">当前结果 / 领域总量</div>
-      <div class="stat-value">${paperCount} / ${allCount}</div>
+      <div class="stat-value">${Math.min(state.visibleCount, paperCount)} / ${allCount}</div>
     </article>
     <article class="stat">
       <div class="stat-label">时间范围 / 日期分组</div>
@@ -317,6 +323,7 @@ function renderPaperCard(paper, index) {
 
 function renderPapersGroupedByDate() {
   paperGroups.innerHTML = "";
+  moreWrap.classList.add("hidden");
 
   if (!state.filtered.length) {
     emptyState.classList.remove("hidden");
@@ -325,7 +332,8 @@ function renderPapersGroupedByDate() {
 
   emptyState.classList.add("hidden");
 
-  const groups = groupByPublishedDate(state.filtered);
+  const visiblePapers = state.filtered.slice(0, state.visibleCount);
+  const groups = groupByPublishedDate(visiblePapers);
   let globalIndex = 0;
 
   groups.forEach((group) => {
@@ -350,6 +358,11 @@ function renderPapersGroupedByDate() {
 
     paperGroups.appendChild(section);
   });
+
+  if (state.filtered.length > state.visibleCount) {
+    moreWrap.classList.remove("hidden");
+    loadMoreBtn.textContent = `加载更多（已显示 ${visiblePapers.length}/${state.filtered.length}）`;
+  }
 }
 
 function bindEvents() {
@@ -385,6 +398,12 @@ function bindEvents() {
 
   triggerUpdateBtn.addEventListener("click", () => {
     openWorkflowPage();
+  });
+
+  loadMoreBtn.addEventListener("click", () => {
+    state.visibleCount += VISIBLE_STEP;
+    renderStats();
+    renderPapersGroupedByDate();
   });
 }
 
