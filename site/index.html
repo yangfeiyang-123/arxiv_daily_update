@@ -33,12 +33,12 @@
       </header>
 
       <section class="panel controls">
-        <label for="fieldSelect">
+        <label class="control-field" for="fieldSelect">
           <span>领域</span>
           <select id="fieldSelect"></select>
         </label>
 
-        <label for="searchInput">
+        <label class="control-search" for="searchInput">
           <span>搜索</span>
           <input
             id="searchInput"
@@ -48,7 +48,7 @@
           />
         </label>
 
-        <label for="sortSelect">
+        <label class="control-sort" for="sortSelect">
           <span>排序</span>
           <select id="sortSelect">
             <option value="published">按发布时间（新到旧）</option>
@@ -57,7 +57,7 @@
           </select>
         </label>
 
-        <div class="range-wrap">
+        <div class="range-wrap control-range">
           <span>快捷范围</span>
           <div class="range-switch" role="group" aria-label="时间范围">
             <button id="rangeMonthBtn" class="range-btn is-active" type="button">最近30天</button>
@@ -65,7 +65,7 @@
           </div>
         </div>
 
-        <div class="manual-wrap">
+        <div class="manual-wrap control-manual">
           <span>手动更新</span>
           <button id="triggerUpdateBtn" class="manual-btn" type="button">一键触发更新</button>
           <p id="triggerUpdateMsg" class="manual-msg">无需 PAT：点击后跳转到 Actions 页面，点 Run workflow 即可。</p>

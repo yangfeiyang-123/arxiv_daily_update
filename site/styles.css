@@ -129,8 +129,32 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 220px 220px 280px;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  grid-template-areas:
+    "field search sort"
+    "range manual manual";
   gap: 12px;
+  align-items: start;
+}
+
+.control-field {
+  grid-area: field;
+}
+
+.control-search {
+  grid-area: search;
+}
+
+.control-sort {
+  grid-area: sort;
+}
+
+.control-range {
+  grid-area: range;
+}
+
+.control-manual {
+  grid-area: manual;
 }
 
 label span {
@@ -430,6 +454,12 @@ select:focus {
 @media (max-width: 980px) {
   .controls {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "field"
+      "search"
+      "sort"
+      "range"
+      "manual";
   }
 
   .stats {
