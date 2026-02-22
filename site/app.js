@@ -7,6 +7,7 @@ const GITHUB_OWNER = "yangfeiyang-123";
 const GITHUB_REPO = "arxiv_daily_update";
 const WORKFLOW_FILE = "update-cs-ro.yml";
 const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
+const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 
 const state = {
   fields: new Map(),
@@ -108,6 +109,27 @@ function updateRangeButtons() {
 
 function setTriggerMessage(text) {
   triggerUpdateMsg.textContent = text;
+}
+
+function getCachedPayload() {
+  const raw = localStorage.getItem(DATA_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch (err) {
+    console.warn("invalid cache payload", err);
+    return null;
+  }
+}
+
+function setCachedPayload(payload) {
+  try {
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(payload));
+  } catch (err) {
+    console.warn("cache save failed", err);
+  }
 }
 
 function openWorkflowPage() {
@@ -354,29 +376,44 @@ function normalizePayload(payload) {
   ];
 }
 
+function applyPayload(payload, sourceLabel) {
+  const fields = normalizePayload(payload);
+  state.fields = new Map(fields.map((field) => [field.code, field]));
+  state.selectedField = fields[0]?.code || "";
+  state.windowDays = Number(payload.window_days) > 0 ? Number(payload.window_days) : 30;
+  state.rangeMode = "month";
+
+  renderFieldOptions();
+  updateRangeButtons();
+  updateOriginLink();
+  fetchedAt.textContent = `最近更新：${formatDateTime(payload.fetched_at)}（数据窗口：最近${state.windowDays}天，${sourceLabel}）`;
+  applyFilters();
+}
+
 async function loadData() {
+  let hasRenderedCache = false;
   try {
-    const resp = await fetch(`${dataUrl}?t=${Date.now()}`);
+    const cached = getCachedPayload();
+    if (cached) {
+      applyPayload(cached, "本地缓存");
+      hasRenderedCache = true;
+    }
+
+    const resp = await fetch(dataUrl, { cache: "no-cache" });
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}`);
     }
 
     const payload = await resp.json();
-    const fields = normalizePayload(payload);
-    state.fields = new Map(fields.map((field) => [field.code, field]));
-    state.selectedField = fields[0]?.code || "";
-    state.windowDays = Number(payload.window_days) > 0 ? Number(payload.window_days) : 30;
-    state.rangeMode = "month";
-
-    renderFieldOptions();
-    updateRangeButtons();
-    updateOriginLink();
-    fetchedAt.textContent = `最近更新：${formatDateTime(payload.fetched_at)}（数据窗口：最近${state.windowDays}天）`;
-
-    applyFilters();
+    setCachedPayload(payload);
+    applyPayload(payload, "在线数据");
   } catch (err) {
     console.error(err);
-    errorState.classList.remove("hidden");
+    if (!hasRenderedCache) {
+      errorState.classList.remove("hidden");
+    } else {
+      setTriggerMessage("网络较慢，当前显示的是本地缓存数据。");
+    }
   }
 }
 
