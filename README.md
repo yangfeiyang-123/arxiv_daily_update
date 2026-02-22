@@ -99,13 +99,10 @@ make serve
 
 ### 网页内一键触发更新（可选）
 
-网站上有 `一键触发更新` 按钮，可直接触发 `update-cs-ro.yml`。
+网站上有 `一键触发更新` 按钮，不需要 PAT。
 
-- 首次点击会提示输入 GitHub PAT（仅保存到当前浏览器）
-- Token 需要对仓库 `arxiv_daily_update` 具备：
-  - `Actions/Workflows: Read and write`
-  - `Contents: Read and write`
-- 触发后会自动打开 Actions 页面查看进度
+- 点击后会打开仓库的 `update-cs-ro.yml` 页面
+- 在 GitHub 页面点一次 `Run workflow` 即可触发更新
 
 ### 一次性推送命令（最短）
 
