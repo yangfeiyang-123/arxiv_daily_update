@@ -8,6 +8,7 @@ const GITHUB_REPO = "arxiv_daily_update";
 const WORKFLOW_FILE = "update-cs-ro.yml";
 const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
+const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 
 const state = {
   fields: new Map(),
@@ -129,6 +130,36 @@ function setCachedPayload(payload) {
     localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(payload));
   } catch (err) {
     console.warn("cache save failed", err);
+  }
+}
+
+async function getCachedPayloadFromCacheApi() {
+  if (!("caches" in window)) return null;
+  try {
+    const cache = await caches.open(DATA_CACHE_NAME);
+    const reqUrl = new URL(dataUrl, window.location.href).toString();
+    const cachedResp = await cache.match(reqUrl);
+    if (!cachedResp) return null;
+    return await cachedResp.json();
+  } catch (err) {
+    console.warn("cache api read failed", err);
+    return null;
+  }
+}
+
+async function setCachedPayloadToCacheApi(payload) {
+  if (!("caches" in window)) return;
+  try {
+    const cache = await caches.open(DATA_CACHE_NAME);
+    const reqUrl = new URL(dataUrl, window.location.href).toString();
+    const resp = new Response(JSON.stringify(payload), {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    await cache.put(reqUrl, resp);
+  } catch (err) {
+    console.warn("cache api write failed", err);
   }
 }
 
@@ -393,7 +424,10 @@ function applyPayload(payload, sourceLabel) {
 async function loadData() {
   let hasRenderedCache = false;
   try {
-    const cached = getCachedPayload();
+    let cached = await getCachedPayloadFromCacheApi();
+    if (!cached) {
+      cached = getCachedPayload();
+    }
     if (cached) {
       applyPayload(cached, "本地缓存");
       hasRenderedCache = true;
@@ -406,6 +440,7 @@ async function loadData() {
 
     const payload = await resp.json();
     setCachedPayload(payload);
+    await setCachedPayloadToCacheApi(payload);
     applyPayload(payload, "在线数据");
   } catch (err) {
     console.error(err);
