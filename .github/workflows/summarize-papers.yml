@@ -24,13 +24,13 @@ on:
           - deep
         default: fast
       model:
-        description: "LLM model name, e.g. qwen3-coder-plus / qwen3-max-2026-01-23"
+        description: "LLM model name, e.g. qwen3.5-397b-a17b / qwen3-max / qwen-plus-latest"
         required: false
-        default: "qwen3-coder-plus"
+        default: "qwen3.5-397b-a17b"
       base_url:
-        description: "OpenAI-compatible API base URL"
+        description: "OpenAI-compatible API base URL (general route recommended)"
         required: false
-        default: "https://coding.dashscope.aliyuncs.com/v1"
+        default: "https://dashscope.aliyuncs.com/compatible-mode/v1"
       arxiv_id:
         description: "For target=one: e.g., 2401.12345"
         required: false

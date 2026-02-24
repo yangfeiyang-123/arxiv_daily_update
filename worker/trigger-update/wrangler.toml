@@ -12,7 +12,7 @@ SUMMARIZE_WORKFLOW_FILE = "summarize-papers.yml"
 # Backward compatible fallback:
 GITHUB_WORKFLOW_FILE = "update-cs-ro.yml"
 GITHUB_REF = "main"
-DEFAULT_LLM_BASE_URL = "https://coding.dashscope.aliyuncs.com/v1"
-DEFAULT_LLM_MODEL = "qwen3-coder-plus"
+DEFAULT_LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+DEFAULT_LLM_MODEL = "qwen3.5-397b-a17b"
 # Use your Pages origin (no trailing slash). Multiple origins: comma-separated.
 ALLOWED_ORIGIN = "https://yangfeiyang-123.github.io"

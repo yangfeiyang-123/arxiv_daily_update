@@ -129,8 +129,8 @@ window.MYARXIV_CONFIG = {
   openSummaryActionsAfterTrigger: false,
   summaryDailyMode: "fast",
   summaryOneMode: "deep",
-  summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-  summaryModel: "qwen3-coder-plus",
+  summaryBaseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  summaryModel: "qwen3.5-397b-a17b",
 };
 ```
 
@@ -207,9 +207,9 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 export DASHSCOPE_API_KEY="你的key"
-export LLM_BASE_URL="https://coding.dashscope.aliyuncs.com/v1"
-export LLM_MODEL_FAST="qwen3-coder-plus"
-export LLM_MODEL_DEEP="qwen3-coder-plus"
+export LLM_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+export LLM_MODEL_FAST="qwen-plus-latest"
+export LLM_MODEL_DEEP="qwen3.5-397b-a17b"
 ```
 
 可选：

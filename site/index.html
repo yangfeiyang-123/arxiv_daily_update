@@ -69,10 +69,13 @@
           <span>手动任务</span>
           <label class="summary-model-wrap" for="summaryModelInput">
             <span>总结模型</span>
-            <input id="summaryModelInput" type="text" list="summaryModelOptions" placeholder="例如 qwen3-coder-plus" />
+            <input id="summaryModelInput" type="text" list="summaryModelOptions" placeholder="例如 qwen3.5-397b-a17b" />
             <datalist id="summaryModelOptions">
-              <option value="qwen3-coder-plus"></option>
+              <option value="qwen3.5-397b-a17b"></option>
+              <option value="qwen3-max"></option>
               <option value="qwen3-max-2026-01-23"></option>
+              <option value="qwen-plus-latest"></option>
+              <option value="qwen-plus-2025-12-01"></option>
             </datalist>
           </label>
           <div class="manual-actions">
@@ -112,7 +115,7 @@
       </footer>
     </aside>
 
-    <script src="./config.js?v=20260224-4" defer></script>
-    <script src="./app.js?v=20260224-10" defer></script>
+    <script src="./config.js?v=20260224-5" defer></script>
+    <script src="./app.js?v=20260224-11" defer></script>
   </body>
 </html>

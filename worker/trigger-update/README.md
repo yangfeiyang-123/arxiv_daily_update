@@ -41,8 +41,8 @@ window.MYARXIV_CONFIG = {
   openSummaryActionsAfterTrigger: false,
   summaryDailyMode: "fast",
   summaryOneMode: "deep",
-  summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-  summaryModel: "qwen3-coder-plus",
+  summaryBaseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  summaryModel: "qwen3.5-397b-a17b",
 };
 ```
 
