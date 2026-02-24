@@ -11,6 +11,6 @@ window.MYARXIV_CONFIG = {
   summaryOneMode: "deep",
   // Qwen OpenAI-compatible endpoint:
   summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-  // Default summary model for UI selector.
-  summaryModel: "qwen-plus",
+  // Default summary model for UI input.
+  summaryModel: "qwen3-coder-plus",
 };

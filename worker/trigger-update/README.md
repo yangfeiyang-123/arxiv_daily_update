@@ -42,7 +42,7 @@ window.MYARXIV_CONFIG = {
   summaryDailyMode: "fast",
   summaryOneMode: "deep",
   summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-  summaryModel: "qwen-plus",
+  summaryModel: "qwen3-coder-plus",
 };
 ```
 

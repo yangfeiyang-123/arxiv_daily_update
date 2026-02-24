@@ -44,8 +44,8 @@ except ModuleNotFoundError:
     OpenAI = None
 
 DEFAULT_BASE_URL = os.getenv("LLM_BASE_URL", os.getenv("OPENAI_BASE_URL", "https://coding.dashscope.aliyuncs.com/v1"))
-DEFAULT_MODEL_FAST = os.getenv("LLM_MODEL_FAST", os.getenv("OPENAI_MODEL_FAST", "qwen-plus"))
-DEFAULT_MODEL_DEEP = os.getenv("LLM_MODEL_DEEP", os.getenv("OPENAI_MODEL_DEEP", "qwen-max"))
+DEFAULT_MODEL_FAST = os.getenv("LLM_MODEL_FAST", os.getenv("OPENAI_MODEL_FAST", "qwen3-coder-plus"))
+DEFAULT_MODEL_DEEP = os.getenv("LLM_MODEL_DEEP", os.getenv("OPENAI_MODEL_DEEP", "qwen3-coder-plus"))
 DEFAULT_MIN_CHARS = int(os.getenv("FULLTEXT_MIN_CHARS", "30000"))
 DEFAULT_CHUNK_MAX_CHARS = int(os.getenv("FULLTEXT_CHUNK_MAX_CHARS", "12000"))
 DEFAULT_HTTP_RETRIES = int(os.getenv("FULLTEXT_HTTP_RETRIES", "4"))

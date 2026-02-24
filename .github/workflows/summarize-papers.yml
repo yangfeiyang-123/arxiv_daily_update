@@ -24,9 +24,9 @@ on:
           - deep
         default: fast
       model:
-        description: "LLM model name, e.g. qwen-plus / qwen-max"
+        description: "LLM model name, e.g. qwen3-coder-plus / qwen3-max-2026-01-23"
         required: false
-        default: "qwen-plus"
+        default: "qwen3-coder-plus"
       base_url:
         description: "OpenAI-compatible API base URL"
         required: false

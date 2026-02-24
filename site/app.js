@@ -20,7 +20,7 @@ const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTri
 const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
 const SUMMARY_ONE_MODE = APP_CONFIG.summaryOneMode === "fast" ? "fast" : "deep";
 const SUMMARY_BASE_URL = String(APP_CONFIG.summaryBaseUrl || "https://coding.dashscope.aliyuncs.com/v1").trim();
-const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen-plus").trim() || "qwen-plus";
+const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen3-coder-plus").trim() || "qwen3-coder-plus";
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
@@ -65,7 +65,7 @@ const triggerUpdateBtn = document.getElementById("triggerUpdateBtn");
 const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
 const triggerSummaryDailyBtn = document.getElementById("triggerSummaryDailyBtn");
 const triggerSummaryMsg = document.getElementById("triggerSummaryMsg");
-const summaryModelSelect = document.getElementById("summaryModelSelect");
+const summaryModelInput = document.getElementById("summaryModelInput");
 const summaryDialog = document.getElementById("summaryDialog");
 const summaryDialogBody = document.getElementById("summaryDialogBody");
 const summaryDialogSub = document.getElementById("summaryDialogSub");
@@ -478,8 +478,8 @@ function openSummaryWorkflowPage(msg) {
 }
 
 function getSelectedSummaryModel() {
-  if (summaryModelSelect && summaryModelSelect.value) {
-    return summaryModelSelect.value.trim();
+  if (summaryModelInput && summaryModelInput.value) {
+    return summaryModelInput.value.trim();
   }
   return SUMMARY_MODEL_DEFAULT;
 }
@@ -577,6 +577,7 @@ async function triggerSummaryDailyViaWorker() {
     }
   } catch (err) {
     console.error(err);
+    setSummaryMessage(`触发失败：${String(err?.message || err)}`);
     openSummaryWorkflowPage("触发失败，已打开总结 workflow 页面。");
   } finally {
     triggerSummaryDailyBtn.disabled = false;
@@ -617,6 +618,7 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
     return true;
   } catch (err) {
     console.error(err);
+    setSummaryMessage(`单篇触发失败：${String(err?.message || err)}`);
     if (options.openWorkflowOnError !== false) {
       openSummaryWorkflowPage("单篇总结触发失败，已打开总结 workflow 页面。");
     }
@@ -875,15 +877,8 @@ function bindEvents() {
   renderSummaryDialog();
   setSummaryDialogOpen(state.summaryDialog.open);
 
-  if (summaryModelSelect && SUMMARY_MODEL_DEFAULT) {
-    const hasOpt = [...summaryModelSelect.options].some((opt) => opt.value === SUMMARY_MODEL_DEFAULT);
-    if (!hasOpt) {
-      const extra = document.createElement("option");
-      extra.value = SUMMARY_MODEL_DEFAULT;
-      extra.textContent = SUMMARY_MODEL_DEFAULT;
-      summaryModelSelect.appendChild(extra);
-    }
-    summaryModelSelect.value = SUMMARY_MODEL_DEFAULT;
+  if (summaryModelInput && SUMMARY_MODEL_DEFAULT) {
+    summaryModelInput.value = SUMMARY_MODEL_DEFAULT;
   }
 
   fieldSelect.addEventListener("change", (event) => {
