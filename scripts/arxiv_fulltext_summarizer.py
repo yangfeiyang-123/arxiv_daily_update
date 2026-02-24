@@ -764,6 +764,7 @@ def parse_json_response(text: str) -> dict[str, Any]:
         "method_details": [],
         "experiment_details": [],
         "resources": [],
+        "reasoning_brief": [],
     }
 
 
@@ -822,7 +823,8 @@ class LLMRunner:
                 '  "key_points": ["..."],\n'
                 '  "method_details": ["..."],\n'
                 '  "experiment_details": ["..."],\n'
-                '  "resources": ["..."]\n'
+                '  "resources": ["..."],\n'
+                '  "reasoning_brief": ["3-6 short bullets of visible reasoning based only on this chunk"]\n'
                 "}\n\n"
                 "Chunk text:\n"
                 f"{chunk.text}"
@@ -984,12 +986,15 @@ def summarize_single_paper(
             kp_preview = short_list_preview(summary_obj.get("key_points", []))
             md_preview = short_list_preview(summary_obj.get("method_details", []), max_items=1)
             ex_preview = short_list_preview(summary_obj.get("experiment_details", []), max_items=1)
+            rs_preview = short_list_preview(summary_obj.get("reasoning_brief", []), max_items=2, max_chars=140)
             if kp_preview:
                 model_log(f"{aid} | {chunk.chunk_id} key_points: {kp_preview}")
             if md_preview:
                 model_log(f"{aid} | {chunk.chunk_id} method: {md_preview}")
             if ex_preview:
                 model_log(f"{aid} | {chunk.chunk_id} eval: {ex_preview}")
+            if rs_preview:
+                model_log(f"{aid} | {chunk.chunk_id} reasoning: {rs_preview}")
             chunk_summaries.append(
                 {
                     "chunk_id": chunk.chunk_id,
