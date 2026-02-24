@@ -1,0 +1,146 @@
+name: Summarize arXiv Papers (Full Text)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "new = newest papers, one = single arXiv id"
+        required: true
+        type: choice
+        options:
+          - new
+          - one
+        default: new
+      n:
+        description: "For target=new: summarize newest N papers"
+        required: false
+        default: "20"
+      mode:
+        description: "fast=batch, deep=single-paper deeper synthesis"
+        required: true
+        type: choice
+        options:
+          - fast
+          - deep
+        default: fast
+      arxiv_id:
+        description: "For target=one: e.g., 2401.12345"
+        required: false
+        default: ""
+      latest_day_only:
+        description: "For target=new: only papers on latest date"
+        required: false
+        default: "true"
+      daily_report:
+        description: "For target=new: also generate one daily report"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "summary"
+  cancel-in-progress: false
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate OpenAI key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::Missing OPENAI_API_KEY in repository Secrets."
+            exit 1
+          fi
+
+      - name: Summarize papers
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL_FAST: ${{ vars.OPENAI_MODEL_FAST }}
+          OPENAI_MODEL_DEEP: ${{ vars.OPENAI_MODEL_DEEP }}
+        run: |
+          mkdir -p outputs/summaries
+          if [ "${{ inputs.target }}" = "one" ]; then
+            if [ -z "${{ inputs.arxiv_id }}" ]; then
+              echo "::error::inputs.arxiv_id is required when target=one"
+              exit 1
+            fi
+            python scripts/arxiv_fulltext_summarizer.py summarize_one \
+              --input data/latest_cs_daily.json \
+              --arxiv_id "${{ inputs.arxiv_id }}" \
+              --mode "${{ inputs.mode }}" \
+              --output-dir outputs/summaries
+          else
+            EXTRA=""
+            if [ "${{ inputs.latest_day_only }}" = "true" ]; then
+              EXTRA="$EXTRA --latest-day-only"
+            fi
+            if [ "${{ inputs.daily_report }}" = "true" ]; then
+              EXTRA="$EXTRA --daily-report"
+            fi
+            python scripts/arxiv_fulltext_summarizer.py summarize_new \
+              --input data/latest_cs_daily.json \
+              --n "${{ inputs.n }}" \
+              --mode "${{ inputs.mode }}" \
+              --output-dir outputs/summaries \
+              $EXTRA
+          fi
+
+      - name: Commit summaries
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add outputs/summaries
+          if git diff --cached --quiet; then
+            echo "No summary updates."
+          else
+            git commit -m "chore: update paper summaries"
+            git push
+          fi
+
+      - name: Prepare static files
+        run: |
+          rm -rf public
+          mkdir -p public/data
+          cp site/index.html public/index.html
+          cp site/styles.css public/styles.css
+          cp site/config.js public/config.js
+          cp site/app.js public/app.js
+          cp data/latest_cs_daily.json public/data/latest_cs_daily.json
+          if [ -d outputs/summaries ]; then
+            mkdir -p public/outputs
+            cp -R outputs/summaries public/outputs/summaries
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

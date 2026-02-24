@@ -51,6 +51,10 @@ jobs:
           cp site/config.js public/config.js
           cp site/app.js public/app.js
           cp data/latest_cs_daily.json public/data/latest_cs_daily.json
+          if [ -d outputs/summaries ]; then
+            mkdir -p public/outputs
+            cp -R outputs/summaries public/outputs/summaries
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

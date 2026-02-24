@@ -6,8 +6,12 @@ on:
     paths:
       - "site/**"
       - "data/latest_cs_daily.json"
+      - "outputs/summaries/**"
+      - "requirements.txt"
+      - "scripts/arxiv_fulltext_summarizer.py"
       - ".github/workflows/deploy-pages.yml"
       - ".github/workflows/update-cs-ro.yml"
+      - ".github/workflows/summarize-papers.yml"
   workflow_dispatch:
 
 permissions:
@@ -39,6 +43,10 @@ jobs:
           cp site/config.js public/config.js
           cp site/app.js public/app.js
           cp data/latest_cs_daily.json public/data/latest_cs_daily.json
+          if [ -d outputs/summaries ]; then
+            mkdir -p public/outputs
+            cp -R outputs/summaries public/outputs/summaries
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

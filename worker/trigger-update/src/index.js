@@ -17,7 +17,6 @@ export default {
 
     const owner = env.GITHUB_OWNER;
     const repo = env.GITHUB_REPO;
-    const workflow = env.GITHUB_WORKFLOW_FILE || "update-cs-ro.yml";
     const ref = env.GITHUB_REF || "main";
     const token = env.GITHUB_TOKEN;
 
@@ -32,6 +31,42 @@ export default {
       );
     }
 
+    let payload = {};
+    try {
+      payload = (await request.json()) || {};
+    } catch (_) {
+      payload = {};
+    }
+
+    const action = String(payload.action || "update");
+    const updateWorkflow = env.UPDATE_WORKFLOW_FILE || env.GITHUB_WORKFLOW_FILE || "update-cs-ro.yml";
+    const summarizeWorkflow = env.SUMMARIZE_WORKFLOW_FILE || "summarize-papers.yml";
+    const workflow = resolveWorkflow(action, updateWorkflow, summarizeWorkflow);
+    if (!workflow) {
+      return json(
+        {
+          ok: false,
+          error: "invalid action",
+          supported_actions: ["update", "summarize_new", "summarize_one"],
+        },
+        400,
+        corsHeaders
+      );
+    }
+
+    const workflowInputs = buildWorkflowInputs(action, payload);
+    if (workflowInputs.__error) {
+      return json(
+        {
+          ok: false,
+          error: workflowInputs.__error,
+        },
+        400,
+        corsHeaders
+      );
+    }
+    const dispatchRef = typeof payload.ref === "string" && payload.ref.trim() ? payload.ref.trim() : ref;
+
     const ghResp = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`,
       {
@@ -43,12 +78,26 @@ export default {
           "User-Agent": "arxiv-trigger-update-worker",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ref }),
+        body: JSON.stringify({
+          ref: dispatchRef,
+          inputs: workflowInputs,
+        }),
       }
     );
 
     if (ghResp.status === 204) {
-      return json({ ok: true, message: "workflow dispatched", workflow, ref }, 200, corsHeaders);
+      return json(
+        {
+          ok: true,
+          message: "workflow dispatched",
+          action,
+          workflow,
+          ref: dispatchRef,
+          inputs: workflowInputs,
+        },
+        200,
+        corsHeaders
+      );
     }
 
     const detail = await ghResp.text();
@@ -64,6 +113,38 @@ export default {
     );
   },
 };
+
+function resolveWorkflow(action, updateWorkflow, summarizeWorkflow) {
+  if (action === "update") return updateWorkflow;
+  if (action === "summarize_new" || action === "summarize_one") return summarizeWorkflow;
+  return "";
+}
+
+function buildWorkflowInputs(action, payload) {
+  if (action === "summarize_new") {
+    return {
+      target: "new",
+      n: String(Number(payload.n) > 0 ? Number(payload.n) : 30),
+      mode: payload.mode === "deep" ? "deep" : "fast",
+      latest_day_only: payload.latest_day_only === false ? "false" : "true",
+      daily_report: payload.daily_report === false ? "false" : "true",
+    };
+  }
+
+  if (action === "summarize_one") {
+    const arxivId = String(payload.arxiv_id || "").trim();
+    if (!arxivId) {
+      return { __error: "arxiv_id is required for summarize_one" };
+    }
+    return {
+      target: "one",
+      arxiv_id: arxivId,
+      mode: payload.mode === "fast" ? "fast" : "deep",
+    };
+  }
+
+  return {};
+}
 
 function isAllowedOrigin(origin, allowedOrigin) {
   if (!allowedOrigin) return true;

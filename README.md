@@ -98,12 +98,15 @@ make serve
 
 之后你每次 push，或每天定时更新数据，网站都会自动更新。
 
-### 网页内一键触发更新（可选）
+### 网页内一键任务（可选）
 
-网站上有 `一键触发更新` 按钮，支持两种方式：
+网站上支持三类按钮：
 
-- 未配置 Worker：按钮会打开 GitHub Actions 页面（手动点 `Run workflow`）
-- 已配置 Worker（推荐）：按钮直接触发更新，无需进入 GitHub 页面
+- `一键触发更新`：刷新论文数据
+- `一键总结最近1天新文`：对最新一天论文做批量全文总结 + 生成每日报告
+- `AI总结此文`（每篇卡片里）：对单篇论文做全文深度总结
+
+未配置 Worker 时会打开 GitHub Actions 页面；已配置 Worker 时可直接触发，无需手动进入 GitHub 页面。
 
 #### 配置方法二（Cloudflare Worker 中转）
 
@@ -122,11 +125,20 @@ wrangler deploy
 ```js
 window.MYARXIV_CONFIG = {
   triggerEndpoint: "https://arxiv-trigger-update.<your-subdomain>.workers.dev/trigger",
-  openActionsAfterTrigger: true,
+  openActionsAfterTrigger: false,
+  openSummaryActionsAfterTrigger: false,
+  summaryDailyMode: "fast",
+  summaryOneMode: "deep",
 };
 ```
 
 3. 提交并推送后，网站按钮即可直接触发
+
+4. 在 GitHub 仓库配置 Secret（用于总结工作流）
+
+- Settings -> Secrets and variables -> Actions -> New repository secret
+- Name: `OPENAI_API_KEY`
+- Value: 你的 OpenAI API Key
 
 ### 一次性推送命令（最短）
 
@@ -165,3 +177,90 @@ python3 scripts/fetch_cs_ro.py \
   --request-interval 1.0 \
   --output data/latest_cs_daily.json
 ```
+
+## 全文大模型总结（新）
+
+新增脚本：`scripts/arxiv_fulltext_summarizer.py`
+
+能力：
+
+- 读取本地 JSON/SQLite 论文列表（无需每次手动贴 URL）
+- 自动优先抓取 arXiv HTML，全量失败再回退 PDF
+- **硬性全文检查**（长度 + Method/Experiments 章节信号），不满足则拒绝总结
+- 长文自动分块、分层总结，再合成最终结构化报告
+- 支持：
+  - 批量最新 N 篇：`summarize_new`
+  - 指定单篇：`summarize_one`
+  - 批量“最新一天”全部论文：`--latest-day-only`
+  - 可选生成“每日汇总报告”：`--daily-report`
+
+### 安装
+
+```bash
+cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv
+python3 -m pip install -r requirements.txt
+```
+
+### 环境变量
+
+```bash
+export OPENAI_API_KEY="你的key"
+export OPENAI_MODEL_FAST="gpt-4.1-mini"
+export OPENAI_MODEL_DEEP="gpt-4.1"
+```
+
+可选：
+
+- `FULLTEXT_MIN_CHARS`（默认 `30000`）
+- `FULLTEXT_CHUNK_MAX_CHARS`（默认 `12000`）
+- `OPENAI_BASE_URL`（如需代理/兼容网关）
+
+### 用法
+
+1. 批量总结最新 N 篇（成本优先）
+
+```bash
+python3 scripts/arxiv_fulltext_summarizer.py summarize_new \
+  --input data/latest_cs_daily.json \
+  --n 10 \
+  --mode fast
+```
+
+2. 批量总结“最新一天”并生成“每日报告”（推荐给网页按钮）
+
+```bash
+python3 scripts/arxiv_fulltext_summarizer.py summarize_new \
+  --input data/latest_cs_daily.json \
+  --n 300 \
+  --mode fast \
+  --latest-day-only \
+  --daily-report
+```
+
+3. 指定 arXiv ID 深度总结
+
+```bash
+python3 scripts/arxiv_fulltext_summarizer.py summarize_one \
+  --input data/latest_cs_daily.json \
+  --arxiv_id 2401.12345 \
+  --mode deep
+```
+
+4. 指定列表索引深度总结（按最新排序，0 开始）
+
+```bash
+python3 scripts/arxiv_fulltext_summarizer.py summarize_one \
+  --input data/latest_cs_daily.json \
+  --index 0 \
+  --mode deep
+```
+
+### 输出
+
+- 每篇 Markdown：`outputs/summaries/{date}_{arxiv_id}.md`
+- 记录文件 JSON：`outputs/summaries/{timestamp}_{command}_records.json`
+  - 字段：`arxiv_id`, `summary_path`, `status`, `error`
+
+如果无法拿到合格全文，记录会返回：
+
+- `Full text not available; cannot summarize.`

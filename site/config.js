@@ -3,4 +3,10 @@ window.MYARXIV_CONFIG = {
   triggerEndpoint: "https://arxiv-trigger-update.yangfeiyang-arxiv-daily.workers.dev/trigger",
   // Set false to avoid opening GitHub Actions page after successful trigger.
   openActionsAfterTrigger: false,
+  // Set true to open summary workflow page after summary triggers.
+  openSummaryActionsAfterTrigger: false,
+  // Optional: fast or deep
+  summaryDailyMode: "fast",
+  // Optional: deep or fast
+  summaryOneMode: "deep",
 };

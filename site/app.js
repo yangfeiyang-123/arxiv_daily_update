@@ -6,10 +6,15 @@ const DISPLAY_TIMEZONE_LABEL = "北京时间";
 const GITHUB_OWNER = "yangfeiyang-123";
 const GITHUB_REPO = "arxiv_daily_update";
 const WORKFLOW_FILE = "update-cs-ro.yml";
+const SUMMARY_WORKFLOW_FILE = "summarize-papers.yml";
 const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
+const SUMMARY_WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${SUMMARY_WORKFLOW_FILE}`;
 const APP_CONFIG = window.MYARXIV_CONFIG || {};
 const WORKER_TRIGGER_URL = String(APP_CONFIG.triggerEndpoint || "").trim();
 const OPEN_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openActionsAfterTrigger !== false;
+const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTrigger === true;
+const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
+const SUMMARY_ONE_MODE = APP_CONFIG.summaryOneMode === "fast" ? "fast" : "deep";
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const INITIAL_VISIBLE_COUNT = 120;
@@ -41,6 +46,8 @@ const rangeMonthBtn = document.getElementById("rangeMonthBtn");
 const rangeDayBtn = document.getElementById("rangeDayBtn");
 const triggerUpdateBtn = document.getElementById("triggerUpdateBtn");
 const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
+const triggerSummaryDailyBtn = document.getElementById("triggerSummaryDailyBtn");
+const triggerSummaryMsg = document.getElementById("triggerSummaryMsg");
 const moreWrap = document.getElementById("moreWrap");
 const loadMoreBtn = document.getElementById("loadMoreBtn");
 
@@ -179,6 +186,12 @@ function setTriggerMessage(text) {
   triggerUpdateMsg.textContent = text;
 }
 
+function setSummaryMessage(text) {
+  if (triggerSummaryMsg) {
+    triggerSummaryMsg.textContent = text;
+  }
+}
+
 function getCachedPayload() {
   const raw = localStorage.getItem(DATA_CACHE_KEY);
   if (!raw) return null;
@@ -230,15 +243,46 @@ async function setCachedPayloadToCacheApi(payload) {
   }
 }
 
-function openWorkflowPage() {
-  setTriggerMessage("已打开 GitHub Actions 页面，请点击 Run workflow。");
-  window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+function openWorkflowPage(url, msg) {
+  window.open(url, "_blank", "noopener,noreferrer");
+  if (msg) {
+    setTriggerMessage(msg);
+  }
+}
+
+function openSummaryWorkflowPage(msg) {
+  window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+  if (msg) {
+    setSummaryMessage(msg);
+  }
+}
+
+async function dispatchWorkerAction(action, payload = {}) {
+  if (!WORKER_TRIGGER_URL) {
+    throw new Error("missing worker endpoint");
+  }
+  const resp = await fetch(WORKER_TRIGGER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action,
+      ref: "main",
+      ...payload,
+    }),
+  });
+  if (!resp.ok) {
+    const detail = await resp.text();
+    throw new Error(`HTTP ${resp.status}: ${detail}`);
+  }
+  return await resp.json();
 }
 
 async function triggerUpdateViaWorker() {
   if (!WORKER_TRIGGER_URL) {
     setTriggerMessage("未配置 Worker 触发地址，正在打开 Actions 页面。");
-    openWorkflowPage();
+    openWorkflowPage(WORKFLOW_PAGE_URL, "已打开 GitHub Actions 页面，请点击 Run workflow。");
     return;
   }
 
@@ -247,35 +291,102 @@ async function triggerUpdateViaWorker() {
   setTriggerMessage("正在触发后台更新任务...");
 
   try {
-    const resp = await fetch(WORKER_TRIGGER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ref: "main" }),
-    });
-
-    if (resp.ok) {
-      setTriggerMessage("更新任务已触发。");
-      if (OPEN_ACTIONS_AFTER_TRIGGER) {
-        setTimeout(() => {
-          window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
-        }, 350);
-      }
-      return;
+    await dispatchWorkerAction("update");
+    setTriggerMessage("更新任务已触发。");
+    if (OPEN_ACTIONS_AFTER_TRIGGER) {
+      setTimeout(() => {
+        window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+      }, 350);
     }
-
-    const detail = await resp.text();
-    console.error("trigger worker failed:", detail);
-    setTriggerMessage(`触发失败（HTTP ${resp.status}），已打开 Actions 页面。`);
-    openWorkflowPage();
+    return;
   } catch (err) {
     console.error(err);
     setTriggerMessage("网络错误，已打开 Actions 页面。");
-    openWorkflowPage();
+    openWorkflowPage(WORKFLOW_PAGE_URL, "已打开 GitHub Actions 页面，请点击 Run workflow。");
   } finally {
     triggerUpdateBtn.disabled = false;
     triggerUpdateBtn.textContent = "一键触发更新";
+  }
+}
+
+function extractArxivId(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  let cleaned = raw.replace(/[#?].*$/, "").replace(/\.pdf$/i, "");
+  if (cleaned.includes("/abs/")) {
+    cleaned = cleaned.split("/abs/").pop();
+  } else if (cleaned.includes("/pdf/")) {
+    cleaned = cleaned.split("/pdf/").pop();
+  } else if (cleaned.includes("/html/")) {
+    cleaned = cleaned.split("/html/").pop();
+  }
+  return cleaned.replace(/^\/+|\/+$/g, "");
+}
+
+async function triggerSummaryDailyViaWorker() {
+  if (!triggerSummaryDailyBtn) return;
+  if (!WORKER_TRIGGER_URL) {
+    openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
+    return;
+  }
+
+  triggerSummaryDailyBtn.disabled = true;
+  triggerSummaryDailyBtn.textContent = "触发中...";
+  setSummaryMessage("正在触发“最近1天新文”批量总结任务...");
+  try {
+    await dispatchWorkerAction("summarize_new", {
+      mode: SUMMARY_DAILY_MODE,
+      latest_day_only: true,
+      daily_report: true,
+      n: 300,
+    });
+    setSummaryMessage("批量总结任务已触发。总结完成后会自动写入仓库并部署。");
+    if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
+      setTimeout(() => {
+        window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+      }, 350);
+    }
+  } catch (err) {
+    console.error(err);
+    openSummaryWorkflowPage("触发失败，已打开总结 workflow 页面。");
+  } finally {
+    triggerSummaryDailyBtn.disabled = false;
+    triggerSummaryDailyBtn.textContent = "一键总结最近1天新文";
+  }
+}
+
+async function triggerSummaryOneViaWorker(arxivId, btn) {
+  if (!arxivId) {
+    setSummaryMessage("无法识别 arXiv ID，已跳过。");
+    return;
+  }
+  if (!WORKER_TRIGGER_URL) {
+    openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
+    return;
+  }
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "触发中...";
+  setSummaryMessage(`正在触发单篇总结：${arxivId}`);
+
+  try {
+    await dispatchWorkerAction("summarize_one", {
+      mode: SUMMARY_ONE_MODE,
+      arxiv_id: arxivId,
+    });
+    setSummaryMessage(`单篇总结任务已触发：${arxivId}`);
+    if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
+      setTimeout(() => {
+        window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+      }, 350);
+    }
+  } catch (err) {
+    console.error(err);
+    openSummaryWorkflowPage("单篇总结触发失败，已打开总结 workflow 页面。");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
   }
 }
 
@@ -408,6 +519,7 @@ function renderPaperCard(paper, index) {
 
   const arxivUrl = escapeHtml(paper.id || "#");
   const pdfUrl = escapeHtml(paper.pdf_url || paper.id || "#");
+  const arxivId = escapeHtml(extractArxivId(paper.id || paper.pdf_url || ""));
 
   return `
     <article class="paper ${isNew ? "paper--new" : ""}" style="animation-delay:${Math.min(index * 35, 420)}ms">
@@ -422,6 +534,7 @@ function renderPaperCard(paper, index) {
       <div class="paper-links">
         <a class="paper-link" href="${pdfUrl}" target="_blank" rel="noreferrer">阅读 PDF</a>
         <a class="paper-link alt" href="${arxivUrl}" target="_blank" rel="noreferrer">arXiv 页面</a>
+        <button type="button" class="paper-link ai js-summarize-one" data-arxiv-id="${arxivId}">AI总结此文</button>
       </div>
     </article>
   `;
@@ -504,6 +617,19 @@ function bindEvents() {
 
   triggerUpdateBtn.addEventListener("click", () => {
     triggerUpdateViaWorker();
+  });
+
+  if (triggerSummaryDailyBtn) {
+    triggerSummaryDailyBtn.addEventListener("click", () => {
+      triggerSummaryDailyViaWorker();
+    });
+  }
+
+  paperGroups.addEventListener("click", (event) => {
+    const target = event.target.closest(".js-summarize-one");
+    if (!target) return;
+    const arxivId = target.getAttribute("data-arxiv-id") || "";
+    triggerSummaryOneViaWorker(arxivId, target);
   });
 
   loadMoreBtn.addEventListener("click", () => {

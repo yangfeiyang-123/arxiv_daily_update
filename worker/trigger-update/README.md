@@ -1,6 +1,12 @@
-# Trigger Update Worker (Cloudflare)
+# Trigger Worker (Cloudflare)
 
-This worker triggers the GitHub Actions workflow `update-cs-ro.yml` via GitHub API.
+This worker triggers GitHub Actions workflows via GitHub API.
+
+Supported actions from website:
+
+- `update` -> `update-cs-ro.yml`
+- `summarize_new` -> `summarize-papers.yml` (latest-day batch summaries)
+- `summarize_one` -> `summarize-papers.yml` (one paper by `arxiv_id`)
 
 ## 1) Prerequisites
 
@@ -32,6 +38,9 @@ Then edit `site/config.js`:
 window.MYARXIV_CONFIG = {
   triggerEndpoint: "https://arxiv-trigger-update.<your-subdomain>.workers.dev/trigger",
   openActionsAfterTrigger: true,
+  openSummaryActionsAfterTrigger: false,
+  summaryDailyMode: "fast",
+  summaryOneMode: "deep",
 };
 ```
 
@@ -41,3 +50,4 @@ Commit and push to GitHub Pages.
 
 - CORS is restricted by `ALLOWED_ORIGIN` in `wrangler.toml`.
 - You can set multiple allowed origins separated by commas.
+- Add repository secret `OPENAI_API_KEY` for summary workflow.

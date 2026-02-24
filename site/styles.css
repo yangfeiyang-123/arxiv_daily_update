@@ -234,6 +234,17 @@ select {
   transition: all 0.2s ease;
 }
 
+.manual-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.manual-btn.alt {
+  border-color: rgba(51, 209, 198, 0.45);
+  background: linear-gradient(120deg, rgba(51, 209, 198, 0.24), rgba(255, 138, 61, 0.16));
+}
+
 .manual-btn:hover {
   border-color: rgba(255, 138, 61, 0.75);
   transform: translateY(-1px);
@@ -449,6 +460,17 @@ select:focus {
   border: 1px solid rgba(51, 209, 198, 0.45);
 }
 
+.paper-link.ai {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+}
+
+.paper-link.ai:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
 .empty,
 .error {
   text-align: center;
@@ -512,6 +534,10 @@ select:focus {
   }
 
   .paper-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-actions {
     grid-template-columns: 1fr;
   }
 }

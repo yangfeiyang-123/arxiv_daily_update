@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260224-5" />
+    <link rel="stylesheet" href="./styles.css?v=20260224-6" />
   </head>
   <body>
     <div class="bg-orb orb-a"></div>
@@ -66,9 +66,13 @@
         </div>
 
         <div class="manual-wrap control-manual">
-          <span>手动更新</span>
-          <button id="triggerUpdateBtn" class="manual-btn" type="button">一键触发更新</button>
-          <p id="triggerUpdateMsg" class="manual-msg">点按钮可直接触发更新；若未配置 Worker，则自动打开 Actions 页面。</p>
+          <span>手动任务</span>
+          <div class="manual-actions">
+            <button id="triggerUpdateBtn" class="manual-btn" type="button">一键触发更新</button>
+            <button id="triggerSummaryDailyBtn" class="manual-btn alt" type="button">一键总结最近1天新文</button>
+          </div>
+          <p id="triggerUpdateMsg" class="manual-msg">更新数据：点按钮可直接触发更新；若未配置 Worker，则自动打开 Actions 页面。</p>
+          <p id="triggerSummaryMsg" class="manual-msg">总结任务：支持“最近1天批量总结”和“单篇总结”（卡片按钮）。</p>
         </div>
       </section>
 
@@ -82,7 +86,7 @@
       <p id="errorState" class="error hidden">数据加载失败，请稍后刷新页面。</p>
     </main>
 
-    <script src="./config.js?v=20260222-1" defer></script>
-    <script src="./app.js?v=20260224-6" defer></script>
+    <script src="./config.js?v=20260224-2" defer></script>
+    <script src="./app.js?v=20260224-7" defer></script>
   </body>
 </html>
