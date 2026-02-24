@@ -7,6 +7,9 @@ const GITHUB_OWNER = "yangfeiyang-123";
 const GITHUB_REPO = "arxiv_daily_update";
 const WORKFLOW_FILE = "update-cs-ro.yml";
 const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}`;
+const APP_CONFIG = window.MYARXIV_CONFIG || {};
+const WORKER_TRIGGER_URL = String(APP_CONFIG.triggerEndpoint || "").trim();
+const OPEN_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openActionsAfterTrigger !== false;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const INITIAL_VISIBLE_COUNT = 120;
@@ -169,12 +172,52 @@ async function setCachedPayloadToCacheApi(payload) {
 }
 
 function openWorkflowPage() {
-  triggerUpdateBtn.disabled = true;
-  triggerUpdateBtn.textContent = "打开中...";
   setTriggerMessage("已打开 GitHub Actions 页面，请点击 Run workflow。");
   window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
-  triggerUpdateBtn.disabled = false;
-  triggerUpdateBtn.textContent = "一键触发更新";
+}
+
+async function triggerUpdateViaWorker() {
+  if (!WORKER_TRIGGER_URL) {
+    setTriggerMessage("未配置 Worker 触发地址，正在打开 Actions 页面。");
+    openWorkflowPage();
+    return;
+  }
+
+  triggerUpdateBtn.disabled = true;
+  triggerUpdateBtn.textContent = "触发中...";
+  setTriggerMessage("正在触发后台更新任务...");
+
+  try {
+    const resp = await fetch(WORKER_TRIGGER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ref: "main" }),
+    });
+
+    if (resp.ok) {
+      setTriggerMessage("更新任务已触发。");
+      if (OPEN_ACTIONS_AFTER_TRIGGER) {
+        setTimeout(() => {
+          window.open(WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
+        }, 350);
+      }
+      return;
+    }
+
+    const detail = await resp.text();
+    console.error("trigger worker failed:", detail);
+    setTriggerMessage(`触发失败（HTTP ${resp.status}），已打开 Actions 页面。`);
+    openWorkflowPage();
+  } catch (err) {
+    console.error(err);
+    setTriggerMessage("网络错误，已打开 Actions 页面。");
+    openWorkflowPage();
+  } finally {
+    triggerUpdateBtn.disabled = false;
+    triggerUpdateBtn.textContent = "一键触发更新";
+  }
 }
 
 function getCurrentField() {
@@ -397,7 +440,7 @@ function bindEvents() {
   });
 
   triggerUpdateBtn.addEventListener("click", () => {
-    openWorkflowPage();
+    triggerUpdateViaWorker();
   });
 
   loadMoreBtn.addEventListener("click", () => {

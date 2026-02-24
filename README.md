@@ -100,10 +100,33 @@ make serve
 
 ### 网页内一键触发更新（可选）
 
-网站上有 `一键触发更新` 按钮，不需要 PAT。
+网站上有 `一键触发更新` 按钮，支持两种方式：
 
-- 点击后会打开仓库的 `update-cs-ro.yml` 页面
-- 在 GitHub 页面点一次 `Run workflow` 即可触发更新
+- 未配置 Worker：按钮会打开 GitHub Actions 页面（手动点 `Run workflow`）
+- 已配置 Worker（推荐）：按钮直接触发更新，无需进入 GitHub 页面
+
+#### 配置方法二（Cloudflare Worker 中转）
+
+1. 部署 Worker
+
+```bash
+cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv/worker/trigger-update
+npm i -g wrangler
+wrangler login
+wrangler secret put GITHUB_TOKEN
+wrangler deploy
+```
+
+2. 编辑网站配置文件 `site/config.js`，填入 Worker 地址
+
+```js
+window.MYARXIV_CONFIG = {
+  triggerEndpoint: "https://arxiv-trigger-update.<your-subdomain>.workers.dev/trigger",
+  openActionsAfterTrigger: true,
+};
+```
+
+3. 提交并推送后，网站按钮即可直接触发
 
 ### 一次性推送命令（最短）
 

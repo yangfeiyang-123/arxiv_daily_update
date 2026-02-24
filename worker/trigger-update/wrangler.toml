@@ -1,0 +1,13 @@
+name = "arxiv-trigger-update"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+account_id = "630cd57a379e5056877bea230fc94ab6"
+
+[vars]
+GITHUB_OWNER = "yangfeiyang-123"
+GITHUB_REPO = "arxiv_daily_update"
+GITHUB_WORKFLOW_FILE = "update-cs-ro.yml"
+GITHUB_REF = "main"
+# Use your Pages origin (no trailing slash). Multiple origins: comma-separated.
+ALLOWED_ORIGIN = "https://yangfeiyang-123.github.io"

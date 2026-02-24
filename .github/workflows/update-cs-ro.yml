@@ -48,6 +48,7 @@ jobs:
           mkdir -p public/data
           cp site/index.html public/index.html
           cp site/styles.css public/styles.css
+          cp site/config.js public/config.js
           cp site/app.js public/app.js
           cp data/latest_cs_daily.json public/data/latest_cs_daily.json
 
