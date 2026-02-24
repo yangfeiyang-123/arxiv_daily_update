@@ -651,7 +651,9 @@ function bindEvents() {
   }
 
   paperGroups.addEventListener("click", (event) => {
-    const target = event.target.closest(".js-summarize-one");
+    const el = event.target instanceof Element ? event.target : null;
+    if (!el) return;
+    const target = el.closest(".js-summarize-one");
     if (!target) return;
     const arxivId = target.getAttribute("data-arxiv-id") || "";
     triggerSummaryOneViaWorker(arxivId, target);
