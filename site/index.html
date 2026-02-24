@@ -67,6 +67,14 @@
 
         <div class="manual-wrap control-manual">
           <span>手动任务</span>
+          <label class="summary-model-wrap" for="summaryModelSelect">
+            <span>总结模型</span>
+            <select id="summaryModelSelect">
+              <option value="qwen-plus" selected>qwen-plus</option>
+              <option value="qwen-max">qwen-max</option>
+              <option value="qwen-turbo">qwen-turbo</option>
+            </select>
+          </label>
           <div class="manual-actions">
             <button id="triggerUpdateBtn" class="manual-btn" type="button">一键触发更新</button>
             <button id="triggerSummaryDailyBtn" class="manual-btn alt" type="button">一键总结最近1天新文</button>
@@ -86,7 +94,7 @@
       <p id="errorState" class="error hidden">数据加载失败，请稍后刷新页面。</p>
     </main>
 
-    <script src="./config.js?v=20260224-2" defer></script>
-    <script src="./app.js?v=20260224-7" defer></script>
+    <script src="./config.js?v=20260224-3" defer></script>
+    <script src="./app.js?v=20260224-8" defer></script>
   </body>
 </html>

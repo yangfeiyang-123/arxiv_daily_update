@@ -222,6 +222,11 @@ select {
   font-size: 0.86rem;
 }
 
+.summary-model-wrap {
+  display: grid;
+  margin-bottom: 8px;
+}
+
 .manual-btn {
   border: 1px solid rgba(255, 138, 61, 0.45);
   border-radius: 12px;

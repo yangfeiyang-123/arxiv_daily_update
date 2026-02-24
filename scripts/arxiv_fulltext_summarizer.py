@@ -11,6 +11,7 @@ Features:
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import os
 import re
@@ -42,8 +43,9 @@ try:
 except ModuleNotFoundError:
     OpenAI = None
 
-DEFAULT_MODEL_FAST = os.getenv("OPENAI_MODEL_FAST", "gpt-4.1-mini")
-DEFAULT_MODEL_DEEP = os.getenv("OPENAI_MODEL_DEEP", "gpt-4.1")
+DEFAULT_BASE_URL = os.getenv("LLM_BASE_URL", os.getenv("OPENAI_BASE_URL", "https://coding.dashscope.aliyuncs.com/v1"))
+DEFAULT_MODEL_FAST = os.getenv("LLM_MODEL_FAST", os.getenv("OPENAI_MODEL_FAST", "qwen-plus"))
+DEFAULT_MODEL_DEEP = os.getenv("LLM_MODEL_DEEP", os.getenv("OPENAI_MODEL_DEEP", "qwen-max"))
 DEFAULT_MIN_CHARS = int(os.getenv("FULLTEXT_MIN_CHARS", "30000"))
 DEFAULT_CHUNK_MAX_CHARS = int(os.getenv("FULLTEXT_CHUNK_MAX_CHARS", "12000"))
 DEFAULT_HTTP_RETRIES = int(os.getenv("FULLTEXT_HTTP_RETRIES", "4"))
@@ -172,6 +174,21 @@ def parse_args() -> argparse.Namespace:
         default="fast",
         help="fast=batch cost-effective, deep=stronger single-paper synthesis.",
     )
+    common.add_argument(
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help=f"OpenAI-compatible base URL (default: {DEFAULT_BASE_URL}).",
+    )
+    common.add_argument(
+        "--model-fast",
+        default=DEFAULT_MODEL_FAST,
+        help=f"Model used for chunk/batch summarization (default: {DEFAULT_MODEL_FAST}).",
+    )
+    common.add_argument(
+        "--model-deep",
+        default=DEFAULT_MODEL_DEEP,
+        help=f"Model used for deep final synthesis (default: {DEFAULT_MODEL_DEEP}).",
+    )
 
     p_new = subparsers.add_parser(
         "summarize_new", parents=[common], help="Summarize newest N papers."
@@ -217,6 +234,20 @@ def require_runtime_deps() -> None:
             + ", ".join(missing)
             + ". Install with: python3 -m pip install -r requirements.txt"
         )
+
+
+def resolve_api_key() -> str:
+    for env_name in ("LLM_API_KEY", "DASHSCOPE_API_KEY", "OPENAI_API_KEY"):
+        value = os.getenv(env_name, "").strip()
+        if value:
+            return value
+
+    if sys.stdin.isatty() and not os.getenv("CI"):
+        value = getpass.getpass("Enter LLM API key (input hidden): ").strip()
+        if value:
+            return value
+
+    return ""
 
 
 def clean_text(value: str) -> str:
@@ -713,16 +744,21 @@ def parse_json_response(text: str) -> dict[str, Any]:
 
 
 class LLMRunner:
-    def __init__(self, model_fast: str, model_deep: str) -> None:
+    def __init__(self, model_fast: str, model_deep: str, base_url: str | None = None) -> None:
         if OpenAI is None:
             raise RuntimeError(
                 "Missing dependency: openai. Install with: python3 -m pip install -r requirements.txt"
             )
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
+        api_key = resolve_api_key()
         if not api_key:
-            raise RuntimeError("OPENAI_API_KEY is required.")
-        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+            raise RuntimeError("API key is required. Set LLM_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY.")
+        final_base_url = (
+            (base_url or "").strip()
+            or os.getenv("LLM_BASE_URL", "").strip()
+            or os.getenv("OPENAI_BASE_URL", "").strip()
+            or None
+        )
+        self.client = OpenAI(api_key=api_key, base_url=final_base_url)
         self.model_fast = model_fast
         self.model_deep = model_deep
 
@@ -978,7 +1014,11 @@ def run_summarize_new(args: argparse.Namespace) -> int:
     else:
         selected = records[: args.n]
 
-    runner = LLMRunner(model_fast=DEFAULT_MODEL_FAST, model_deep=DEFAULT_MODEL_DEEP)
+    runner = LLMRunner(
+        model_fast=args.model_fast,
+        model_deep=args.model_deep,
+        base_url=args.base_url,
+    )
     session = build_http_session()
 
     run_records: list[dict[str, Any]] = []
@@ -1024,7 +1064,11 @@ def run_summarize_one(args: argparse.Namespace) -> int:
     records = sort_newest(load_records(input_path))
     paper = pick_one_record(records, arxiv_id=args.arxiv_id, index=args.index)
 
-    runner = LLMRunner(model_fast=DEFAULT_MODEL_FAST, model_deep=DEFAULT_MODEL_DEEP)
+    runner = LLMRunner(
+        model_fast=args.model_fast,
+        model_deep=args.model_deep,
+        base_url=args.base_url,
+    )
     session = build_http_session()
 
     rec = summarize_single_paper(

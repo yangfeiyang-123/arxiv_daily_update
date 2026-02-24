@@ -129,6 +129,8 @@ window.MYARXIV_CONFIG = {
   openSummaryActionsAfterTrigger: false,
   summaryDailyMode: "fast",
   summaryOneMode: "deep",
+  summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
+  summaryModel: "qwen-plus",
 };
 ```
 
@@ -137,8 +139,8 @@ window.MYARXIV_CONFIG = {
 4. 在 GitHub 仓库配置 Secret（用于总结工作流）
 
 - Settings -> Secrets and variables -> Actions -> New repository secret
-- Name: `OPENAI_API_KEY`
-- Value: 你的 OpenAI API Key
+- Name: `DASHSCOPE_API_KEY`
+- Value: 你的 Qwen API Key
 
 ### 一次性推送命令（最短）
 
@@ -201,19 +203,21 @@ cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv
 python3 -m pip install -r requirements.txt
 ```
 
-### 环境变量
+### 环境变量（Qwen 推荐）
 
 ```bash
-export OPENAI_API_KEY="你的key"
-export OPENAI_MODEL_FAST="gpt-4.1-mini"
-export OPENAI_MODEL_DEEP="gpt-4.1"
+export DASHSCOPE_API_KEY="你的key"
+export LLM_BASE_URL="https://coding.dashscope.aliyuncs.com/v1"
+export LLM_MODEL_FAST="qwen-plus"
+export LLM_MODEL_DEEP="qwen-max"
 ```
 
 可选：
 
 - `FULLTEXT_MIN_CHARS`（默认 `30000`）
 - `FULLTEXT_CHUNK_MAX_CHARS`（默认 `12000`）
-- `OPENAI_BASE_URL`（如需代理/兼容网关）
+- `OPENAI_BASE_URL`（兼容变量名，仍可用）
+- `LLM_API_KEY` / `OPENAI_API_KEY`（兼容变量名，仍可用）
 
 ### 用法
 

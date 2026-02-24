@@ -41,6 +41,8 @@ window.MYARXIV_CONFIG = {
   openSummaryActionsAfterTrigger: false,
   summaryDailyMode: "fast",
   summaryOneMode: "deep",
+  summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
+  summaryModel: "qwen-plus",
 };
 ```
 
@@ -50,4 +52,4 @@ Commit and push to GitHub Pages.
 
 - CORS is restricted by `ALLOWED_ORIGIN` in `wrangler.toml`.
 - You can set multiple allowed origins separated by commas.
-- Add repository secret `OPENAI_API_KEY` for summary workflow.
+- Add repository secret `DASHSCOPE_API_KEY` for summary workflow.

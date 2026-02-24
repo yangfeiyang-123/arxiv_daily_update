@@ -41,6 +41,8 @@ export default {
     const action = String(payload.action || "update");
     const updateWorkflow = env.UPDATE_WORKFLOW_FILE || env.GITHUB_WORKFLOW_FILE || "update-cs-ro.yml";
     const summarizeWorkflow = env.SUMMARIZE_WORKFLOW_FILE || "summarize-papers.yml";
+    const defaultBaseUrl = env.DEFAULT_LLM_BASE_URL || "https://coding.dashscope.aliyuncs.com/v1";
+    const defaultModel = env.DEFAULT_LLM_MODEL || "qwen-plus";
     const workflow = resolveWorkflow(action, updateWorkflow, summarizeWorkflow);
     if (!workflow) {
       return json(
@@ -54,7 +56,7 @@ export default {
       );
     }
 
-    const workflowInputs = buildWorkflowInputs(action, payload);
+    const workflowInputs = buildWorkflowInputs(action, payload, { defaultBaseUrl, defaultModel });
     if (workflowInputs.__error) {
       return json(
         {
@@ -120,7 +122,9 @@ function resolveWorkflow(action, updateWorkflow, summarizeWorkflow) {
   return "";
 }
 
-function buildWorkflowInputs(action, payload) {
+function buildWorkflowInputs(action, payload, defaults = {}) {
+  const baseUrl = String(payload.base_url || defaults.defaultBaseUrl || "").trim();
+  const model = String(payload.model || defaults.defaultModel || "qwen-plus").trim() || "qwen-plus";
   if (action === "summarize_new") {
     return {
       target: "new",
@@ -128,6 +132,8 @@ function buildWorkflowInputs(action, payload) {
       mode: payload.mode === "deep" ? "deep" : "fast",
       latest_day_only: payload.latest_day_only === false ? "false" : "true",
       daily_report: payload.daily_report === false ? "false" : "true",
+      base_url: baseUrl,
+      model,
     };
   }
 
@@ -140,6 +146,8 @@ function buildWorkflowInputs(action, payload) {
       target: "one",
       arxiv_id: arxivId,
       mode: payload.mode === "fast" ? "fast" : "deep",
+      base_url: baseUrl,
+      model,
     };
   }
 

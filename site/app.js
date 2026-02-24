@@ -15,6 +15,8 @@ const OPEN_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openActionsAfterTrigger !== false;
 const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTrigger === true;
 const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
 const SUMMARY_ONE_MODE = APP_CONFIG.summaryOneMode === "fast" ? "fast" : "deep";
+const SUMMARY_BASE_URL = String(APP_CONFIG.summaryBaseUrl || "https://coding.dashscope.aliyuncs.com/v1").trim();
+const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen-plus").trim() || "qwen-plus";
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const INITIAL_VISIBLE_COUNT = 120;
@@ -48,6 +50,7 @@ const triggerUpdateBtn = document.getElementById("triggerUpdateBtn");
 const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
 const triggerSummaryDailyBtn = document.getElementById("triggerSummaryDailyBtn");
 const triggerSummaryMsg = document.getElementById("triggerSummaryMsg");
+const summaryModelSelect = document.getElementById("summaryModelSelect");
 const moreWrap = document.getElementById("moreWrap");
 const loadMoreBtn = document.getElementById("loadMoreBtn");
 
@@ -257,6 +260,13 @@ function openSummaryWorkflowPage(msg) {
   }
 }
 
+function getSelectedSummaryModel() {
+  if (summaryModelSelect && summaryModelSelect.value) {
+    return summaryModelSelect.value.trim();
+  }
+  return SUMMARY_MODEL_DEFAULT;
+}
+
 async function dispatchWorkerAction(action, payload = {}) {
   if (!WORKER_TRIGGER_URL) {
     throw new Error("missing worker endpoint");
@@ -339,6 +349,8 @@ async function triggerSummaryDailyViaWorker() {
       latest_day_only: true,
       daily_report: true,
       n: 300,
+      model: getSelectedSummaryModel(),
+      base_url: SUMMARY_BASE_URL,
     });
     setSummaryMessage("批量总结任务已触发。总结完成后会自动写入仓库并部署。");
     if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
@@ -374,6 +386,8 @@ async function triggerSummaryOneViaWorker(arxivId, btn) {
     await dispatchWorkerAction("summarize_one", {
       mode: SUMMARY_ONE_MODE,
       arxiv_id: arxivId,
+      model: getSelectedSummaryModel(),
+      base_url: SUMMARY_BASE_URL,
     });
     setSummaryMessage(`单篇总结任务已触发：${arxivId}`);
     if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
@@ -585,6 +599,17 @@ function renderPapersGroupedByDate() {
 }
 
 function bindEvents() {
+  if (summaryModelSelect && SUMMARY_MODEL_DEFAULT) {
+    const hasOpt = [...summaryModelSelect.options].some((opt) => opt.value === SUMMARY_MODEL_DEFAULT);
+    if (!hasOpt) {
+      const extra = document.createElement("option");
+      extra.value = SUMMARY_MODEL_DEFAULT;
+      extra.textContent = SUMMARY_MODEL_DEFAULT;
+      summaryModelSelect.appendChild(extra);
+    }
+    summaryModelSelect.value = SUMMARY_MODEL_DEFAULT;
+  }
+
   fieldSelect.addEventListener("change", (event) => {
     state.selectedField = event.target.value;
     updateOriginLink();

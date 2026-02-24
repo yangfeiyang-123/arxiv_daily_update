@@ -9,4 +9,8 @@ window.MYARXIV_CONFIG = {
   summaryDailyMode: "fast",
   // Optional: deep or fast
   summaryOneMode: "deep",
+  // Qwen OpenAI-compatible endpoint:
+  summaryBaseUrl: "https://coding.dashscope.aliyuncs.com/v1",
+  // Default summary model for UI selector.
+  summaryModel: "qwen-plus",
 };

@@ -23,6 +23,14 @@ on:
           - fast
           - deep
         default: fast
+      model:
+        description: "LLM model name, e.g. qwen-plus / qwen-max"
+        required: false
+        default: "qwen-plus"
+      base_url:
+        description: "OpenAI-compatible API base URL"
+        required: false
+        default: "https://coding.dashscope.aliyuncs.com/v1"
       arxiv_id:
         description: "For target=one: e.g., 2401.12345"
         required: false
@@ -63,20 +71,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Validate OpenAI key
+      - name: Validate LLM key
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_API_KEY: ${{ secrets.DASHSCOPE_API_KEY || secrets.OPENAI_API_KEY }}
         run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "::error::Missing OPENAI_API_KEY in repository Secrets."
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "::error::Missing DASHSCOPE_API_KEY (or OPENAI_API_KEY) in repository Secrets."
             exit 1
           fi
 
       - name: Summarize papers
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL_FAST: ${{ vars.OPENAI_MODEL_FAST }}
-          OPENAI_MODEL_DEEP: ${{ vars.OPENAI_MODEL_DEEP }}
+          LLM_API_KEY: ${{ secrets.DASHSCOPE_API_KEY || secrets.OPENAI_API_KEY }}
         run: |
           mkdir -p outputs/summaries
           if [ "${{ inputs.target }}" = "one" ]; then
@@ -88,6 +94,9 @@ jobs:
               --input data/latest_cs_daily.json \
               --arxiv_id "${{ inputs.arxiv_id }}" \
               --mode "${{ inputs.mode }}" \
+              --base-url "${{ inputs.base_url }}" \
+              --model-fast "${{ inputs.model }}" \
+              --model-deep "${{ inputs.model }}" \
               --output-dir outputs/summaries
           else
             EXTRA=""
@@ -101,6 +110,9 @@ jobs:
               --input data/latest_cs_daily.json \
               --n "${{ inputs.n }}" \
               --mode "${{ inputs.mode }}" \
+              --base-url "${{ inputs.base_url }}" \
+              --model-fast "${{ inputs.model }}" \
+              --model-deep "${{ inputs.model }}" \
               --output-dir outputs/summaries \
               $EXTRA
           fi
