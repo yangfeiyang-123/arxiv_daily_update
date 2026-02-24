@@ -26,6 +26,7 @@ const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
 const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
+const SUMMARY_STATUS_POLL_MS = 4500;
 const INITIAL_VISIBLE_COUNT = 120;
 const VISIBLE_STEP = 120;
 
@@ -47,6 +48,9 @@ const state = {
     activeTitle: "",
     activePublished: "",
     messages: [],
+    pollTimerId: 0,
+    pollContext: null,
+    lastStatusSignature: "",
   },
 };
 
@@ -269,8 +273,10 @@ function loadSummaryDialogMemory() {
 function setSummaryDialogOpen(open) {
   state.summaryDialog.open = Boolean(open);
   if (summaryDialog) {
-    summaryDialog.classList.toggle("hidden", !state.summaryDialog.open);
+    summaryDialog.classList.remove("hidden");
+    summaryDialog.classList.toggle("is-open", state.summaryDialog.open);
   }
+  document.body.classList.toggle("summary-open", state.summaryDialog.open);
   persistSummaryDialogMemory();
 }
 
@@ -506,6 +512,92 @@ async function dispatchWorkerAction(action, payload = {}) {
   return await resp.json();
 }
 
+function summarizeRunStatusText(statusPayload) {
+  if (!statusPayload || !statusPayload.found || !statusPayload.run) {
+    return "等待工作流创建中...";
+  }
+  const run = statusPayload.run;
+  const lines = [
+    `工作流状态：${run.status || "unknown"}${run.conclusion ? ` / ${run.conclusion}` : ""}`,
+  ];
+  const jobs = Array.isArray(statusPayload.jobs) ? statusPayload.jobs : [];
+  jobs.forEach((job) => {
+    lines.push(`- Job ${job.name || "unnamed"}：${job.status || "unknown"}${job.conclusion ? ` / ${job.conclusion}` : ""}`);
+    const steps = Array.isArray(job.steps) ? job.steps : [];
+    steps.forEach((step) => {
+      lines.push(`  · ${step.name || "step"}：${step.status || "unknown"}${step.conclusion ? ` / ${step.conclusion}` : ""}`);
+    });
+  });
+  return lines.join("\n");
+}
+
+function stopSummaryStatusPolling() {
+  const timerId = state.summaryDialog.pollTimerId;
+  if (timerId) {
+    clearInterval(timerId);
+  }
+  state.summaryDialog.pollTimerId = 0;
+  state.summaryDialog.pollContext = null;
+  state.summaryDialog.lastStatusSignature = "";
+}
+
+async function pollSummaryStatusOnce() {
+  const ctx = state.summaryDialog.pollContext;
+  if (!ctx) return;
+  try {
+    const statusPayload = await dispatchWorkerAction("summary_status", {
+      client_tag: ctx.clientTag || "",
+      arxiv_id: ctx.arxivId || "",
+    });
+    const statusText = summarizeRunStatusText(statusPayload);
+    if (statusText !== state.summaryDialog.lastStatusSignature) {
+      state.summaryDialog.lastStatusSignature = statusText;
+      pushSummaryDialogMessage("system", statusText);
+    }
+
+    const run = statusPayload?.run;
+    if (!run || run.status !== "completed") {
+      return;
+    }
+
+    stopSummaryStatusPolling();
+
+    if (run.conclusion !== "success") {
+      pushSummaryDialogMessage(
+        "system",
+        `任务完成但失败：${run.conclusion || "unknown"}\n可在 Actions 查看详情：${run.html_url || SUMMARY_WORKFLOW_PAGE_URL}`
+      );
+      return;
+    }
+
+    if (ctx.type === "one") {
+      const found = await fetchSummaryMarkdown(ctx.meta || {}, true);
+      if (found) {
+        pushSummaryDialogMessage("assistant", `总结已生成（${found.path}）\n\n${found.text}`);
+      } else {
+        pushSummaryDialogMessage("system", "任务成功，但网站还未同步到最新总结文件，请稍后点“刷新”。");
+      }
+    } else {
+      pushSummaryDialogMessage("system", "批量总结任务已完成。你可以在页面刷新后查看最新结果。");
+    }
+  } catch (err) {
+    const msg = `状态轮询失败：${String(err?.message || err)}`;
+    if (msg !== state.summaryDialog.lastStatusSignature) {
+      state.summaryDialog.lastStatusSignature = msg;
+      pushSummaryDialogMessage("system", msg);
+    }
+  }
+}
+
+function startSummaryStatusPolling(context) {
+  stopSummaryStatusPolling();
+  state.summaryDialog.pollContext = context;
+  pollSummaryStatusOnce();
+  state.summaryDialog.pollTimerId = window.setInterval(() => {
+    pollSummaryStatusOnce();
+  }, SUMMARY_STATUS_POLL_MS);
+}
+
 async function triggerUpdateViaWorker() {
   if (!WORKER_TRIGGER_URL) {
     setTriggerMessage("未配置 Worker 触发地址，正在打开 Actions 页面。");
@@ -552,11 +644,13 @@ function extractArxivId(value) {
 
 async function triggerSummaryDailyViaWorker() {
   if (!triggerSummaryDailyBtn) return;
+  setSummaryDialogOpen(true);
   if (!WORKER_TRIGGER_URL) {
     openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
     return;
   }
 
+  const clientTag = `daily-${Date.now().toString(36)}`;
   triggerSummaryDailyBtn.disabled = true;
   triggerSummaryDailyBtn.textContent = "触发中...";
   setSummaryMessage("正在触发“最近1天新文”批量总结任务...");
@@ -568,8 +662,15 @@ async function triggerSummaryDailyViaWorker() {
       n: 300,
       model: getSelectedSummaryModel(),
       base_url: SUMMARY_BASE_URL,
+      client_tag: clientTag,
     });
     setSummaryMessage("批量总结任务已触发。总结完成后会自动写入仓库并部署。");
+    startSummaryStatusPolling({
+      type: "daily",
+      clientTag,
+      arxivId: "",
+    });
+    pushSummaryDialogMessage("system", "已触发批量总结，正在实时轮询任务进度...");
     if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
       setTimeout(() => {
         window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
@@ -601,6 +702,7 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
   btn.disabled = true;
   btn.textContent = "触发中...";
   setSummaryMessage(`正在触发单篇总结：${arxivId}`);
+  const clientTag = `one-${arxivId}-${Date.now().toString(36)}`;
 
   try {
     await dispatchWorkerAction("summarize_one", {
@@ -608,6 +710,7 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
       arxiv_id: arxivId,
       model: getSelectedSummaryModel(),
       base_url: SUMMARY_BASE_URL,
+      client_tag: clientTag,
     });
     setSummaryMessage(`单篇总结任务已触发：${arxivId}`);
     if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
@@ -615,14 +718,14 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
         window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
       }, 350);
     }
-    return true;
+    return { ok: true, clientTag };
   } catch (err) {
     console.error(err);
     setSummaryMessage(`单篇触发失败：${String(err?.message || err)}`);
     if (options.openWorkflowOnError !== false) {
       openSummaryWorkflowPage("单篇总结触发失败，已打开总结 workflow 页面。");
     }
-    return false;
+    return { ok: false, clientTag: "" };
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
@@ -642,12 +745,18 @@ async function showSummaryInDialogForPaper(meta, btn) {
   }
 
   pushSummaryDialogMessage("system", "当前还没有可用总结，正在触发后台单篇总结任务。");
-  const ok = await triggerSummaryOneViaWorker(meta.arxivId, btn, { openWorkflowOnError: false });
-  if (ok) {
+  const result = await triggerSummaryOneViaWorker(meta.arxivId, btn, { openWorkflowOnError: false });
+  if (result.ok) {
     pushSummaryDialogMessage(
       "system",
-      "总结任务已触发。几分钟后点“刷新”查看结果。"
+      "总结任务已触发。下面会实时显示任务阶段进度。"
     );
+    startSummaryStatusPolling({
+      type: "one",
+      clientTag: result.clientTag,
+      arxivId: meta.arxivId,
+      meta,
+    });
   } else {
     pushSummaryDialogMessage(
       "system",
@@ -673,7 +782,7 @@ async function refreshSummaryDialog() {
     pushSummaryDialogMessage("assistant", `刷新成功（${found.path}）\n\n${found.text}`);
     return;
   }
-  pushSummaryDialogMessage("system", "仍未找到总结文件，请稍后再试。");
+  pushSummaryDialogMessage("system", "仍未找到总结文件，请稍后再试；如果任务在跑，下面会持续显示进度。");
 }
 
 function getCurrentField() {
@@ -923,6 +1032,7 @@ function bindEvents() {
 
   if (summaryDialogCloseBtn) {
     summaryDialogCloseBtn.addEventListener("click", () => {
+      stopSummaryStatusPolling();
       setSummaryDialogOpen(false);
     });
   }

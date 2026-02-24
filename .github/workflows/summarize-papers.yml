@@ -1,4 +1,5 @@
 name: Summarize arXiv Papers (Full Text)
+run-name: summarize-${{ inputs.target }}-${{ inputs.client_tag }}-${{ inputs.model }}
 
 on:
   workflow_dispatch:
@@ -43,6 +44,10 @@ on:
         description: "For target=new: also generate one daily report"
         required: false
         default: "true"
+      client_tag:
+        description: "Client-side tracking id for UI polling"
+        required: false
+        default: ""
 
 permissions:
   contents: write

@@ -70,6 +70,11 @@ body {
   padding: 32px 20px 52px;
   position: relative;
   z-index: 2;
+  transition: transform 0.45s cubic-bezier(0.22, 0.72, 0, 1);
+}
+
+body.summary-open .page-shell {
+  transform: translateX(-230px);
 }
 
 .hero {
@@ -502,6 +507,16 @@ select:focus {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   z-index: 30;
   backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateX(110%);
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.22, 0.72, 0, 1), opacity 0.3s ease;
+}
+
+.summary-dialog.is-open {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
 }
 
 .summary-dialog-header {
@@ -643,6 +658,10 @@ select:focus {
 
   .page-shell {
     padding: 18px 14px 34px;
+  }
+
+  body.summary-open .page-shell {
+    transform: none;
   }
 
   .summary-dialog {

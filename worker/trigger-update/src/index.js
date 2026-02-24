@@ -41,15 +41,41 @@ export default {
     const action = String(payload.action || "update");
     const updateWorkflow = env.UPDATE_WORKFLOW_FILE || env.GITHUB_WORKFLOW_FILE || "update-cs-ro.yml";
     const summarizeWorkflow = env.SUMMARIZE_WORKFLOW_FILE || "summarize-papers.yml";
-    const defaultBaseUrl = env.DEFAULT_LLM_BASE_URL || "https://coding.dashscope.aliyuncs.com/v1";
-    const defaultModel = env.DEFAULT_LLM_MODEL || "qwen-plus";
+    const defaultBaseUrl = env.DEFAULT_LLM_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
+    const defaultModel = env.DEFAULT_LLM_MODEL || "qwen3.5-397b-a17b";
+
+    if (action === "summary_status") {
+      try {
+        const status = await fetchSummaryStatus({
+          owner,
+          repo,
+          token,
+          workflow: summarizeWorkflow,
+          ref,
+          arxivId: String(payload.arxiv_id || "").trim(),
+          clientTag: String(payload.client_tag || "").trim(),
+        });
+        return json({ ok: true, ...status }, 200, corsHeaders);
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: "summary status failed",
+            detail: String(err?.message || err),
+          },
+          502,
+          corsHeaders
+        );
+      }
+    }
+
     const workflow = resolveWorkflow(action, updateWorkflow, summarizeWorkflow);
     if (!workflow) {
       return json(
         {
           ok: false,
           error: "invalid action",
-          supported_actions: ["update", "summarize_new", "summarize_one"],
+          supported_actions: ["update", "summarize_new", "summarize_one", "summary_status"],
         },
         400,
         corsHeaders
@@ -124,7 +150,10 @@ function resolveWorkflow(action, updateWorkflow, summarizeWorkflow) {
 
 function buildWorkflowInputs(action, payload, defaults = {}) {
   const baseUrl = String(payload.base_url || defaults.defaultBaseUrl || "").trim();
-  const model = String(payload.model || defaults.defaultModel || "qwen-plus").trim() || "qwen-plus";
+  const model =
+    String(payload.model || defaults.defaultModel || "qwen3.5-397b-a17b").trim() ||
+    "qwen3.5-397b-a17b";
+  const clientTag = String(payload.client_tag || "").trim();
   if (action === "summarize_new") {
     return {
       target: "new",
@@ -134,6 +163,7 @@ function buildWorkflowInputs(action, payload, defaults = {}) {
       daily_report: payload.daily_report === false ? "false" : "true",
       base_url: baseUrl,
       model,
+      client_tag: clientTag,
     };
   }
 
@@ -148,6 +178,7 @@ function buildWorkflowInputs(action, payload, defaults = {}) {
       mode: payload.mode === "fast" ? "fast" : "deep",
       base_url: baseUrl,
       model,
+      client_tag: clientTag,
     };
   }
 
@@ -194,4 +225,91 @@ function json(data, status, headers = {}) {
       ...headers,
     },
   });
+}
+
+async function ghJson(url, token) {
+  const resp = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "arxiv-trigger-update-worker",
+    },
+  });
+  if (!resp.ok) {
+    const detail = await resp.text();
+    throw new Error(`GitHub API ${resp.status}: ${detail}`);
+  }
+  return await resp.json();
+}
+
+function matchRun(run, arxivId, clientTag) {
+  const title = `${run?.display_title || ""} ${run?.name || ""}`.toLowerCase();
+  if (clientTag && !title.includes(clientTag.toLowerCase())) {
+    return false;
+  }
+  if (arxivId && !title.includes(arxivId.toLowerCase())) {
+    return false;
+  }
+  return true;
+}
+
+function summarizeJobs(jobResp) {
+  const jobs = Array.isArray(jobResp?.jobs) ? jobResp.jobs : [];
+  return jobs.map((job) => ({
+    name: job.name,
+    status: job.status,
+    conclusion: job.conclusion,
+    started_at: job.started_at,
+    completed_at: job.completed_at,
+    steps: (job.steps || []).map((s) => ({
+      name: s.name,
+      status: s.status,
+      conclusion: s.conclusion,
+      number: s.number,
+      started_at: s.started_at,
+      completed_at: s.completed_at,
+    })),
+  }));
+}
+
+async function fetchSummaryStatus({ owner, repo, token, workflow, ref, arxivId, clientTag }) {
+  const runsUrl = new URL(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/runs`);
+  runsUrl.searchParams.set("event", "workflow_dispatch");
+  runsUrl.searchParams.set("branch", ref);
+  runsUrl.searchParams.set("per_page", "20");
+
+  const runsResp = await ghJson(runsUrl.toString(), token);
+  const runs = Array.isArray(runsResp?.workflow_runs) ? runsResp.workflow_runs : [];
+
+  let run = runs.find((r) => matchRun(r, arxivId, clientTag));
+  if (!run) {
+    run = runs[0];
+  }
+  if (!run) {
+    return {
+      found: false,
+      message: "no workflow run found yet",
+    };
+  }
+
+  const jobsUrl = `https://api.github.com/repos/${owner}/${repo}/actions/runs/${run.id}/jobs?per_page=50`;
+  const jobsResp = await ghJson(jobsUrl, token);
+  const jobs = summarizeJobs(jobsResp);
+
+  return {
+    found: true,
+    run: {
+      id: run.id,
+      name: run.name,
+      display_title: run.display_title,
+      status: run.status,
+      conclusion: run.conclusion,
+      html_url: run.html_url,
+      created_at: run.created_at,
+      updated_at: run.updated_at,
+    },
+    jobs,
+  };
 }
