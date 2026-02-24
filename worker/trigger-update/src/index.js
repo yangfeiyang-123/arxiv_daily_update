@@ -285,12 +285,9 @@ async function fetchSummaryStatus({ owner, repo, token, workflow, ref, arxivId, 
 
   let run = runs.find((r) => matchRun(r, arxivId, clientTag));
   if (!run) {
-    run = runs[0];
-  }
-  if (!run) {
     return {
       found: false,
-      message: "no workflow run found yet",
+      message: "no matched workflow run found yet",
     };
   }
 

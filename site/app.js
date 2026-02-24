@@ -15,6 +15,7 @@ const WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/act
 const SUMMARY_WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${SUMMARY_WORKFLOW_FILE}`;
 const APP_CONFIG = window.MYARXIV_CONFIG || {};
 const WORKER_TRIGGER_URL = String(APP_CONFIG.triggerEndpoint || "").trim();
+const REALTIME_ENDPOINT = String(APP_CONFIG.realtimeEndpoint || "").trim().replace(/\/+$/, "");
 const OPEN_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openActionsAfterTrigger !== false;
 const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTrigger === true;
 const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
@@ -51,6 +52,9 @@ const state = {
     pollTimerId: 0,
     pollContext: null,
     lastStatusSignature: "",
+    streamAbort: null,
+    streamingText: "",
+    streamingActive: false,
   },
 };
 
@@ -288,15 +292,24 @@ function renderSummaryDialog() {
     : "未选择论文";
   summaryDialogSub.textContent = sub;
 
-  if (!state.summaryDialog.messages.length) {
+  const hasHistory = state.summaryDialog.messages.length > 0;
+  const hasStreaming = state.summaryDialog.streamingActive && state.summaryDialog.streamingText;
+
+  if (!hasHistory && !hasStreaming) {
     summaryDialogBody.innerHTML = `<article class="summary-msg system">点击“AI总结此文”后，这里会显示总结结果。</article>`;
   } else {
-    summaryDialogBody.innerHTML = state.summaryDialog.messages
+    const historyHtml = state.summaryDialog.messages
       .map((msg) => {
         const role = ["user", "assistant", "system"].includes(msg.role) ? msg.role : "system";
         return `<article class="summary-msg ${role}">${escapeHtml(msg.text || "")}</article>`;
       })
       .join("");
+
+    const streamingHtml = hasStreaming
+      ? `<article class="summary-msg assistant">${escapeHtml(state.summaryDialog.streamingText)}</article>`
+      : "";
+
+    summaryDialogBody.innerHTML = `${historyHtml}${streamingHtml}`;
   }
 
   summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
@@ -607,6 +620,182 @@ function startSummaryStatusPolling(context) {
   }, SUMMARY_STATUS_POLL_MS);
 }
 
+function stopRealtimeStream() {
+  const ctrl = state.summaryDialog.streamAbort;
+  if (ctrl) {
+    try {
+      ctrl.abort();
+    } catch (_) {
+      // ignore
+    }
+  }
+  state.summaryDialog.streamAbort = null;
+  state.summaryDialog.streamingActive = false;
+  state.summaryDialog.streamingText = "";
+}
+
+function appendStreamingToken(text) {
+  if (!text) return;
+  state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamingText += text;
+  if (state.summaryDialog.streamingText.length > SUMMARY_DIALOG_MAX_TEXT * 4) {
+    state.summaryDialog.streamingText = state.summaryDialog.streamingText.slice(-SUMMARY_DIALOG_MAX_TEXT * 4);
+  }
+  renderSummaryDialog();
+}
+
+function finalizeStreamingAsAssistant() {
+  if (!state.summaryDialog.streamingText) {
+    state.summaryDialog.streamingActive = false;
+    state.summaryDialog.streamingText = "";
+    renderSummaryDialog();
+    return;
+  }
+  pushSummaryDialogMessage("assistant", state.summaryDialog.streamingText);
+  state.summaryDialog.streamingActive = false;
+  state.summaryDialog.streamingText = "";
+  renderSummaryDialog();
+}
+
+function parseSseBlock(rawBlock) {
+  const lines = rawBlock.split(/\r?\n/);
+  let eventName = "message";
+  const dataLines = [];
+  lines.forEach((line) => {
+    if (line.startsWith("event:")) {
+      eventName = line.slice(6).trim() || "message";
+      return;
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice(5).trim());
+    }
+  });
+  const rawData = dataLines.join("\n");
+  let data = rawData;
+  try {
+    data = JSON.parse(rawData);
+  } catch (_) {
+    // keep as string
+  }
+  return { eventName, data };
+}
+
+async function streamSummaryViaRealtime(meta) {
+  if (!REALTIME_ENDPOINT) return false;
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+
+  const ctrl = new AbortController();
+  state.summaryDialog.streamAbort = ctrl;
+  state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamingText = "";
+  renderSummaryDialog();
+
+  const url = `${REALTIME_ENDPOINT}/api/summarize-one/stream`;
+  const model = getSelectedSummaryModel();
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        arxiv_id: meta.arxivId,
+        mode: SUMMARY_ONE_MODE,
+        model,
+        base_url: SUMMARY_BASE_URL,
+        input_path: "data/latest_cs_daily.json",
+        output_dir: "outputs/summaries",
+        save: true,
+      }),
+      signal: ctrl.signal,
+    });
+  } catch (err) {
+    stopRealtimeStream();
+    pushSummaryDialogMessage("system", `实时接口不可用：${String(err?.message || err)}`);
+    return false;
+  }
+
+  if (!response.ok || !response.body) {
+    const detail = await response.text().catch(() => "");
+    stopRealtimeStream();
+    pushSummaryDialogMessage("system", `实时流启动失败：HTTP ${response.status} ${detail}`);
+    return false;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      while (true) {
+        const sepIndex = buffer.indexOf("\n\n");
+        if (sepIndex < 0) break;
+        const rawBlock = buffer.slice(0, sepIndex);
+        buffer = buffer.slice(sepIndex + 2);
+        if (!rawBlock.trim()) continue;
+
+        const evt = parseSseBlock(rawBlock);
+        const data = evt.data && typeof evt.data === "object" ? evt.data : {};
+
+        if (evt.eventName === "stage") {
+          const msg = data.message || data.name || "阶段更新";
+          pushSummaryDialogMessage("system", String(msg));
+          continue;
+        }
+
+        if (evt.eventName === "chunk") {
+          pushSummaryDialogMessage(
+            "system",
+            `分块进度：${data.index || "?"}/${data.total || "?"} (${data.chunk_id || "-"})`
+          );
+          continue;
+        }
+
+        if (evt.eventName === "token") {
+          appendStreamingToken(String(data.text || ""));
+          continue;
+        }
+
+        if (evt.eventName === "done") {
+          finalizeStreamingAsAssistant();
+          pushSummaryDialogMessage(
+            "system",
+            `实时总结完成：${String(data.summary_path || "已生成")}`
+          );
+          stopRealtimeStream();
+          return true;
+        }
+
+        if (evt.eventName === "error") {
+          finalizeStreamingAsAssistant();
+          pushSummaryDialogMessage("system", `实时总结失败：${String(data.message || "unknown error")}`);
+          stopRealtimeStream();
+          return false;
+        }
+      }
+    }
+  } catch (err) {
+    if (!ctrl.signal.aborted) {
+      finalizeStreamingAsAssistant();
+      pushSummaryDialogMessage("system", `实时流中断：${String(err?.message || err)}`);
+    }
+    stopRealtimeStream();
+    return false;
+  }
+
+  finalizeStreamingAsAssistant();
+  stopRealtimeStream();
+  return true;
+}
+
 async function triggerUpdateViaWorker() {
   if (!WORKER_TRIGGER_URL) {
     setTriggerMessage("未配置 Worker 触发地址，正在打开 Actions 页面。");
@@ -653,6 +842,7 @@ function extractArxivId(value) {
 
 async function triggerSummaryDailyViaWorker() {
   if (!triggerSummaryDailyBtn) return;
+  stopRealtimeStream();
   setSummaryDialogOpen(true);
   if (!WORKER_TRIGGER_URL) {
     openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
@@ -751,6 +941,13 @@ async function showSummaryInDialogForPaper(meta, btn) {
   if (found) {
     pushSummaryDialogMessage("assistant", `已找到总结（${found.path}）\n\n${found.text}`);
     return;
+  }
+
+  if (REALTIME_ENDPOINT) {
+    pushSummaryDialogMessage("system", "未找到现成总结，开始实时流式总结...");
+    const streamed = await streamSummaryViaRealtime(meta);
+    if (streamed) return;
+    pushSummaryDialogMessage("system", "实时流不可用，回退到后台任务模式。");
   }
 
   pushSummaryDialogMessage("system", "当前还没有可用总结，正在触发后台单篇总结任务。");
@@ -1042,6 +1239,7 @@ function bindEvents() {
   if (summaryDialogCloseBtn) {
     summaryDialogCloseBtn.addEventListener("click", () => {
       stopSummaryStatusPolling();
+      stopRealtimeStream();
       setSummaryDialogOpen(false);
     });
   }

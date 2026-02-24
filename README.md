@@ -268,3 +268,45 @@ python3 scripts/arxiv_fulltext_summarizer.py summarize_one \
 如果无法拿到合格全文，记录会返回：
 
 - `Full text not available; cannot summarize.`
+
+## 单篇实时流式总结（SSE）
+
+说明：
+
+- 每日批量总结仍走 GitHub Actions（后台异步）
+- 单篇总结可走实时后端（FastAPI + SSE），在网页对话框中实时显示阶段与生成内容
+
+### 1) 启动实时后端
+
+```bash
+cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv
+python3 -m pip install -r requirements.txt
+export DASHSCOPE_API_KEY="你的key"
+python3 scripts/realtime_summary_server.py --host 127.0.0.1 --port 8788
+```
+
+### 2) 配置网页
+
+编辑 `site/config.js`：
+
+```js
+window.MYARXIV_CONFIG = {
+  // ...existing configs
+  realtimeEndpoint: "http://127.0.0.1:8788",
+};
+```
+
+提交后刷新页面。
+
+注意：
+
+- 如果你在 `https://...github.io` 页面使用实时功能，`realtimeEndpoint` 也必须是 `https://`（不能是 `http://127.0.0.1`，会被浏览器拦截 mixed content）。
+
+### 3) 使用
+
+- 点击论文卡片 `AI总结此文`
+- 若有已有总结，直接显示
+- 若没有，页面会实时显示：
+  - `stage`（获取全文、分块、综合）
+  - `chunk`（第 i/j 块）
+  - `token`（最终报告实时生成文本）
