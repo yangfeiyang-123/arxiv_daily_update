@@ -586,6 +586,12 @@ async function pollSummaryStatusOnce() {
     }
     if (liveLogs && Array.isArray(liveLogs.lines) && liveLogs.lines.length > 0) {
       appendSummaryLiveLines(liveLogs.lines);
+      ctx.emptyPollCount = 0;
+    } else {
+      ctx.emptyPollCount = Number(ctx.emptyPollCount || 0) + 1;
+      if (ctx.emptyPollCount === 4) {
+        pushSummaryDialogMessage("system", "仍在等待日志流，请稍候（任务已触发）。");
+      }
     }
     if (liveLogs?.error) {
       const errText = `实时日志暂不可用：${String(liveLogs.error)}`;
@@ -645,6 +651,7 @@ function startSummaryStatusPolling(context) {
     ...context,
     sinceLine: 0,
     lastLiveError: "",
+    emptyPollCount: 0,
   };
   state.summaryDialog.streamingActive = true;
   state.summaryDialog.streamingText = "";

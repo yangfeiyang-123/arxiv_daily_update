@@ -247,8 +247,9 @@ async function ghJson(url, token) {
 }
 
 async function ghText(url, token) {
-  const resp = await fetch(url, {
+  let resp = await fetch(url, {
     method: "GET",
+    redirect: "manual",
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${token}`,
@@ -256,15 +257,28 @@ async function ghText(url, token) {
       "User-Agent": "arxiv-trigger-update-worker",
     },
   });
+
+  // GitHub logs endpoints return 302 to a short-lived download URL.
+  if (resp.status >= 300 && resp.status < 400) {
+    const location = resp.headers.get("Location") || resp.headers.get("location") || "";
+    if (!location) {
+      throw new Error(`GitHub API ${resp.status}: missing redirect location for logs`);
+    }
+    resp = await fetch(location, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "User-Agent": "arxiv-trigger-update-worker",
+      },
+    });
+  }
+
   if (!resp.ok) {
     const detail = await resp.text();
-    throw new Error(`GitHub API ${resp.status}: ${detail}`);
+    throw new Error(`log download ${resp.status}: ${detail}`);
   }
-  const bytes = new Uint8Array(await resp.arrayBuffer());
-  if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4b) {
-    throw new Error("job logs returned zip data");
-  }
-  return new TextDecoder("utf-8").decode(bytes);
+
+  return await resp.text();
 }
 
 function matchRun(run, arxivId, clientTag) {
@@ -318,15 +332,13 @@ function extractLiveLogLines(logText) {
 
     const idxLive = line.indexOf("[LIVE]");
     if (idxLive >= 0) {
-      const msg = line.slice(idxLive + 6).trim();
-      if (msg) out.push(msg);
+      out.push(line.slice(idxLive));
       continue;
     }
 
     const idxModel = line.indexOf("[MODEL]");
     if (idxModel >= 0) {
-      const msg = line.slice(idxModel + 7).trim();
-      if (msg) out.push(`模型输出: ${msg}`);
+      out.push(line.slice(idxModel));
       continue;
     }
 
