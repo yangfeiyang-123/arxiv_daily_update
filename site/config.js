@@ -15,5 +15,5 @@ window.MYARXIV_CONFIG = {
   summaryModel: "qwen3.5-397b-a17b",
   // Optional realtime backend for streaming single-paper summaries.
   // Example: "http://127.0.0.1:8788"
-  realtimeEndpoint: "",
+  realtimeEndpoint: "http://127.0.0.1:8788",
 };
