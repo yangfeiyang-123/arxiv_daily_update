@@ -20,6 +20,7 @@ const state = {
   selectedField: "",
   papers: [],
   filtered: [],
+  newPaperKeys: new Set(),
   sortBy: "published",
   keyword: "",
   rangeMode: "month",
@@ -84,6 +85,48 @@ function shortText(text, max = 280) {
   if (!text) return "";
   if (text.length <= max) return text;
   return `${text.slice(0, max).trim()}...`;
+}
+
+function getPaperIdentity(paper) {
+  if (!paper || typeof paper !== "object") return "unknown";
+  return paper.id || paper.pdf_url || `${paper.title || "untitled"}|${paper.published || ""}`;
+}
+
+function buildPaperKey(fieldCode, paper) {
+  return `${fieldCode || "unknown"}::${getPaperIdentity(paper)}`;
+}
+
+function buildPaperSignature(fieldCode, paper) {
+  return `${buildPaperKey(fieldCode, paper)}::${paper.updated || ""}::${paper.published || ""}`;
+}
+
+function collectPaperSignatures(payload) {
+  const signatures = new Map();
+  const fields = normalizePayload(payload);
+
+  fields.forEach((field) => {
+    (field.papers || []).forEach((paper) => {
+      signatures.set(buildPaperKey(field.code, paper), buildPaperSignature(field.code, paper));
+    });
+  });
+
+  return signatures;
+}
+
+function computeChangedPaperKeys(oldPayload, newPayload) {
+  if (!oldPayload || !newPayload) return new Set();
+
+  const oldSignatures = collectPaperSignatures(oldPayload);
+  const newSignatures = collectPaperSignatures(newPayload);
+  const changed = new Set();
+
+  newSignatures.forEach((signature, key) => {
+    if (!oldSignatures.has(key) || oldSignatures.get(key) !== signature) {
+      changed.add(key);
+    }
+  });
+
+  return changed;
 }
 
 function byDateDesc(key) {
@@ -330,9 +373,11 @@ function applyFilters() {
 
 function renderStats() {
   const currentField = getCurrentField();
+  const currentFieldCode = currentField?.code || "";
   const paperCount = state.filtered.length;
   const allCount = state.papers.length;
   const dateGroups = groupByPublishedDate(state.filtered).length;
+  const newCount = state.filtered.filter((paper) => state.newPaperKeys.has(buildPaperKey(currentFieldCode, paper))).length;
   const rangeLabel =
     state.rangeMode === "month"
       ? `最近${state.windowDays}天`
@@ -348,8 +393,8 @@ function renderStats() {
       <div class="stat-value">${Math.min(state.visibleCount, paperCount)} / ${allCount}</div>
     </article>
     <article class="stat">
-      <div class="stat-label">时间范围 / 日期分组</div>
-      <div class="stat-value">${escapeHtml(rangeLabel)} / ${dateGroups}</div>
+      <div class="stat-label">时间范围 / 日期分组 / 新增</div>
+      <div class="stat-value">${escapeHtml(rangeLabel)} / ${dateGroups} / ${newCount}</div>
     </article>
   `;
 }
@@ -359,12 +404,14 @@ function renderPaperCard(paper, index) {
   const chips = categories
     .map((cat) => `<span class="chip">${escapeHtml(cat)}</span>`)
     .join("");
+  const isNew = state.newPaperKeys.has(buildPaperKey(state.selectedField, paper));
 
   const arxivUrl = escapeHtml(paper.id || "#");
   const pdfUrl = escapeHtml(paper.pdf_url || paper.id || "#");
 
   return `
-    <article class="paper" style="animation-delay:${Math.min(index * 35, 420)}ms">
+    <article class="paper ${isNew ? "paper--new" : ""}" style="animation-delay:${Math.min(index * 35, 420)}ms">
+      ${isNew ? '<div class="paper-new-badge">NEW</div>' : ""}
       <h2 class="paper-title">
         <a href="${arxivUrl}" target="_blank" rel="noreferrer">${escapeHtml(paper.title || "Untitled")}</a>
       </h2>
@@ -485,10 +532,11 @@ function normalizePayload(payload) {
   ];
 }
 
-function applyPayload(payload, sourceLabel) {
+function applyPayload(payload, sourceLabel, options = {}) {
   const fields = normalizePayload(payload);
   state.fields = new Map(fields.map((field) => [field.code, field]));
   state.selectedField = fields[0]?.code || "";
+  state.newPaperKeys = options.newPaperKeys instanceof Set ? options.newPaperKeys : new Set();
   state.windowDays = Number(payload.window_days) > 0 ? Number(payload.window_days) : 30;
   state.rangeMode = "month";
 
@@ -501,12 +549,14 @@ function applyPayload(payload, sourceLabel) {
 
 async function loadData() {
   let hasRenderedCache = false;
+  let cachedPayload = null;
   try {
     let cached = await getCachedPayloadFromCacheApi();
     if (!cached) {
       cached = getCachedPayload();
     }
     if (cached) {
+      cachedPayload = cached;
       applyPayload(cached, "本地缓存");
       hasRenderedCache = true;
     }
@@ -519,7 +569,8 @@ async function loadData() {
     const payload = await resp.json();
     setCachedPayload(payload);
     await setCachedPayloadToCacheApi(payload);
-    applyPayload(payload, "在线数据");
+    const changedPaperKeys = computeChangedPaperKeys(cachedPayload, payload);
+    applyPayload(payload, "在线数据", { newPaperKeys: changedPaperKeys });
   } catch (err) {
     console.error(err);
     if (!hasRenderedCache) {

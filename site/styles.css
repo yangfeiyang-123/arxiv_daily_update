@@ -353,6 +353,7 @@ select:focus {
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 16px;
+  position: relative;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
   display: flex;
   flex-direction: column;
@@ -360,6 +361,27 @@ select:focus {
   opacity: 0;
   transform: translateY(10px);
   animation: cardIn 0.55s ease forwards;
+}
+
+.paper--new {
+  border-color: rgba(255, 138, 61, 0.72);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(51, 209, 198, 0.4) inset;
+  background: linear-gradient(160deg, rgba(255, 138, 61, 0.12), rgba(51, 209, 198, 0.12)),
+    var(--panel-strong);
+}
+
+.paper-new-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #031622;
+  background: linear-gradient(100deg, #ffb15f, #56f0e5);
+  box-shadow: 0 4px 14px rgba(51, 209, 198, 0.35);
 }
 
 .paper-title {
