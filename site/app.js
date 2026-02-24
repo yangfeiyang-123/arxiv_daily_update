@@ -1,8 +1,8 @@
 const dataUrl = window.location.pathname.includes("/site/")
   ? "../data/latest_cs_daily.json"
   : "./data/latest_cs_daily.json";
-const DISPLAY_TIMEZONE = "UTC";
-const DISPLAY_TIMEZONE_LABEL = "UTC";
+const DISPLAY_TIMEZONE = "Asia/Shanghai";
+const DISPLAY_TIMEZONE_LABEL = "北京时间";
 const GITHUB_OWNER = "yangfeiyang-123";
 const GITHUB_REPO = "arxiv_daily_update";
 const WORKFLOW_FILE = "update-cs-ro.yml";
@@ -96,7 +96,23 @@ function byDateDesc(key) {
 
 function extractDateKey(raw) {
   if (!raw) return "unknown";
-  return /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : "unknown";
+  const dt = new Date(raw);
+  if (Number.isNaN(dt.getTime())) {
+    return /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : "unknown";
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: DISPLAY_TIMEZONE,
+  }).formatToParts(dt);
+
+  const year = parts.find((p) => p.type === "year")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  const day = parts.find((p) => p.type === "day")?.value;
+  if (!year || !month || !day) return "unknown";
+  return `${year}-${month}-${day}`;
 }
 
 function getLatestDateKey(papers) {
