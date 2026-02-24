@@ -7,6 +7,7 @@ Supported actions from website:
 - `update` -> `update-cs-ro.yml`
 - `summarize_new` -> `summarize-papers.yml` (latest-day batch summaries)
 - `summarize_one` -> `summarize-papers.yml` (one paper by `arxiv_id`)
+- `summary_status` -> poll run status + live log lines from `Summarize papers` step
 
 ## 1) Prerequisites
 

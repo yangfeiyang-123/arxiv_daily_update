@@ -146,6 +146,27 @@ def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def live_log(message: str) -> None:
+    print(f"[LIVE] {message}", flush=True)
+
+
+def model_log(message: str) -> None:
+    print(f"[MODEL] {message}", flush=True)
+
+
+def short_list_preview(values: Any, max_items: int = 2, max_chars: int = 120) -> str:
+    if not isinstance(values, list):
+        return ""
+    items = [clean_text(str(v)) for v in values if clean_text(str(v))]
+    if not items:
+        return ""
+    picked = items[:max_items]
+    preview = " | ".join(x[:max_chars] for x in picked)
+    if len(items) > max_items:
+        preview += " | ..."
+    return preview
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Summarize arXiv robotics papers from full text using OpenAI API."
@@ -937,20 +958,38 @@ def summarize_single_paper(
     min_chars: int,
     chunk_max_chars: int,
 ) -> dict[str, Any]:
+    aid = paper.arxiv_id
     record: dict[str, Any] = {
-        "arxiv_id": paper.arxiv_id,
+        "arxiv_id": aid,
         "summary_path": "",
         "status": "failed",
         "error": "",
     }
 
     try:
+        live_log(f"{aid} | fetch_full_text start")
         extracted = retrieve_full_text(session=session, paper=paper, min_chars=min_chars)
+        live_log(
+            f"{aid} | fetch_full_text ok source={extracted.source_type} chars={len(extracted.full_text)}"
+        )
         chunks = build_chunks(extracted, max_chars=chunk_max_chars)
+        live_log(f"{aid} | chunk_plan total={len(chunks)}")
 
         chunk_summaries: list[dict[str, Any]] = []
-        for chunk in chunks:
+        for idx, chunk in enumerate(chunks, start=1):
+            live_log(
+                f"{aid} | chunk {idx}/{len(chunks)} start {chunk.chunk_id} {chunk.evidence_pointer}"
+            )
             summary_obj = runner.summarize_chunk(paper=paper, chunk=chunk, mode=mode)
+            kp_preview = short_list_preview(summary_obj.get("key_points", []))
+            md_preview = short_list_preview(summary_obj.get("method_details", []), max_items=1)
+            ex_preview = short_list_preview(summary_obj.get("experiment_details", []), max_items=1)
+            if kp_preview:
+                model_log(f"{aid} | {chunk.chunk_id} key_points: {kp_preview}")
+            if md_preview:
+                model_log(f"{aid} | {chunk.chunk_id} method: {md_preview}")
+            if ex_preview:
+                model_log(f"{aid} | {chunk.chunk_id} eval: {ex_preview}")
             chunk_summaries.append(
                 {
                     "chunk_id": chunk.chunk_id,
@@ -959,16 +998,21 @@ def summarize_single_paper(
                 }
             )
 
+        live_log(f"{aid} | final_synthesis start mode={mode}")
         final_md = runner.synthesize_final(
             paper=paper,
             source_type=extracted.source_type,
             chunk_summaries=chunk_summaries,
             mode=mode,
         )
+        final_preview = clean_text(final_md).replace("\n", " ")[:220]
+        if final_preview:
+            model_log(f"{aid} | final_preview: {final_preview}")
 
         out_path = output_dir / summary_filename(paper)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(final_md, encoding="utf-8")
+        live_log(f"{aid} | write_summary ok {out_path}")
 
         record["summary_path"] = str(out_path)
         record["status"] = "success"
@@ -978,9 +1022,11 @@ def summarize_single_paper(
 
     except FullTextUnavailableError as err:
         record["error"] = str(err)
+        live_log(f"{aid} | full_text_unavailable {record['error']}")
         return record
     except Exception as err:  # noqa: BLE001
         record["error"] = str(err)
+        live_log(f"{aid} | summarize_error {record['error']}")
         return record
 
 
@@ -1074,6 +1120,9 @@ def run_summarize_new(args: argparse.Namespace) -> int:
         selected = [item for item in records if date_key_asia_shanghai(item) == latest_key] if latest_key else []
     else:
         selected = records[: args.n]
+    live_log(
+        f"batch_start mode={args.mode} latest_day_only={bool(args.latest_day_only)} selected={len(selected)}"
+    )
 
     runner = LLMRunner(
         model_fast=args.model_fast,
@@ -1103,11 +1152,15 @@ def run_summarize_new(args: argparse.Namespace) -> int:
     if args.daily_report:
         successful = [r for r in run_records if r.get("status") == "success"]
         if successful:
+            live_log(f"daily_report start source_count={len(successful)}")
             report_md = runner.synthesize_daily_report(successful, mode=args.mode)
             day = now_utc().date().isoformat()
             report_path = output_dir / f"{day}_daily_report.md"
             report_path.write_text(report_md, encoding="utf-8")
             print(f"daily report -> {report_path}", flush=True)
+            preview = clean_text(report_md)[:220]
+            if preview:
+                model_log(f"daily_report preview: {preview}")
 
     index_path = upsert_summary_index(output_dir, run_records)
     print(f"summary index -> {index_path}")
@@ -1115,6 +1168,10 @@ def run_summarize_new(args: argparse.Namespace) -> int:
     print(f"records -> {records_path}")
 
     failed = sum(1 for r in run_records if r.get("status") != "success")
+    success = len(run_records) - failed
+    live_log(f"batch_done success={success} failed={failed}")
+    if success > 0:
+        return 0
     return 0 if failed == 0 else 2
 
 
@@ -1151,9 +1208,11 @@ def run_summarize_one(args: argparse.Namespace) -> int:
 
     if rec["status"] == "success":
         print(f"success -> {rec['summary_path']}")
+        live_log("single_done success=1 failed=0")
         return 0
 
     print(f"failed -> {rec['error']}")
+    live_log("single_done success=0 failed=1")
     return 2
 
 

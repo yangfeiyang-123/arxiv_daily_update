@@ -88,6 +88,7 @@ jobs:
       - name: Summarize papers
         env:
           LLM_API_KEY: ${{ secrets.DASHSCOPE_API_KEY || secrets.OPENAI_API_KEY }}
+          PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p outputs/summaries
           if [ "${{ inputs.target }}" = "one" ]; then

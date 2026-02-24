@@ -16,6 +16,7 @@ const SUMMARY_WORKFLOW_PAGE_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_R
 const APP_CONFIG = window.MYARXIV_CONFIG || {};
 const WORKER_TRIGGER_URL = String(APP_CONFIG.triggerEndpoint || "").trim();
 const REALTIME_ENDPOINT = String(APP_CONFIG.realtimeEndpoint || "").trim().replace(/\/+$/, "");
+const ENABLE_LOCAL_REALTIME = APP_CONFIG.enableLocalRealtime === true;
 const OPEN_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openActionsAfterTrigger !== false;
 const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTrigger === true;
 const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
@@ -554,6 +555,16 @@ function stopSummaryStatusPolling() {
   state.summaryDialog.lastStatusSignature = "";
 }
 
+function appendSummaryLiveLines(lines) {
+  if (!Array.isArray(lines) || lines.length === 0) return;
+  const text = lines
+    .map((line) => String(line || "").trim())
+    .filter(Boolean)
+    .join("\n");
+  if (!text) return;
+  appendStreamingToken(`${state.summaryDialog.streamingText ? "\n" : ""}${text}`);
+}
+
 async function pollSummaryStatusOnce() {
   const ctx = state.summaryDialog.pollContext;
   if (!ctx) return;
@@ -561,11 +572,27 @@ async function pollSummaryStatusOnce() {
     const statusPayload = await dispatchWorkerAction("summary_status", {
       client_tag: ctx.clientTag || "",
       arxiv_id: ctx.arxivId || "",
+      since_line: Number(ctx.sinceLine || 0),
+      max_lines: 90,
     });
     const statusText = summarizeRunStatusText(statusPayload);
     if (statusText !== state.summaryDialog.lastStatusSignature) {
       state.summaryDialog.lastStatusSignature = statusText;
       pushSummaryDialogMessage("system", statusText);
+    }
+    const liveLogs = statusPayload?.live_logs;
+    if (liveLogs && Number.isFinite(Number(liveLogs.total_lines))) {
+      ctx.sinceLine = Number(liveLogs.total_lines);
+    }
+    if (liveLogs && Array.isArray(liveLogs.lines) && liveLogs.lines.length > 0) {
+      appendSummaryLiveLines(liveLogs.lines);
+    }
+    if (liveLogs?.error) {
+      const errText = `实时日志暂不可用：${String(liveLogs.error)}`;
+      if (errText !== ctx.lastLiveError) {
+        ctx.lastLiveError = errText;
+        pushSummaryDialogMessage("system", errText);
+      }
     }
 
     const run = statusPayload?.run;
@@ -573,6 +600,7 @@ async function pollSummaryStatusOnce() {
       return;
     }
 
+    finalizeStreamingAsAssistant();
     stopSummaryStatusPolling();
 
     if (run.conclusion !== "success") {
@@ -613,7 +641,14 @@ async function pollSummaryStatusOnce() {
 
 function startSummaryStatusPolling(context) {
   stopSummaryStatusPolling();
-  state.summaryDialog.pollContext = context;
+  state.summaryDialog.pollContext = {
+    ...context,
+    sinceLine: 0,
+    lastLiveError: "",
+  };
+  state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamingText = "";
+  renderSummaryDialog();
   pollSummaryStatusOnce();
   state.summaryDialog.pollTimerId = window.setInterval(() => {
     pollSummaryStatusOnce();
@@ -943,7 +978,7 @@ async function showSummaryInDialogForPaper(meta, btn) {
     return;
   }
 
-  if (REALTIME_ENDPOINT) {
+  if (ENABLE_LOCAL_REALTIME && REALTIME_ENDPOINT) {
     pushSummaryDialogMessage("system", "未找到现成总结，开始实时流式总结...");
     const streamed = await streamSummaryViaRealtime(meta);
     if (streamed) return;

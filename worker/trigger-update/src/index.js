@@ -54,6 +54,8 @@ export default {
           ref,
           arxivId: String(payload.arxiv_id || "").trim(),
           clientTag: String(payload.client_tag || "").trim(),
+          sinceLine: Number(payload.since_line || 0),
+          maxLines: Number(payload.max_lines || 80),
         });
         return json({ ok: true, ...status }, 200, corsHeaders);
       } catch (err) {
@@ -244,6 +246,27 @@ async function ghJson(url, token) {
   return await resp.json();
 }
 
+async function ghText(url, token) {
+  const resp = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "arxiv-trigger-update-worker",
+    },
+  });
+  if (!resp.ok) {
+    const detail = await resp.text();
+    throw new Error(`GitHub API ${resp.status}: ${detail}`);
+  }
+  const bytes = new Uint8Array(await resp.arrayBuffer());
+  if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4b) {
+    throw new Error("job logs returned zip data");
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 function matchRun(run, arxivId, clientTag) {
   const title = `${run?.display_title || ""} ${run?.name || ""}`.toLowerCase();
   if (clientTag && !title.includes(clientTag.toLowerCase())) {
@@ -255,12 +278,13 @@ function matchRun(run, arxivId, clientTag) {
   return true;
 }
 
-function summarizeJobs(jobResp) {
-  const jobs = Array.isArray(jobResp?.jobs) ? jobResp.jobs : [];
+function summarizeJobs(jobs = []) {
   return jobs.map((job) => ({
+    id: job.id,
     name: job.name,
     status: job.status,
     conclusion: job.conclusion,
+    html_url: job.html_url,
     started_at: job.started_at,
     completed_at: job.completed_at,
     steps: (job.steps || []).map((s) => ({
@@ -274,7 +298,100 @@ function summarizeJobs(jobResp) {
   }));
 }
 
-async function fetchSummaryStatus({ owner, repo, token, workflow, ref, arxivId, clientTag }) {
+function stripAnsi(input) {
+  return String(input || "").replace(/\x1b\[[0-9;]*m/g, "");
+}
+
+function normalizeLogLine(input) {
+  return stripAnsi(input)
+    .replace(/^\d{4}-\d{2}-\d{2}T[0-9:.]+Z\s+/, "")
+    .replace(/^[^[]*##\[command\].*$/, "")
+    .trim();
+}
+
+function extractLiveLogLines(logText) {
+  const rawLines = String(logText || "").split(/\r?\n/);
+  const out = [];
+  for (const raw of rawLines) {
+    const line = normalizeLogLine(raw);
+    if (!line) continue;
+
+    const idxLive = line.indexOf("[LIVE]");
+    if (idxLive >= 0) {
+      const msg = line.slice(idxLive + 6).trim();
+      if (msg) out.push(msg);
+      continue;
+    }
+
+    const idxModel = line.indexOf("[MODEL]");
+    if (idxModel >= 0) {
+      const msg = line.slice(idxModel + 7).trim();
+      if (msg) out.push(`模型输出: ${msg}`);
+      continue;
+    }
+
+    if (
+      /^\[\d+\/\d+\]\s+summarizing\s+/i.test(line) ||
+      /^success\s*->/i.test(line) ||
+      /^failed\s*->/i.test(line) ||
+      /^daily report\s*->/i.test(line) ||
+      /^ERROR:/i.test(line)
+    ) {
+      out.push(line);
+    }
+  }
+  return out;
+}
+
+function pickSummaryJob(rawJobs) {
+  const jobs = Array.isArray(rawJobs) ? rawJobs : [];
+  const byStep = jobs.find((job) =>
+    (job?.steps || []).some((step) => String(step?.name || "").toLowerCase().includes("summarize papers"))
+  );
+  if (byStep) return byStep;
+
+  const byName = jobs.find((job) => String(job?.name || "").toLowerCase().includes("summarize"));
+  if (byName) return byName;
+
+  return jobs[0] || null;
+}
+
+async function fetchJobLiveLogs({ owner, repo, token, jobId, sinceLine, maxLines }) {
+  if (!jobId) {
+    return {
+      total_lines: 0,
+      from_line: 0,
+      lines: [],
+      truncated: false,
+    };
+  }
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/actions/jobs/${jobId}/logs`;
+  const text = await ghText(url, token);
+  const lines = extractLiveLogLines(text);
+  const total = lines.length;
+  const fromLine = Number.isFinite(sinceLine) && sinceLine > 0 ? Math.min(Math.floor(sinceLine), total) : 0;
+  const limit = Number.isFinite(maxLines) && maxLines > 0 ? Math.min(Math.floor(maxLines), 200) : 80;
+  const next = lines.slice(fromLine, fromLine + limit);
+  return {
+    total_lines: total,
+    from_line: fromLine,
+    lines: next,
+    truncated: fromLine + limit < total,
+  };
+}
+
+async function fetchSummaryStatus({
+  owner,
+  repo,
+  token,
+  workflow,
+  ref,
+  arxivId,
+  clientTag,
+  sinceLine,
+  maxLines,
+}) {
   const runsUrl = new URL(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/runs`);
   runsUrl.searchParams.set("event", "workflow_dispatch");
   runsUrl.searchParams.set("branch", ref);
@@ -293,7 +410,34 @@ async function fetchSummaryStatus({ owner, repo, token, workflow, ref, arxivId, 
 
   const jobsUrl = `https://api.github.com/repos/${owner}/${repo}/actions/runs/${run.id}/jobs?per_page=50`;
   const jobsResp = await ghJson(jobsUrl, token);
-  const jobs = summarizeJobs(jobsResp);
+  const rawJobs = Array.isArray(jobsResp?.jobs) ? jobsResp.jobs : [];
+  const jobs = summarizeJobs(rawJobs);
+  const summaryJob = pickSummaryJob(rawJobs);
+
+  let liveLogs = {
+    total_lines: 0,
+    from_line: 0,
+    lines: [],
+    truncated: false,
+  };
+  try {
+    liveLogs = await fetchJobLiveLogs({
+      owner,
+      repo,
+      token,
+      jobId: summaryJob?.id,
+      sinceLine,
+      maxLines,
+    });
+  } catch (err) {
+    liveLogs = {
+      total_lines: 0,
+      from_line: 0,
+      lines: [],
+      truncated: false,
+      error: String(err?.message || err),
+    };
+  }
 
   return {
     found: true,
@@ -308,5 +452,6 @@ async function fetchSummaryStatus({ owner, repo, token, workflow, ref, arxivId, 
       updated_at: run.updated_at,
     },
     jobs,
+    live_logs: liveLogs,
   };
 }
