@@ -997,6 +997,64 @@ def write_records(output_dir: Path, command: str, records: list[dict[str, Any]])
     return path
 
 
+def build_summary_web_path(output_dir: Path, summary_path: str) -> tuple[str, str]:
+    p = Path(summary_path)
+    file_name = p.name
+    parts = list(output_dir.parts)
+    if len(parts) >= 2 and parts[-2:] == ["outputs", "summaries"]:
+        return file_name, f"outputs/summaries/{file_name}"
+    return file_name, file_name
+
+
+def upsert_summary_index(output_dir: Path, records: list[dict[str, Any]]) -> Path:
+    index_path = output_dir / "summary_index.json"
+    index_payload: dict[str, Any] = {
+        "updated_at": now_utc().isoformat(),
+        "items": {},
+    }
+
+    if index_path.exists():
+        try:
+            existing = json.loads(index_path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                index_payload.update(existing)
+            if not isinstance(index_payload.get("items"), dict):
+                index_payload["items"] = {}
+        except Exception:
+            index_payload = {
+                "updated_at": now_utc().isoformat(),
+                "items": {},
+            }
+
+    items: dict[str, Any] = index_payload["items"]
+    ts = now_utc().isoformat()
+
+    for rec in records:
+        if rec.get("status") != "success":
+            continue
+        aid = normalize_arxiv_id(str(rec.get("arxiv_id", "")))
+        summary_path = str(rec.get("summary_path", "")).strip()
+        if not aid or not summary_path:
+            continue
+
+        summary_file, web_path = build_summary_web_path(output_dir, summary_path)
+        entry = {
+            "arxiv_id": aid,
+            "summary_file": summary_file,
+            "summary_path": web_path,
+            "updated_at": ts,
+        }
+        items[aid] = entry
+
+        canonical = canonical_arxiv_id(aid)
+        if canonical and canonical != aid:
+            items[canonical] = entry
+
+    index_payload["updated_at"] = ts
+    write_json(index_path, index_payload)
+    return index_path
+
+
 def run_summarize_new(args: argparse.Namespace) -> int:
     require_runtime_deps()
     input_path = Path(args.input)
@@ -1048,6 +1106,8 @@ def run_summarize_new(args: argparse.Namespace) -> int:
             report_path.write_text(report_md, encoding="utf-8")
             print(f"daily report -> {report_path}", flush=True)
 
+    index_path = upsert_summary_index(output_dir, run_records)
+    print(f"summary index -> {index_path}")
     records_path = write_records(output_dir, "summarize_new", run_records)
     print(f"records -> {records_path}")
 
@@ -1081,6 +1141,8 @@ def run_summarize_one(args: argparse.Namespace) -> int:
         chunk_max_chars=args.chunk_max_chars,
     )
 
+    index_path = upsert_summary_index(output_dir, [rec])
+    print(f"summary index -> {index_path}")
     records_path = write_records(output_dir, "summarize_one", [rec])
     print(f"records -> {records_path}")
 

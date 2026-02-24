@@ -94,7 +94,25 @@
       <p id="errorState" class="error hidden">数据加载失败，请稍后刷新页面。</p>
     </main>
 
+    <aside id="summaryDialog" class="summary-dialog hidden" aria-live="polite">
+      <header class="summary-dialog-header">
+        <div>
+          <h3>AI总结对话框</h3>
+          <p id="summaryDialogSub" class="summary-dialog-sub">未选择论文</p>
+        </div>
+        <div class="summary-dialog-actions">
+          <button id="summaryDialogRefreshBtn" type="button" class="summary-dialog-btn">刷新</button>
+          <button id="summaryDialogClearBtn" type="button" class="summary-dialog-btn">清空记忆</button>
+          <button id="summaryDialogCloseBtn" type="button" class="summary-dialog-btn">关闭</button>
+        </div>
+      </header>
+      <div id="summaryDialogBody" class="summary-dialog-body"></div>
+      <footer class="summary-dialog-footer">
+        <small>记忆说明：本地浏览器会保留最近对话和查看记录。</small>
+      </footer>
+    </aside>
+
     <script src="./config.js?v=20260224-3" defer></script>
-    <script src="./app.js?v=20260224-8" defer></script>
+    <script src="./app.js?v=20260224-9" defer></script>
   </body>
 </html>

@@ -1,6 +1,10 @@
 const dataUrl = window.location.pathname.includes("/site/")
   ? "../data/latest_cs_daily.json"
   : "./data/latest_cs_daily.json";
+const summariesBaseUrl = window.location.pathname.includes("/site/")
+  ? "../outputs/summaries"
+  : "./outputs/summaries";
+const summaryIndexUrl = `${summariesBaseUrl}/summary_index.json`;
 const DISPLAY_TIMEZONE = "Asia/Shanghai";
 const DISPLAY_TIMEZONE_LABEL = "北京时间";
 const GITHUB_OWNER = "yangfeiyang-123";
@@ -19,6 +23,9 @@ const SUMMARY_BASE_URL = String(APP_CONFIG.summaryBaseUrl || "https://coding.das
 const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen-plus").trim() || "qwen-plus";
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
+const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
+const SUMMARY_DIALOG_MAX_MESSAGES = 40;
+const SUMMARY_DIALOG_MAX_TEXT = 12000;
 const INITIAL_VISIBLE_COUNT = 120;
 const VISIBLE_STEP = 120;
 
@@ -33,6 +40,14 @@ const state = {
   rangeMode: "month",
   windowDays: 30,
   visibleCount: INITIAL_VISIBLE_COUNT,
+  summaryIndex: null,
+  summaryDialog: {
+    open: false,
+    activeArxivId: "",
+    activeTitle: "",
+    activePublished: "",
+    messages: [],
+  },
 };
 
 const fieldSelect = document.getElementById("fieldSelect");
@@ -51,6 +66,12 @@ const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
 const triggerSummaryDailyBtn = document.getElementById("triggerSummaryDailyBtn");
 const triggerSummaryMsg = document.getElementById("triggerSummaryMsg");
 const summaryModelSelect = document.getElementById("summaryModelSelect");
+const summaryDialog = document.getElementById("summaryDialog");
+const summaryDialogBody = document.getElementById("summaryDialogBody");
+const summaryDialogSub = document.getElementById("summaryDialogSub");
+const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
+const summaryDialogClearBtn = document.getElementById("summaryDialogClearBtn");
+const summaryDialogRefreshBtn = document.getElementById("summaryDialogRefreshBtn");
 const moreWrap = document.getElementById("moreWrap");
 const loadMoreBtn = document.getElementById("loadMoreBtn");
 
@@ -193,6 +214,202 @@ function setSummaryMessage(text) {
   if (triggerSummaryMsg) {
     triggerSummaryMsg.textContent = text;
   }
+}
+
+function clampDialogText(text) {
+  const value = String(text || "").trim();
+  if (value.length <= SUMMARY_DIALOG_MAX_TEXT) return value;
+  return `${value.slice(0, SUMMARY_DIALOG_MAX_TEXT)}\n\n[内容过长，已截断显示]`;
+}
+
+function extractCanonicalArxivId(arxivId) {
+  return String(arxivId || "").replace(/v\d+$/i, "");
+}
+
+function persistSummaryDialogMemory() {
+  try {
+    const mem = {
+      open: state.summaryDialog.open,
+      activeArxivId: state.summaryDialog.activeArxivId,
+      activeTitle: state.summaryDialog.activeTitle,
+      activePublished: state.summaryDialog.activePublished,
+      messages: state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES),
+    };
+    localStorage.setItem(SUMMARY_DIALOG_MEMORY_KEY, JSON.stringify(mem));
+  } catch (err) {
+    console.warn("save summary dialog memory failed", err);
+  }
+}
+
+function loadSummaryDialogMemory() {
+  try {
+    const raw = localStorage.getItem(SUMMARY_DIALOG_MEMORY_KEY);
+    if (!raw) return;
+    const mem = JSON.parse(raw);
+    if (!mem || typeof mem !== "object") return;
+    state.summaryDialog.open = Boolean(mem.open);
+    state.summaryDialog.activeArxivId = String(mem.activeArxivId || "");
+    state.summaryDialog.activeTitle = String(mem.activeTitle || "");
+    state.summaryDialog.activePublished = String(mem.activePublished || "");
+    if (Array.isArray(mem.messages)) {
+      state.summaryDialog.messages = mem.messages
+        .filter((x) => x && typeof x === "object")
+        .map((x) => ({
+          role: String(x.role || "system"),
+          text: clampDialogText(x.text || ""),
+          ts: String(x.ts || ""),
+        }))
+        .slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+    }
+  } catch (err) {
+    console.warn("load summary dialog memory failed", err);
+  }
+}
+
+function setSummaryDialogOpen(open) {
+  state.summaryDialog.open = Boolean(open);
+  if (summaryDialog) {
+    summaryDialog.classList.toggle("hidden", !state.summaryDialog.open);
+  }
+  persistSummaryDialogMemory();
+}
+
+function renderSummaryDialog() {
+  if (!summaryDialog || !summaryDialogBody || !summaryDialogSub) return;
+
+  const sub = state.summaryDialog.activeArxivId
+    ? `${state.summaryDialog.activeArxivId}${state.summaryDialog.activeTitle ? ` · ${state.summaryDialog.activeTitle}` : ""}`
+    : "未选择论文";
+  summaryDialogSub.textContent = sub;
+
+  if (!state.summaryDialog.messages.length) {
+    summaryDialogBody.innerHTML = `<article class="summary-msg system">点击“AI总结此文”后，这里会显示总结结果。</article>`;
+  } else {
+    summaryDialogBody.innerHTML = state.summaryDialog.messages
+      .map((msg) => {
+        const role = ["user", "assistant", "system"].includes(msg.role) ? msg.role : "system";
+        return `<article class="summary-msg ${role}">${escapeHtml(msg.text || "")}</article>`;
+      })
+      .join("");
+  }
+
+  summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
+}
+
+function pushSummaryDialogMessage(role, text) {
+  const value = clampDialogText(text);
+  if (!value) return;
+  state.summaryDialog.messages.push({
+    role,
+    text: value,
+    ts: new Date().toISOString(),
+  });
+  if (state.summaryDialog.messages.length > SUMMARY_DIALOG_MAX_MESSAGES) {
+    state.summaryDialog.messages = state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+  }
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+}
+
+function clearSummaryDialogMemory() {
+  state.summaryDialog.messages = [];
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+}
+
+function setActiveSummaryPaper(meta = {}) {
+  state.summaryDialog.activeArxivId = String(meta.arxivId || "");
+  state.summaryDialog.activeTitle = String(meta.title || "");
+  state.summaryDialog.activePublished = String(meta.published || "");
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+}
+
+async function ensureSummaryIndex(force = false) {
+  if (state.summaryIndex && !force) return state.summaryIndex;
+  try {
+    const resp = await fetch(summaryIndexUrl, { cache: "no-cache" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    state.summaryIndex = await resp.json();
+    return state.summaryIndex;
+  } catch (err) {
+    state.summaryIndex = null;
+    return null;
+  }
+}
+
+function buildSummaryCandidatePaths(arxivId, published) {
+  const candidates = [];
+  const cleanId = extractArxivId(arxivId);
+  const canonical = extractCanonicalArxivId(cleanId);
+  if (published) {
+    const dt = new Date(published);
+    if (!Number.isNaN(dt.getTime())) {
+      const datePart = new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "UTC",
+      }).format(dt);
+      if (cleanId) {
+        candidates.push(`${summariesBaseUrl}/${datePart}_${cleanId}.md`);
+      }
+      if (canonical && canonical !== cleanId) {
+        candidates.push(`${summariesBaseUrl}/${datePart}_${canonical}.md`);
+      }
+    }
+  }
+  if (cleanId) {
+    candidates.push(`${summariesBaseUrl}/${cleanId}.md`);
+  }
+  if (canonical && canonical !== cleanId) {
+    candidates.push(`${summariesBaseUrl}/${canonical}.md`);
+  }
+  return [...new Set(candidates)];
+}
+
+function readSummaryPathFromIndex(arxivId) {
+  const index = state.summaryIndex;
+  if (!index || typeof index !== "object") return "";
+  const items = index.items && typeof index.items === "object" ? index.items : null;
+  if (!items) return "";
+  const cleanId = extractArxivId(arxivId);
+  const canonical = extractCanonicalArxivId(cleanId);
+  const entry = items[cleanId] || items[canonical];
+  if (!entry || typeof entry !== "object") return "";
+  const relPath = String(entry.summary_path || entry.summary_file || "").trim();
+  if (!relPath) return "";
+  if (relPath.startsWith("http://") || relPath.startsWith("https://")) return relPath;
+  if (relPath.startsWith("outputs/summaries/")) {
+    return window.location.pathname.includes("/site/") ? `../${relPath}` : `./${relPath}`;
+  }
+  if (relPath.endsWith(".md")) {
+    return `${summariesBaseUrl}/${relPath.replace(/^\/+/, "")}`;
+  }
+  return "";
+}
+
+async function fetchSummaryMarkdown(meta, forceIndex = false) {
+  await ensureSummaryIndex(forceIndex);
+  const paths = [];
+  const fromIndex = readSummaryPathFromIndex(meta.arxivId || "");
+  if (fromIndex) paths.push(fromIndex);
+  paths.push(...buildSummaryCandidatePaths(meta.arxivId || "", meta.published || ""));
+
+  const uniquePaths = [...new Set(paths)];
+  for (const path of uniquePaths) {
+    try {
+      const resp = await fetch(path, { cache: "no-cache" });
+      if (!resp.ok) continue;
+      const text = await resp.text();
+      if (text && text.trim().length > 120) {
+        return { text: text.trim(), path };
+      }
+    } catch (_) {
+      // Try next candidate.
+    }
+  }
+  return null;
 }
 
 function getCachedPayload() {
@@ -367,14 +584,16 @@ async function triggerSummaryDailyViaWorker() {
   }
 }
 
-async function triggerSummaryOneViaWorker(arxivId, btn) {
+async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
   if (!arxivId) {
     setSummaryMessage("无法识别 arXiv ID，已跳过。");
-    return;
+    return false;
   }
   if (!WORKER_TRIGGER_URL) {
-    openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
-    return;
+    if (options.openWorkflowOnError !== false) {
+      openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
+    }
+    return false;
   }
 
   const originalText = btn.textContent;
@@ -395,13 +614,64 @@ async function triggerSummaryOneViaWorker(arxivId, btn) {
         window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
       }, 350);
     }
+    return true;
   } catch (err) {
     console.error(err);
-    openSummaryWorkflowPage("单篇总结触发失败，已打开总结 workflow 页面。");
+    if (options.openWorkflowOnError !== false) {
+      openSummaryWorkflowPage("单篇总结触发失败，已打开总结 workflow 页面。");
+    }
+    return false;
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
   }
+}
+
+async function showSummaryInDialogForPaper(meta, btn) {
+  setSummaryDialogOpen(true);
+  setActiveSummaryPaper(meta);
+  pushSummaryDialogMessage("user", `请总结论文：${meta.arxivId}`);
+  pushSummaryDialogMessage("system", "正在检查是否已有总结...");
+
+  const found = await fetchSummaryMarkdown(meta);
+  if (found) {
+    pushSummaryDialogMessage("assistant", `已找到总结（${found.path}）\n\n${found.text}`);
+    return;
+  }
+
+  pushSummaryDialogMessage("system", "当前还没有可用总结，正在触发后台单篇总结任务。");
+  const ok = await triggerSummaryOneViaWorker(meta.arxivId, btn, { openWorkflowOnError: false });
+  if (ok) {
+    pushSummaryDialogMessage(
+      "system",
+      "总结任务已触发。几分钟后点“刷新”查看结果。"
+    );
+  } else {
+    pushSummaryDialogMessage(
+      "system",
+      "总结任务触发失败。请检查 Worker 部署、仓库 Secret（DASHSCOPE_API_KEY）和 Actions 日志。"
+    );
+  }
+}
+
+async function refreshSummaryDialog() {
+  const arxivId = state.summaryDialog.activeArxivId;
+  if (!arxivId) {
+    pushSummaryDialogMessage("system", "未选择论文，无法刷新。");
+    return;
+  }
+  const meta = {
+    arxivId,
+    title: state.summaryDialog.activeTitle,
+    published: state.summaryDialog.activePublished,
+  };
+  pushSummaryDialogMessage("system", "正在刷新总结内容...");
+  const found = await fetchSummaryMarkdown(meta, true);
+  if (found) {
+    pushSummaryDialogMessage("assistant", `刷新成功（${found.path}）\n\n${found.text}`);
+    return;
+  }
+  pushSummaryDialogMessage("system", "仍未找到总结文件，请稍后再试。");
 }
 
 function getCurrentField() {
@@ -534,6 +804,8 @@ function renderPaperCard(paper, index) {
   const arxivUrl = escapeHtml(paper.id || "#");
   const pdfUrl = escapeHtml(paper.pdf_url || paper.id || "#");
   const arxivId = escapeHtml(extractArxivId(paper.id || paper.pdf_url || ""));
+  const published = escapeHtml(paper.published || "");
+  const title = escapeHtml(paper.title || "Untitled");
 
   return `
     <article class="paper ${isNew ? "paper--new" : ""}" style="animation-delay:${Math.min(index * 35, 420)}ms">
@@ -548,7 +820,7 @@ function renderPaperCard(paper, index) {
       <div class="paper-links">
         <a class="paper-link" href="${pdfUrl}" target="_blank" rel="noreferrer">阅读 PDF</a>
         <a class="paper-link alt" href="${arxivUrl}" target="_blank" rel="noreferrer">arXiv 页面</a>
-        <button type="button" class="paper-link ai js-summarize-one" data-arxiv-id="${arxivId}">AI总结此文</button>
+        <button type="button" class="paper-link ai js-summarize-one" data-arxiv-id="${arxivId}" data-published="${published}" data-title="${title}">AI总结此文</button>
       </div>
     </article>
   `;
@@ -599,6 +871,10 @@ function renderPapersGroupedByDate() {
 }
 
 function bindEvents() {
+  loadSummaryDialogMemory();
+  renderSummaryDialog();
+  setSummaryDialogOpen(state.summaryDialog.open);
+
   if (summaryModelSelect && SUMMARY_MODEL_DEFAULT) {
     const hasOpt = [...summaryModelSelect.options].some((opt) => opt.value === SUMMARY_MODEL_DEFAULT);
     if (!hasOpt) {
@@ -650,13 +926,36 @@ function bindEvents() {
     });
   }
 
+  if (summaryDialogCloseBtn) {
+    summaryDialogCloseBtn.addEventListener("click", () => {
+      setSummaryDialogOpen(false);
+    });
+  }
+
+  if (summaryDialogClearBtn) {
+    summaryDialogClearBtn.addEventListener("click", () => {
+      clearSummaryDialogMemory();
+      pushSummaryDialogMessage("system", "已清空本地记忆。");
+    });
+  }
+
+  if (summaryDialogRefreshBtn) {
+    summaryDialogRefreshBtn.addEventListener("click", () => {
+      refreshSummaryDialog();
+    });
+  }
+
   paperGroups.addEventListener("click", (event) => {
     const el = event.target instanceof Element ? event.target : null;
     if (!el) return;
     const target = el.closest(".js-summarize-one");
     if (!target) return;
-    const arxivId = target.getAttribute("data-arxiv-id") || "";
-    triggerSummaryOneViaWorker(arxivId, target);
+    const meta = {
+      arxivId: target.getAttribute("data-arxiv-id") || "",
+      title: target.getAttribute("data-title") || "",
+      published: target.getAttribute("data-published") || "",
+    };
+    showSummaryInDialogForPaper(meta, target);
   });
 
   loadMoreBtn.addEventListener("click", () => {

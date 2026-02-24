@@ -487,6 +487,95 @@ select:focus {
   display: none;
 }
 
+.summary-dialog {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: min(480px, calc(100vw - 24px));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  background: rgba(8, 20, 33, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+
+.summary-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 14px 0;
+}
+
+.summary-dialog-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.summary-dialog-sub {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.summary-dialog-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.summary-dialog-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 6px 9px;
+  cursor: pointer;
+}
+
+.summary-dialog-body {
+  overflow: auto;
+  padding: 0 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.summary-msg {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+  font-size: 0.86rem;
+}
+
+.summary-msg.user {
+  background: rgba(51, 209, 198, 0.14);
+  border-color: rgba(51, 209, 198, 0.4);
+}
+
+.summary-msg.assistant {
+  background: rgba(255, 138, 61, 0.12);
+  border-color: rgba(255, 138, 61, 0.38);
+}
+
+.summary-msg.system {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-dialog-footer {
+  padding: 0 14px 12px;
+  color: var(--ink-soft);
+}
+
 @keyframes driftA {
   from {
     transform: translate(0, 0);
@@ -554,5 +643,13 @@ select:focus {
 
   .page-shell {
     padding: 18px 14px 34px;
+  }
+
+  .summary-dialog {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: auto;
   }
 }
