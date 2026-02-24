@@ -581,7 +581,16 @@ async function pollSummaryStatusOnce() {
       pushSummaryDialogMessage("system", "批量总结任务已完成。你可以在页面刷新后查看最新结果。");
     }
   } catch (err) {
-    const msg = `状态轮询失败：${String(err?.message || err)}`;
+    const raw = String(err?.message || err);
+    const msg = `状态轮询失败：${raw}`;
+    if (raw.includes("invalid action") && raw.includes("supported_actions")) {
+      stopSummaryStatusPolling();
+      pushSummaryDialogMessage(
+        "system",
+        "当前 Worker 还是旧版本，不支持 summary_status。请重新执行 wrangler deploy 后再试。"
+      );
+      return;
+    }
     if (msg !== state.summaryDialog.lastStatusSignature) {
       state.summaryDialog.lastStatusSignature = msg;
       pushSummaryDialogMessage("system", msg);
