@@ -61,11 +61,13 @@ export default {
       } catch (err) {
         return json(
           {
-            ok: false,
-            error: "summary status failed",
+            ok: true,
+            found: false,
+            transient_error: "summary status temporary unavailable",
             detail: String(err?.message || err),
+            message: "github status api temporary error; client should retry polling",
           },
-          502,
+          200,
           corsHeaders
         );
       }
@@ -230,55 +232,89 @@ function json(data, status, headers = {}) {
 }
 
 async function ghJson(url, token) {
-  const resp = await fetch(url, {
-    method: "GET",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "arxiv-trigger-update-worker",
-    },
-  });
-  if (!resp.ok) {
-    const detail = await resp.text();
-    throw new Error(`GitHub API ${resp.status}: ${detail}`);
+  let lastErr = "unknown";
+  for (let i = 0; i < 4; i++) {
+    try {
+      const resp = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${token}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "arxiv-trigger-update-worker",
+        },
+      });
+      if (resp.ok) {
+        return await resp.json();
+      }
+      const detail = await resp.text();
+      lastErr = `GitHub API ${resp.status}: ${detail}`;
+      if (![429, 500, 502, 503, 504].includes(resp.status) || i === 3) {
+        throw new Error(lastErr);
+      }
+    } catch (err) {
+      lastErr = String(err?.message || err);
+      if (i === 3) {
+        throw new Error(lastErr);
+      }
+    }
+    await waitMs(400 * (i + 1));
   }
-  return await resp.json();
+  throw new Error(lastErr);
 }
 
 async function ghText(url, token) {
-  let resp = await fetch(url, {
-    method: "GET",
-    redirect: "manual",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "arxiv-trigger-update-worker",
-    },
-  });
+  let lastErr = "unknown";
+  for (let i = 0; i < 4; i++) {
+    try {
+      let resp = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${token}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "arxiv-trigger-update-worker",
+        },
+      });
 
-  // GitHub logs endpoints return 302 to a short-lived download URL.
-  if (resp.status >= 300 && resp.status < 400) {
-    const location = resp.headers.get("Location") || resp.headers.get("location") || "";
-    if (!location) {
-      throw new Error(`GitHub API ${resp.status}: missing redirect location for logs`);
+      // GitHub logs endpoints return 302 to a short-lived download URL.
+      if (resp.status >= 300 && resp.status < 400) {
+        const location = resp.headers.get("Location") || resp.headers.get("location") || "";
+        if (!location) {
+          throw new Error(`GitHub API ${resp.status}: missing redirect location for logs`);
+        }
+        resp = await fetch(location, {
+          method: "GET",
+          redirect: "follow",
+          headers: {
+            "User-Agent": "arxiv-trigger-update-worker",
+          },
+        });
+      }
+
+      if (resp.ok) {
+        return await resp.text();
+      }
+
+      const detail = await resp.text();
+      lastErr = `log download ${resp.status}: ${detail}`;
+      if (![429, 500, 502, 503, 504].includes(resp.status) || i === 3) {
+        throw new Error(lastErr);
+      }
+    } catch (err) {
+      lastErr = String(err?.message || err);
+      if (i === 3) {
+        throw new Error(lastErr);
+      }
     }
-    resp = await fetch(location, {
-      method: "GET",
-      redirect: "follow",
-      headers: {
-        "User-Agent": "arxiv-trigger-update-worker",
-      },
-    });
+    await waitMs(400 * (i + 1));
   }
+  throw new Error(lastErr);
+}
 
-  if (!resp.ok) {
-    const detail = await resp.text();
-    throw new Error(`log download ${resp.status}: ${detail}`);
-  }
-
-  return await resp.text();
+function waitMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function matchRun(run, arxivId, clientTag) {
