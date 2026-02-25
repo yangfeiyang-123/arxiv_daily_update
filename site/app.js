@@ -2480,7 +2480,7 @@ function extractModelSummaryHints(lines, refEntries = []) {
     const title = best.title;
     if (title) {
       const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      desc = desc.replace(new RegExp(`^${escaped}\\s*[:：-–—]?\\s*`, "i"), "").trim();
+      desc = desc.replace(new RegExp(`^${escaped}\\s*[-:：–—]?\\s*`, "i"), "").trim();
     }
     if (!desc || desc.length < 8) return;
     hints.set(best.key, shortText(desc, 200));
