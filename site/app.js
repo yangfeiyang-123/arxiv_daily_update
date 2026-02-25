@@ -820,9 +820,9 @@ function renderConversationSelector() {
   if (!summaryThreadSelect) return;
   ensureConversationList();
   const options = state.summaryDialog.conversations
-    .map((conv, idx) => {
+    .map((conv) => {
       const pinPrefix = isPinnedConversation(conv) ? "📌 " : "";
-      const label = `${idx + 1}. ${pinPrefix}${conv.title || "会话"}`;
+      const label = `${pinPrefix}${conv.title || "会话"}`;
       return `<option value="${escapeHtml(conv.id)}">${escapeHtml(label)}</option>`;
     })
     .join("");
