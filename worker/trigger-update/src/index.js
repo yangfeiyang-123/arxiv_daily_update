@@ -522,6 +522,8 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl }) {
         const reader = upstream.body.getReader();
         let buffer = "";
         let emittedTokens = 0;
+        let streamErrorMsg = "";
+        let forceFallbackToNonStream = false;
 
         const emitParsedToken = (parsed) => {
           const tokenParts = extractTokenParts(parsed);
@@ -535,8 +537,18 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl }) {
           }
         };
 
-        while (true) {
-          const { done, value } = await reader.read();
+        streamLoop: while (true) {
+          let done = false;
+          let value = null;
+          try {
+            const readResult = await reader.read();
+            done = Boolean(readResult.done);
+            value = readResult.value || null;
+          } catch (err) {
+            streamErrorMsg = String(err?.message || err || "stream read failed");
+            forceFallbackToNonStream = true;
+            break;
+          }
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
 
@@ -565,24 +577,44 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl }) {
             } catch (_) {
               continue;
             }
+            const upstreamErr = String(parsed?.error?.message || parsed?.message || "").trim();
+            if (upstreamErr && (!parsed?.choices || parsed?.choices.length === 0)) {
+              streamErrorMsg = upstreamErr;
+              forceFallbackToNonStream = true;
+              break streamLoop;
+            }
             emitParsedToken(parsed);
           }
         }
 
         // Some providers may return a plain JSON body (no SSE data: lines) even when stream=true.
         const tail = String(buffer || "").trim();
-        if (tail) {
+        if (tail && !forceFallbackToNonStream) {
           try {
             const parsedTail = JSON.parse(tail);
+            const upstreamErr = String(parsedTail?.error?.message || parsedTail?.message || "").trim();
+            if (upstreamErr && (!parsedTail?.choices || parsedTail?.choices.length === 0)) {
+              streamErrorMsg = upstreamErr;
+              forceFallbackToNonStream = true;
+            }
             emitParsedToken(parsedTail);
           } catch (_) {
             // ignore tail parse failure
           }
         }
 
-        // Final fallback for models that produce empty stream chunks:
+        // Fallback for stream interruption / empty stream output:
         // retry once with stream=false and extract full content from message payload.
-        if (emittedTokens === 0) {
+        if (forceFallbackToNonStream || emittedTokens === 0) {
+          if (forceFallbackToNonStream) {
+            controller.enqueue(
+              encoder.encode(
+                sse("stage", {
+                  message: "流式输出中断，正在切换非流式重试...",
+                })
+              )
+            );
+          }
           let plainResp = await callUpstream(messages, false);
           if (!plainResp.ok && fullTextLoaded) {
             plainResp = await callUpstream(originalMessages, false);
@@ -613,7 +645,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl }) {
             encoder.encode(
               sse("error", {
                 ok: false,
-                message: "upstream returned no textual content for this model",
+                message: streamErrorMsg || "upstream returned no textual content for this model",
                 model,
               })
             )
