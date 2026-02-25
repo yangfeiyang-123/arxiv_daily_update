@@ -398,6 +398,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
 
   const model = String(payload.model || defaultModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
   const baseUrl = String(payload.base_url || defaultBaseUrl || "").trim().replace(/\/+$/, "");
+  const omitReasoning = payload.omit_reasoning === true || String(payload.omit_reasoning || "").toLowerCase() === "true";
   const originalMessages = normalizeMessages(payload.messages);
   let messages = [...originalMessages];
   if (!messages.length) {
@@ -513,7 +514,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
             }
             const delta = String(parsed?.choices?.[0]?.delta?.content || "");
             const reasoning = String(parsed?.choices?.[0]?.delta?.reasoning_content || "");
-            if (reasoning) {
+            if (reasoning && !omitReasoning) {
               controller.enqueue(encoder.encode(sse("token", { text: reasoning })));
             }
             if (delta) {

@@ -1611,53 +1611,233 @@ function startConversationForPaper(meta) {
   }
 }
 
+function collectLatestDayPapersAcrossFields() {
+  const all = [];
+  state.fields.forEach((field) => {
+    (field.papers || []).forEach((paper) => {
+      all.push({
+        fieldCode: field.code,
+        fieldName: field.name || field.code,
+        paper,
+      });
+    });
+  });
+
+  let latestDateKey = "";
+  all.forEach((item) => {
+    const key = extractDateKey(item.paper?.published || "");
+    if (key !== "unknown" && key > latestDateKey) {
+      latestDateKey = key;
+    }
+  });
+
+  if (!latestDateKey) {
+    return { latestDateKey: "", items: [] };
+  }
+  return {
+    latestDateKey,
+    items: all.filter((item) => extractDateKey(item.paper?.published || "") === latestDateKey),
+  };
+}
+
+function buildDailyBriefCorpus(items, options = {}) {
+  const maxItems = Number(options.maxItems || 120);
+  const maxChars = Number(options.maxChars || 70000);
+  const lines = [];
+  let usedChars = 0;
+  let usedCount = 0;
+
+  for (let i = 0; i < items.length; i += 1) {
+    if (usedCount >= maxItems) break;
+    const entry = items[i];
+    const paper = entry.paper || {};
+    const title = String(paper.title || "Untitled").trim();
+    const categories = Array.isArray(paper.categories) ? paper.categories.slice(0, 3).join(", ") : "";
+    const abs = String(paper.summary || "").replace(/\s+/g, " ").trim();
+    if (!abs) continue;
+
+    const row = [
+      `[${usedCount + 1}]`,
+      `field=${entry.fieldCode || "-"}`,
+      categories ? `cats=${categories}` : "",
+      `title=${title}`,
+      `abstract=${abs}`,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
+    if (usedChars + row.length > maxChars) break;
+    lines.push(row);
+    usedChars += row.length;
+    usedCount += 1;
+  }
+
+  return {
+    corpusText: lines.join("\n"),
+    usedCount,
+    totalCount: items.length,
+    truncated: Math.max(0, items.length - usedCount),
+  };
+}
+
+function buildDailyBriefMessages(latestDateKey, items) {
+  const dateLabel = latestDateKey ? formatDateOnly(`${latestDateKey}T00:00:00Z`) : "未知日期";
+  const dist = new Map();
+  items.forEach((entry) => {
+    const key = entry.fieldCode || "unknown";
+    dist.set(key, (dist.get(key) || 0) + 1);
+  });
+  const fieldDist = [...dist.entries()]
+    .map(([k, v]) => `${k}:${v}`)
+    .join(", ");
+
+  const corpus = buildDailyBriefCorpus(items);
+  const userPayload = [
+    `日期: ${dateLabel}`,
+    `样本总数: ${corpus.totalCount}`,
+    `已纳入总结: ${corpus.usedCount}`,
+    corpus.truncated > 0 ? `未纳入（超长截断）: ${corpus.truncated}` : "",
+    fieldDist ? `领域分布: ${fieldDist}` : "",
+    "",
+    "以下是论文摘要列表：",
+    corpus.corpusText || "(empty)",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return [
+    {
+      role: "system",
+      content: [
+        "你是我的论文日报助手。",
+        "仅基于给定摘要生成中文 Markdown，不要输出思考过程、推理过程、分析草稿。",
+        "输出结构必须是：",
+        "## 今日问候",
+        "## 今日新论文主要类别",
+        "## 分类摘要",
+        "其中“主要类别”给出 3-6 类；“分类摘要”按类别给小标题并简要总结。",
+        "禁止编造；若某类信息不足，直接写“信息不足”。",
+      ].join("\n"),
+    },
+    {
+      role: "user",
+      content: userPayload,
+    },
+  ];
+}
+
+async function generateDailyBriefViaWorker(latestDateKey, items) {
+  if (!WORKER_TRIGGER_URL) {
+    throw new Error("未配置 Worker 触发地址");
+  }
+  const messages = buildDailyBriefMessages(latestDateKey, items);
+  if (!messages.length) {
+    throw new Error("daily brief messages empty");
+  }
+
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+  const ctrl = new AbortController();
+  state.summaryDialog.streamAbort = ctrl;
+  state.summaryDialog.chatStreaming = true;
+  syncSummaryUiControls();
+
+  const resp = await fetch(WORKER_TRIGGER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "chat_stream",
+      messages,
+      model: getSelectedSummaryModel(),
+      base_url: SUMMARY_BASE_URL,
+      omit_reasoning: true,
+    }),
+    signal: ctrl.signal,
+  });
+
+  if (!resp.ok || !resp.body) {
+    const detail = await resp.text().catch(() => "");
+    throw new Error(`HTTP ${resp.status}: ${detail}`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+  let finalText = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    while (true) {
+      const sepIndex = buffer.indexOf("\n\n");
+      if (sepIndex < 0) break;
+      const rawBlock = buffer.slice(0, sepIndex);
+      buffer = buffer.slice(sepIndex + 2);
+      if (!rawBlock.trim()) continue;
+
+      const evt = parseSseBlock(rawBlock);
+      const data = evt.data && typeof evt.data === "object" ? evt.data : {};
+      if (evt.eventName === "token") {
+        finalText += String(data.text || "");
+        continue;
+      }
+      if (evt.eventName === "error") {
+        throw new Error(String(data.message || "unknown error"));
+      }
+      if (evt.eventName === "done") {
+        return finalText.trim();
+      }
+    }
+  }
+  return finalText.trim();
+}
+
 async function triggerSummaryDailyViaWorker() {
   if (!triggerSummaryDailyBtn) return;
   if (!state.summaryDialog.aiSidebarEnabled) {
     setSummaryMessage("AI侧边栏已关闭，请先开启后再触发总结。");
     return;
   }
+  stopSummaryStatusPolling();
   stopRealtimeStream();
   setSummaryDialogOpen(true);
-  if (!WORKER_TRIGGER_URL) {
-    openSummaryWorkflowPage("未配置 Worker，已打开总结 workflow 页面。");
-    return;
-  }
-
-  const clientTag = `daily-${Date.now().toString(36)}`;
   triggerSummaryDailyBtn.disabled = true;
-  triggerSummaryDailyBtn.textContent = "触发中...";
-  setSummaryMessage("正在触发“最近1天新文”批量总结任务...");
+  triggerSummaryDailyBtn.textContent = "总结中...";
+  setSummaryMessage("正在生成最近1天新文日报...");
   try {
-    await dispatchWorkerAction("summarize_new", {
-      mode: SUMMARY_DAILY_MODE,
-      latest_day_only: true,
-      daily_report: true,
-      n: 300,
-      model: getSelectedSummaryModel(),
-      base_url: SUMMARY_BASE_URL,
-      client_tag: clientTag,
-      save_result: SUMMARY_PERSIST_RESULTS,
-    });
-    setSummaryMessage("批量总结任务已触发。");
-    startSummaryStatusPolling({
-      type: "daily",
-      clientTag,
-      arxivId: "",
-    });
-    pushSummaryDialogMessage("system", "已触发批量总结，正在实时轮询任务进度...");
-    if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
-      setTimeout(() => {
-        window.open(SUMMARY_WORKFLOW_PAGE_URL, "_blank", "noopener,noreferrer");
-      }, 350);
+    const latest = collectLatestDayPapersAcrossFields();
+    if (!latest.items.length) {
+      setSummaryLoading(false, "");
+      pushSummaryDialogMessage("system", "最近1天没有可用于总结的论文摘要。");
+      setSummaryMessage("没有可总结数据。");
+      return;
     }
+
+    setSummaryLoading(true, `正在读取最近1天摘要（${latest.items.length} 篇）...`);
+    const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items);
+    setSummaryLoading(false, "");
+
+    if (!dailyText) {
+      pushSummaryDialogMessage("system", "日报生成完成，但返回内容为空。");
+      setSummaryMessage("日报生成完成（空结果）。");
+      return;
+    }
+    pushSummaryDialogMessage("assistant", dailyText);
+    setSummaryMessage("最近1天新文日报已生成。");
   } catch (err) {
     console.error(err);
-    setSummaryMessage(`触发失败：${String(err?.message || err)}`);
-    openSummaryWorkflowPage("触发失败，已打开总结 workflow 页面。");
+    stopRealtimeStream();
+    setSummaryLoading(false, "");
+    const msg = String(err?.message || err);
+    pushSummaryDialogMessage("system", `最近1天新文日报生成失败：${msg}`);
+    setSummaryMessage(`日报生成失败：${msg}`);
   } finally {
     triggerSummaryDailyBtn.disabled = false;
     triggerSummaryDailyBtn.textContent = "一键总结最近1天新文";
+    state.summaryDialog.streamAbort = null;
+    state.summaryDialog.chatStreaming = false;
+    syncSummaryUiControls();
   }
 }
 
