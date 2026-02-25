@@ -127,6 +127,9 @@ function renderInlineMarkdown(line) {
     return `@@MD_CODE_${idx}@@`;
   });
 
+  html = html.replace(/\[([^\]]+)\]\((#[a-zA-Z0-9._:-]+)\)/g, (_m, text, hash) => {
+    return `<a href="${hash}">${text}</a>`;
+  });
   html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, text, url) => {
     return `<a href="${url}" target="_blank" rel="noreferrer">${text}</a>`;
   });
@@ -1716,6 +1719,7 @@ function buildDailyBriefMessages(latestDateKey, items) {
         "## 今日新论文主要类别",
         "## 分类摘要",
         "其中“主要类别”给出 3-6 类；“分类摘要”按类别给小标题并简要总结。",
+        "在输出末尾必须追加“## 参考链接”小节；列出你在总结里提到的论文，格式为 Markdown 列表，每条都包含 arXiv URL。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
     },
@@ -1724,6 +1728,61 @@ function buildDailyBriefMessages(latestDateKey, items) {
       content: userPayload,
     },
   ];
+}
+
+function extractArxivIdsFromText(rawText) {
+  const ids = [];
+  const text = String(rawText || "");
+  const urlRegex = /https?:\/\/arxiv\.org\/(?:abs|pdf|html)\/([0-9]{4}\.[0-9]{4,5}(?:v\d+)?)(?:\.pdf)?/gi;
+  const idRegex = /\b([0-9]{4}\.[0-9]{4,5}(?:v\d+)?)\b/g;
+  let m = null;
+  while ((m = urlRegex.exec(text)) !== null) {
+    if (m[1]) ids.push(m[1]);
+  }
+  while ((m = idRegex.exec(text)) !== null) {
+    if (m[1]) ids.push(m[1]);
+  }
+  return [...new Set(ids.map((x) => extractCanonicalArxivId(extractArxivId(x))).filter(Boolean))];
+}
+
+function buildDailyReferenceAppendix(arxivIds = []) {
+  if (!Array.isArray(arxivIds) || arxivIds.length === 0) return "";
+  const lines = ["", "## 参考链接（自动补全）"];
+  const seen = new Set();
+  arxivIds.forEach((id) => {
+    const canonical = extractCanonicalArxivId(extractArxivId(id));
+    if (!canonical || seen.has(canonical)) return;
+    seen.add(canonical);
+    const record = findPaperByArxivId(canonical);
+    const paper = record?.paper || {};
+    const title = String(paper.title || canonical).replace(/\s+/g, " ").trim();
+    const url = String(paper.id || `https://arxiv.org/abs/${canonical}`).trim();
+    const localRef = `paper-${canonical}`;
+    lines.push(`- [${canonical}](${url}) · ${title} · [左侧定位](#${localRef})`);
+  });
+  return lines.join("\n");
+}
+
+function highlightReferencedPapers(arxivIds = []) {
+  if (!Array.isArray(arxivIds) || arxivIds.length === 0) return;
+  const wanted = new Set(
+    arxivIds
+      .map((id) => extractCanonicalArxivId(extractArxivId(id)))
+      .filter(Boolean)
+  );
+  if (!wanted.size) return;
+
+  const cards = document.querySelectorAll(".paper[data-arxiv-id]");
+  cards.forEach((card) => {
+    const cardId = extractCanonicalArxivId(extractArxivId(card.getAttribute("data-arxiv-id") || ""));
+    if (!wanted.has(cardId)) return;
+    card.classList.remove("paper--ref-highlight");
+    void card.offsetWidth;
+    card.classList.add("paper--ref-highlight");
+    window.setTimeout(() => {
+      card.classList.remove("paper--ref-highlight");
+    }, 1900);
+  });
 }
 
 async function generateDailyBriefViaWorker(latestDateKey, items) {
@@ -1814,7 +1873,7 @@ async function triggerSummaryDailyViaWorker() {
       return;
     }
 
-    setSummaryLoading(true, `正在读取最近1天摘要（${latest.items.length} 篇）...`);
+    setSummaryLoading(true, "正在总结今日最新论文ing～");
     const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items);
     setSummaryLoading(false, "");
 
@@ -1823,7 +1882,11 @@ async function triggerSummaryDailyViaWorker() {
       setSummaryMessage("日报生成完成（空结果）。");
       return;
     }
-    pushSummaryDialogMessage("assistant", dailyText);
+    const refIds = extractArxivIdsFromText(dailyText);
+    const appendix = buildDailyReferenceAppendix(refIds);
+    const finalText = `${dailyText}${appendix}`;
+    pushSummaryDialogMessage("assistant", finalText);
+    highlightReferencedPapers(refIds);
     setSummaryMessage("最近1天新文日报已生成。");
   } catch (err) {
     console.error(err);
@@ -2064,13 +2127,17 @@ function renderPaperCard(paper, index) {
 
   const arxivUrl = escapeHtml(paper.id || "#");
   const pdfUrl = escapeHtml(paper.pdf_url || paper.id || "#");
-  const arxivId = escapeHtml(extractArxivId(paper.id || paper.pdf_url || ""));
+  const rawArxivId = extractArxivId(paper.id || paper.pdf_url || "");
+  const canonicalArxivId = extractCanonicalArxivId(rawArxivId);
+  const arxivId = escapeHtml(rawArxivId);
+  const cardAnchorId = escapeHtml(`paper-${canonicalArxivId}`);
+  const cardDataArxivId = escapeHtml(canonicalArxivId || rawArxivId);
   const fieldCode = escapeHtml(state.selectedField || "");
   const published = escapeHtml(paper.published || "");
   const title = escapeHtml(paper.title || "Untitled");
 
   return `
-    <article class="paper ${isNew ? "paper--new" : ""}" style="animation-delay:${Math.min(index * 35, 420)}ms">
+    <article id="${cardAnchorId}" data-arxiv-id="${cardDataArxivId}" class="paper ${isNew ? "paper--new" : ""}" style="animation-delay:${Math.min(index * 35, 420)}ms">
       ${isNew ? '<div class="paper-new-badge">NEW</div>' : ""}
       <h2 class="paper-title">
         <a href="${arxivUrl}" target="_blank" rel="noreferrer">${escapeHtml(paper.title || "Untitled")}</a>
