@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260225-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260225-4" />
   </head>
   <body>
     <div class="bg-orb orb-a"></div>
@@ -113,8 +113,6 @@
         <div class="summary-dialog-actions">
           <button id="summaryThreadNewBtn" type="button" class="summary-dialog-btn">新建会话</button>
           <button id="summaryThreadDeleteBtn" type="button" class="summary-dialog-btn">删除会话</button>
-          <button id="summaryDialogRefreshBtn" type="button" class="summary-dialog-btn">刷新</button>
-          <button id="summaryDialogClearBtn" type="button" class="summary-dialog-btn">清空记忆</button>
           <button id="summaryDialogCloseBtn" type="button" class="summary-dialog-btn">关闭</button>
         </div>
       </header>
@@ -131,6 +129,7 @@
           </label>
           <small>记忆说明：本地浏览器会保留最近对话和查看记录。</small>
         </div>
+        <div id="summaryDialogStatus" class="summary-dialog-status hidden"></div>
         <form id="summaryChatForm" class="summary-chat-form">
           <input id="summaryChatInput" type="text" placeholder="在这里和 AI 对话（回车发送）" />
           <button id="summaryChatSendBtn" type="submit" class="summary-dialog-btn">发送</button>
@@ -138,7 +137,7 @@
       </footer>
     </aside>
 
-    <script src="./config.js?v=20260225-3" defer></script>
-    <script src="./app.js?v=20260225-3" defer></script>
+    <script src="./config.js?v=20260225-4" defer></script>
+    <script src="./app.js?v=20260225-4" defer></script>
   </body>
 </html>

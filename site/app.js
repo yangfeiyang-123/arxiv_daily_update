@@ -95,8 +95,7 @@ const summaryDialog = document.getElementById("summaryDialog");
 const summaryDialogBody = document.getElementById("summaryDialogBody");
 const summaryDialogSub = document.getElementById("summaryDialogSub");
 const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
-const summaryDialogClearBtn = document.getElementById("summaryDialogClearBtn");
-const summaryDialogRefreshBtn = document.getElementById("summaryDialogRefreshBtn");
+const summaryDialogStatus = document.getElementById("summaryDialogStatus");
 const summaryThreadSelect = document.getElementById("summaryThreadSelect");
 const summaryThreadNewBtn = document.getElementById("summaryThreadNewBtn");
 const summaryThreadDeleteBtn = document.getElementById("summaryThreadDeleteBtn");
@@ -615,14 +614,8 @@ function renderSummaryDialog() {
   const hasHistory = state.summaryDialog.messages.length > 0;
   const hasStreaming = state.summaryDialog.streamingActive && state.summaryDialog.streamingText;
 
-  const loadingHtml = state.summaryDialog.loading
-    ? `<article class="summary-loading"><span class="summary-spinner" aria-hidden="true"></span><span>${escapeHtml(
-        state.summaryDialog.loadingStatus || "正在处理中..."
-      )}</span></article>`
-    : "";
-
   if (!hasHistory && !hasStreaming) {
-    summaryDialogBody.innerHTML = `${loadingHtml}<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或点击“AI总结此文”直接触发总结。</article>`;
+    summaryDialogBody.innerHTML = `<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或点击“AI总结此文”直接触发总结。</article>`;
   } else {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
@@ -635,16 +628,30 @@ function renderSummaryDialog() {
       ? `<article class="summary-msg assistant">${escapeHtml(state.summaryDialog.streamingText)}</article>`
       : "";
 
-    summaryDialogBody.innerHTML = `${loadingHtml}${historyHtml}${streamingHtml}`;
+    summaryDialogBody.innerHTML = `${historyHtml}${streamingHtml}`;
   }
 
   summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
+  renderSummaryDialogStatus();
+}
+
+function renderSummaryDialogStatus() {
+  if (!summaryDialogStatus) return;
+  if (!state.summaryDialog.loading) {
+    summaryDialogStatus.classList.add("hidden");
+    summaryDialogStatus.innerHTML = "";
+    return;
+  }
+  summaryDialogStatus.classList.remove("hidden");
+  summaryDialogStatus.innerHTML = `<span class="summary-spinner" aria-hidden="true"></span><span>${escapeHtml(
+    state.summaryDialog.loadingStatus || "正在处理中..."
+  )}</span>`;
 }
 
 function setSummaryLoading(active, statusText = "") {
   state.summaryDialog.loading = Boolean(active);
   state.summaryDialog.loadingStatus = String(statusText || "").trim();
-  renderSummaryDialog();
+  renderSummaryDialogStatus();
 }
 
 function setAiSidebarEnabled(enabled) {
@@ -676,12 +683,6 @@ function pushSummaryDialogMessage(role, text) {
   if (state.summaryDialog.messages.length > SUMMARY_DIALOG_MAX_MESSAGES) {
     state.summaryDialog.messages = state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
   }
-  persistSummaryDialogMemory();
-  renderSummaryDialog();
-}
-
-function clearSummaryDialogMemory() {
-  state.summaryDialog.messages = [];
   persistSummaryDialogMemory();
   renderSummaryDialog();
 }
@@ -1234,7 +1235,7 @@ function buildChatContextMessages() {
   return [
     {
       role: "system",
-      content: `${paperPrompt.join("\n")}\n请围绕这篇论文回答用户问题；如信息不在摘要中，请明确说“摘要未提及”。`,
+      content: `${paperPrompt.join("\n")}\n请围绕这篇论文回答用户问题，优先基于可获得的论文正文与上下文。`,
     },
     ...history,
   ];
@@ -1278,6 +1279,12 @@ async function streamChatViaWorker(userText) {
       body: JSON.stringify({
         action: "chat_stream",
         messages: buildChatContextMessages(),
+        paper_context: {
+          arxiv_id: state.summaryDialog.activeArxivId || "",
+          title: state.summaryDialog.activeTitle || "",
+          paper_url: state.summaryDialog.activePaperUrl || "",
+          pdf_url: state.summaryDialog.activePaperPdfUrl || "",
+        },
         model: getSelectedSummaryModel(),
         base_url: SUMMARY_BASE_URL,
       }),
@@ -1581,30 +1588,6 @@ async function showSummaryInDialogForPaper(meta, btn) {
   }
 }
 
-async function refreshSummaryDialog() {
-  const arxivId = state.summaryDialog.activeArxivId;
-  if (!arxivId) {
-    pushSummaryDialogMessage("system", "未选择论文，无法刷新。");
-    return;
-  }
-  const meta = {
-    arxivId,
-    title: state.summaryDialog.activeTitle,
-    published: state.summaryDialog.activePublished,
-  };
-  pushSummaryDialogMessage("system", "正在刷新总结内容...");
-  if (!SUMMARY_PERSIST_RESULTS) {
-    pushSummaryDialogMessage("system", "当前配置为不落盘保存，刷新不会从仓库读取新结果。请重新触发总结。");
-    return;
-  }
-  const found = await fetchSummaryMarkdown(meta, true);
-  if (found) {
-    pushSummaryDialogMessage("assistant", `刷新成功（${found.path}）\n\n${found.text}`);
-    return;
-  }
-  pushSummaryDialogMessage("system", "仍未找到总结文件，请稍后再试；如果任务在跑，下面会持续显示进度。");
-}
-
 function getCurrentField() {
   return state.fields.get(state.selectedField) || null;
 }
@@ -1859,19 +1842,6 @@ function bindEvents() {
       stopSummaryStatusPolling();
       stopRealtimeStream();
       setSummaryDialogOpen(false);
-    });
-  }
-
-  if (summaryDialogClearBtn) {
-    summaryDialogClearBtn.addEventListener("click", () => {
-      clearSummaryDialogMemory();
-      pushSummaryDialogMessage("system", "已清空本地记忆。");
-    });
-  }
-
-  if (summaryDialogRefreshBtn) {
-    summaryDialogRefreshBtn.addEventListener("click", () => {
-      refreshSummaryDialog();
     });
   }
 

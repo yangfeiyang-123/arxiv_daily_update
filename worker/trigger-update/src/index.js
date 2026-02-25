@@ -263,6 +263,125 @@ function normalizeMessages(input) {
     .slice(-20);
 }
 
+function decodeHtmlEntities(input) {
+  return String(input || "")
+    .replaceAll("&nbsp;", " ")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'");
+}
+
+function htmlToText(html) {
+  const stripped = String(html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<math[\s\S]*?<\/math>/gi, " ")
+    .replace(/<\/(article|section|div|p|li|tr|h1|h2|h3|h4|h5|h6)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ");
+  return decodeHtmlEntities(stripped).trim();
+}
+
+function extractArxivIdsFromText(text) {
+  const result = [];
+  const raw = String(text || "");
+  const urlRegex = /https?:\/\/arxiv\.org\/(?:abs|pdf|html)\/([0-9]{4}\.[0-9]{4,5}(?:v\d+)?)(?:\.pdf)?/gi;
+  const idRegex = /\b([0-9]{4}\.[0-9]{4,5}(?:v\d+)?)\b/g;
+  let m = null;
+  while ((m = urlRegex.exec(raw)) !== null) {
+    if (m[1]) result.push(m[1]);
+  }
+  while ((m = idRegex.exec(raw)) !== null) {
+    if (m[1]) result.push(m[1]);
+  }
+  return result;
+}
+
+function pickArxivId(payload, messages) {
+  const candidates = [];
+  const ctx = payload?.paper_context || {};
+  if (ctx.arxiv_id) candidates.push(String(ctx.arxiv_id));
+  if (ctx.paper_url) candidates.push(...extractArxivIdsFromText(ctx.paper_url));
+  if (ctx.pdf_url) candidates.push(...extractArxivIdsFromText(ctx.pdf_url));
+  for (let i = messages.length - 1; i >= 0; i--) {
+    candidates.push(...extractArxivIdsFromText(messages[i]?.content || ""));
+  }
+  const clean = candidates
+    .map((x) => String(x || "").trim())
+    .map((x) => x.replace(/\.pdf$/i, ""))
+    .filter(Boolean);
+  return clean[0] || "";
+}
+
+function buildArxivFetchCandidates(arxivId) {
+  const withVersion = String(arxivId || "").trim();
+  const noVersion = withVersion.replace(/v\d+$/i, "");
+  return [...new Set([withVersion, noVersion].filter(Boolean))];
+}
+
+async function fetchTextWithRetry(url, options = {}, retries = 3) {
+  let lastError = "unknown";
+  for (let i = 0; i < retries; i++) {
+    try {
+      const resp = await fetch(url, {
+        redirect: "follow",
+        ...options,
+      });
+      if (resp.ok) return resp;
+      const detail = await resp.text().catch(() => "");
+      lastError = `${resp.status} ${detail}`;
+      if (![429, 500, 502, 503, 504].includes(resp.status) || i === retries - 1) {
+        throw new Error(lastError);
+      }
+    } catch (err) {
+      lastError = String(err?.message || err);
+      if (i === retries - 1) throw new Error(lastError);
+    }
+    await waitMs(350 * (i + 1));
+  }
+  throw new Error(lastError);
+}
+
+async function fetchArxivFullText(arxivId, maxChars = 90000) {
+  const ids = buildArxivFetchCandidates(arxivId);
+  for (const id of ids) {
+    const htmlUrl = `https://arxiv.org/html/${id}`;
+    try {
+      const resp = await fetchTextWithRetry(htmlUrl, {
+        method: "GET",
+        headers: {
+          Accept: "text/html,application/xhtml+xml",
+          "User-Agent": "arxiv-trigger-update-worker",
+        },
+      });
+      const html = await resp.text();
+      const text = htmlToText(html);
+      if (text.length > 8000) {
+        const clipped = text.slice(0, maxChars);
+        return {
+          ok: true,
+          arxivId: id,
+          sourceUrl: htmlUrl,
+          text: clipped,
+          totalChars: text.length,
+          usedChars: clipped.length,
+        };
+      }
+    } catch (_) {
+      // try next candidate id
+    }
+  }
+  return { ok: false, error: "full text fetch failed" };
+}
+
 async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, defaultModel }) {
   const apiKey = env.LLM_API_KEY || env.DASHSCOPE_API_KEY || env.OPENAI_API_KEY || "";
   if (!apiKey) {
@@ -279,24 +398,65 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
 
   const model = String(payload.model || defaultModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
   const baseUrl = String(payload.base_url || defaultBaseUrl || "").trim().replace(/\/+$/, "");
-  const messages = normalizeMessages(payload.messages);
+  const originalMessages = normalizeMessages(payload.messages);
+  let messages = [...originalMessages];
   if (!messages.length) {
     return json({ ok: false, error: "messages is required for chat_stream" }, 400, corsHeaders);
   }
 
-  const upstream = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.2,
-      stream: true,
-    }),
-  });
+  const maxFulltextChars = Math.max(10000, Math.min(200000, Number(env.CHAT_FULLTEXT_MAX_CHARS || 90000) || 90000));
+  let stageMessage = "LLM 已连接，正在生成...";
+  let fullTextLoaded = false;
+  let fullTextMeta = null;
+  const arxivIdHint = pickArxivId(payload, messages);
+
+  if (arxivIdHint) {
+    const fullText = await fetchArxivFullText(arxivIdHint, maxFulltextChars);
+    if (fullText?.ok && fullText.text) {
+      fullTextLoaded = true;
+      fullTextMeta = fullText;
+      stageMessage = `已读取论文正文（${fullText.arxivId}，${fullText.usedChars} 字符），正在回答...`;
+      messages = [
+        {
+          role: "system",
+          content: [
+            `以下是 arXiv 论文正文提取文本（来源：${fullText.sourceUrl}）。`,
+            `请优先依据这段正文回答问题；如果正文没有提到，再明确说明缺失。`,
+            "",
+            fullText.text,
+          ].join("\n"),
+        },
+        ...messages,
+      ];
+    } else {
+      stageMessage = `检测到 arXiv 链接（${arxivIdHint}），正文抓取失败，使用当前会话上下文回答。`;
+    }
+  }
+
+  async function callUpstream(inputMessages) {
+    return await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: inputMessages,
+        temperature: 0.2,
+        stream: true,
+      }),
+    });
+  }
+
+  let upstream = await callUpstream(messages);
+  if ((!upstream.ok || !upstream.body) && fullTextLoaded) {
+    // Fallback in case full-text context is too large for upstream limits.
+    upstream = await callUpstream(originalMessages);
+    if (upstream.ok && upstream.body) {
+      stageMessage = "正文上下文超限，已回退到基础上下文继续回答。";
+    }
+  }
 
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");
@@ -318,7 +478,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        controller.enqueue(encoder.encode(sse("stage", { message: "LLM connected, generating..." })));
+        controller.enqueue(encoder.encode(sse("stage", { message: stageMessage, fulltext: fullTextMeta || null })));
         const reader = upstream.body.getReader();
         let buffer = "";
         while (true) {

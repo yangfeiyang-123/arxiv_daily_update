@@ -618,18 +618,6 @@ select:focus {
   align-content: start;
 }
 
-.summary-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 10px 11px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--ink-soft);
-  font-size: 0.86rem;
-}
-
 .summary-spinner {
   width: 14px;
   height: 14px;
@@ -669,6 +657,17 @@ select:focus {
   color: var(--ink-soft);
   display: grid;
   gap: 8px;
+}
+
+.summary-dialog-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 24px;
+  color: rgba(235, 242, 249, 0.72);
+  font-size: 0.78rem;
+  padding: 2px 2px 0;
 }
 
 .summary-chat-head {
