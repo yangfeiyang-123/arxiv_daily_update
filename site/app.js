@@ -2064,7 +2064,7 @@ function sanitizeDailyBriefText(rawText) {
         matchedIds.push(rec.canonicalId);
         const url = String(rec.paper?.id || `https://arxiv.org/abs/${rec.canonicalId}`).trim();
         const displayTitle = String(rec.paper?.title || title || rec.canonicalId).trim();
-        out.push(`- [${displayTitle}](#paper-${rec.canonicalId}) · [arXiv](${url})`);
+        out.push(`- ${displayTitle} - ${url}`);
       } else {
         const safeTitle = title || trimmed.replace(/\s*[-–—]?\s*URL[:：].*$/i, "").trim();
         if (safeTitle) out.push(`- ${safeTitle}`);
@@ -2072,10 +2072,29 @@ function sanitizeDailyBriefText(rawText) {
       return;
     }
 
-    const cleaned = trimmed
+    let cleaned = trimmed
       .replace(/\s*[-–—]?\s*URL[:：]\s*未提供\s*(?:（[^）]*）|\([^)]*\))?/gi, "")
       .replace(/\s*[-–—]?\s*arxiv\s*url\s*未提供\s*(?:（[^）]*）|\([^)]*\))?/gi, "")
       .trim();
+
+    // Normalize markdown-style reference entries into single-line plain format:
+    // "- Title - http://arxiv.org/abs/xxxx"
+    const refPair = cleaned.match(/^(?:[-*]\s+)?\[(.+?)\]\(#paper-[^)]+\)\s*[·•]\s*\[arxiv\]\((https?:\/\/[^\s)]+)\)\s*$/i);
+    if (refPair) {
+      const title = normalizeDialogTitleText(refPair[1]);
+      const url = String(refPair[2] || "").trim();
+      if (title && url) {
+        cleaned = `- ${title} - ${url}`;
+      }
+    } else {
+      const plainMd = cleaned
+        .replace(/\[([^\]]+)\]\(#paper-[^)]+\)/gi, "$1")
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, "$1 - $2")
+        .replace(/\s*[·•]\s*\[?arxiv\]?\s*/gi, " - ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (plainMd) cleaned = plainMd;
+    }
     out.push(cleaned || "");
   });
 
@@ -2267,8 +2286,7 @@ function buildDailyReferenceAppendix(arxivIds = []) {
     const paper = record?.paper || {};
     const title = String(paper.title || canonical).replace(/\s+/g, " ").trim();
     const url = String(paper.id || `https://arxiv.org/abs/${canonical}`).trim();
-    const localRef = `paper-${canonical}`;
-    lines.push(`- [${title}](#${localRef}) · [arXiv](${url})`);
+    lines.push(`- ${title} - ${url}`);
   });
   return lines.join("\n");
 }

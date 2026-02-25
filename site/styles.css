@@ -632,6 +632,8 @@ select:focus {
 
 .summary-dialog-body {
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 0 14px;
   display: grid;
   gap: 10px;
@@ -653,8 +655,8 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 10px 40px 10px 11px;
-  max-height: 1600px;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
@@ -666,6 +668,7 @@ select:focus {
   opacity: 0;
   transform: translateY(-3px);
   max-height: 0;
+  overflow: hidden;
   padding-top: 0;
   padding-bottom: 0;
   border-color: transparent;
@@ -801,6 +804,15 @@ select:focus {
 .summary-msg.assistant li,
 .summary-msg.system li {
   cursor: pointer;
+  transition: transform 0.16s ease, color 0.16s ease, text-shadow 0.16s ease;
+  transform-origin: left center;
+}
+
+.summary-msg.assistant li:hover,
+.summary-msg.system li:hover {
+  transform: scale(0.992);
+  color: #d7f4ff;
+  text-shadow: 0 0 10px rgba(118, 227, 255, 0.18);
 }
 
 .summary-msg blockquote {
