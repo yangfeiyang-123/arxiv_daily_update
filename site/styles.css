@@ -731,6 +731,17 @@ select:focus {
   text-decoration: underline;
 }
 
+.summary-msg a[href^="#paper-"] {
+  display: inline-block;
+  transition: transform 0.16s ease, color 0.16s ease;
+  transform-origin: left center;
+}
+
+.summary-msg a[href^="#paper-"]:hover {
+  transform: scale(0.985);
+  color: #bdf4ff;
+}
+
 .summary-msg blockquote {
   border-left: 3px solid rgba(255, 255, 255, 0.25);
   padding-left: 10px;
