@@ -31,6 +31,8 @@ const SUMMARY_UI_PREF_KEY = "myarxiv_summary_ui_pref_v1";
 const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
 const SUMMARY_CONVERSATION_MAX = 24;
+const DAILY_PIN_CONVERSATION_ID = "conv-daily-pinned";
+const DAILY_PIN_CONVERSATION_TITLE = "每日新文总结";
 const SUMMARY_STATUS_POLL_MS = 4500;
 const INITIAL_VISIBLE_COUNT = 120;
 const VISIBLE_STEP = 120;
@@ -99,6 +101,7 @@ const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogStatus = document.getElementById("summaryDialogStatus");
 const summaryThreadSelect = document.getElementById("summaryThreadSelect");
 const summaryThreadNewBtn = document.getElementById("summaryThreadNewBtn");
+const summaryThreadRenameBtn = document.getElementById("summaryThreadRenameBtn");
 const summaryThreadDeleteBtn = document.getElementById("summaryThreadDeleteBtn");
 const summaryChatEnabledToggle = document.getElementById("summaryChatEnabledToggle");
 const summaryChatForm = document.getElementById("summaryChatForm");
@@ -413,18 +416,18 @@ function buildConversationTitle(meta = {}, fallback = "新会话") {
   return fallback;
 }
 
-function getActiveConversation() {
-  const id = state.summaryDialog.activeConversationId;
-  if (!id) return null;
-  return state.summaryDialog.conversations.find((conv) => conv.id === id) || null;
+function isPinnedConversation(conv) {
+  if (!conv || typeof conv !== "object") return false;
+  return conv.pinned === true || String(conv.id || "") === DAILY_PIN_CONVERSATION_ID;
 }
 
-function ensureConversationList() {
-  if (state.summaryDialog.conversations.length > 0) return;
+function makePinnedDailyConversation() {
   const now = new Date().toISOString();
-  const seed = {
-    id: buildConversationId(),
-    title: "默认会话",
+  return {
+    id: DAILY_PIN_CONVERSATION_ID,
+    pinned: true,
+    customTitle: false,
+    title: DAILY_PIN_CONVERSATION_TITLE,
     createdAt: now,
     updatedAt: now,
     activeArxivId: "",
@@ -436,8 +439,73 @@ function ensureConversationList() {
     activePaperField: "",
     messages: [],
   };
-  state.summaryDialog.conversations = [seed];
-  state.summaryDialog.activeConversationId = seed.id;
+}
+
+function ensurePinnedConversation() {
+  let pinned = state.summaryDialog.conversations.find((conv) => isPinnedConversation(conv));
+  if (!pinned) {
+    pinned = makePinnedDailyConversation();
+  } else {
+    pinned.id = DAILY_PIN_CONVERSATION_ID;
+    pinned.pinned = true;
+    pinned.customTitle = false;
+    pinned.title = DAILY_PIN_CONVERSATION_TITLE;
+    if (!pinned.createdAt) {
+      pinned.createdAt = new Date().toISOString();
+    }
+  }
+
+  const others = state.summaryDialog.conversations.filter((conv) => !isPinnedConversation(conv));
+  const kept = others.slice(0, Math.max(0, SUMMARY_CONVERSATION_MAX - 1));
+  state.summaryDialog.conversations = [pinned, ...kept];
+  return pinned;
+}
+
+function getActiveConversation() {
+  const id = state.summaryDialog.activeConversationId;
+  if (!id) return null;
+  return state.summaryDialog.conversations.find((conv) => conv.id === id) || null;
+}
+
+function ensureConversationList() {
+  if (state.summaryDialog.conversations.length === 0) {
+    const now = new Date().toISOString();
+    const seed = {
+      id: buildConversationId(),
+      pinned: false,
+      customTitle: false,
+      title: "默认会话",
+      createdAt: now,
+      updatedAt: now,
+      activeArxivId: "",
+      activeTitle: "",
+      activePublished: "",
+      activePaperSummary: "",
+      activePaperUrl: "",
+      activePaperPdfUrl: "",
+      activePaperField: "",
+      messages: [],
+    };
+    state.summaryDialog.conversations = [seed];
+    state.summaryDialog.activeConversationId = seed.id;
+  }
+
+  ensurePinnedConversation();
+  const activeExists = state.summaryDialog.conversations.some((conv) => conv.id === state.summaryDialog.activeConversationId);
+  if (!activeExists) {
+    const fallback = state.summaryDialog.conversations.find((conv) => !isPinnedConversation(conv)) || state.summaryDialog.conversations[0];
+    state.summaryDialog.activeConversationId = fallback?.id || "";
+  }
+}
+
+function activatePinnedDailyConversation() {
+  ensureConversationList();
+  syncRuntimeToConversation();
+  const pinned = ensurePinnedConversation();
+  state.summaryDialog.activeConversationId = pinned.id;
+  applyConversationToRuntime(pinned);
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
 }
 
 function applyConversationToRuntime(conv) {
@@ -473,7 +541,7 @@ function syncRuntimeToConversation() {
   conv.activePaperPdfUrl = String(state.summaryDialog.activePaperPdfUrl || "");
   conv.activePaperField = String(state.summaryDialog.activePaperField || "");
   conv.messages = (state.summaryDialog.messages || []).slice(-SUMMARY_DIALOG_MAX_MESSAGES);
-  if (conv.messages.length > 0 && !conv.title) {
+  if (conv.messages.length > 0 && !conv.title && !conv.customTitle && !isPinnedConversation(conv)) {
     conv.title = buildConversationTitle({ arxivId: conv.activeArxivId, title: conv.activeTitle }, "会话");
   }
   conv.updatedAt = new Date().toISOString();
@@ -484,6 +552,8 @@ function createConversation(meta = {}) {
   const now = new Date().toISOString();
   const conv = {
     id: buildConversationId(),
+    pinned: false,
+    customTitle: false,
     title: buildConversationTitle(meta),
     createdAt: now,
     updatedAt: now,
@@ -496,10 +566,10 @@ function createConversation(meta = {}) {
     activePaperField: String(meta.fieldCode || ""),
     messages: [],
   };
-  state.summaryDialog.conversations.unshift(conv);
-  if (state.summaryDialog.conversations.length > SUMMARY_CONVERSATION_MAX) {
-    state.summaryDialog.conversations = state.summaryDialog.conversations.slice(0, SUMMARY_CONVERSATION_MAX);
-  }
+  ensurePinnedConversation();
+  const insertIndex = state.summaryDialog.conversations.length > 0 && isPinnedConversation(state.summaryDialog.conversations[0]) ? 1 : 0;
+  state.summaryDialog.conversations.splice(insertIndex, 0, conv);
+  ensurePinnedConversation();
   state.summaryDialog.activeConversationId = conv.id;
   applyConversationToRuntime(conv);
   state.summaryDialog.pollContext = null;
@@ -524,6 +594,11 @@ function switchConversation(conversationId) {
 
 function deleteActiveConversation() {
   ensureConversationList();
+  const active = getActiveConversation();
+  if (active && isPinnedConversation(active)) {
+    showSummaryDialogNotice("该会话已固定（Pin），不能删除。");
+    return false;
+  }
   stopSummaryStatusPolling();
   stopRealtimeStream();
   setSummaryLoading(false, "");
@@ -539,15 +614,19 @@ function deleteActiveConversation() {
     syncRuntimeToConversation();
     persistSummaryDialogMemory();
     renderSummaryDialog();
-    return;
+    return true;
   }
   const activeId = state.summaryDialog.activeConversationId;
   const nextList = state.summaryDialog.conversations.filter((conv) => conv.id !== activeId);
   state.summaryDialog.conversations = nextList;
+  ensurePinnedConversation();
   state.summaryDialog.activeConversationId = nextList[0]?.id || "";
+  const fallback = state.summaryDialog.conversations.find((conv) => !isPinnedConversation(conv)) || state.summaryDialog.conversations[0];
+  state.summaryDialog.activeConversationId = fallback?.id || "";
   applyConversationToRuntime(getActiveConversation());
   persistSummaryDialogMemory();
   renderSummaryDialog();
+  return true;
 }
 
 function persistSummaryDialogMemory() {
@@ -559,6 +638,8 @@ function persistSummaryDialogMemory() {
       conversations: state.summaryDialog.conversations
         .map((conv) => ({
           id: String(conv.id || ""),
+          pinned: isPinnedConversation(conv),
+          customTitle: conv.customTitle === true,
           title: String(conv.title || ""),
           createdAt: String(conv.createdAt || ""),
           updatedAt: String(conv.updatedAt || ""),
@@ -600,6 +681,8 @@ function loadSummaryDialogMemory() {
         if (!rawConv || typeof rawConv !== "object") return;
         const conv = {
           id: String(rawConv.id || buildConversationId()),
+          pinned: rawConv.pinned === true || String(rawConv.id || "") === DAILY_PIN_CONVERSATION_ID,
+          customTitle: rawConv.customTitle === true,
           title: String(rawConv.title || `会话 ${idx + 1}`),
           createdAt: String(rawConv.createdAt || ""),
           updatedAt: String(rawConv.updatedAt || ""),
@@ -627,6 +710,8 @@ function loadSummaryDialogMemory() {
       // Backward compatible migration from single-conversation storage.
       parsedConversations.push({
         id: buildConversationId(),
+        pinned: false,
+        customTitle: false,
         title: buildConversationTitle({ arxivId: mem.activeArxivId, title: mem.activeTitle }, "默认会话"),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -709,8 +794,13 @@ function syncSummaryUiControls() {
   if (summaryThreadSelect) {
     summaryThreadSelect.disabled = !state.summaryDialog.aiSidebarEnabled;
   }
+  const activeConv = getActiveConversation();
+  const pinnedActive = isPinnedConversation(activeConv);
+  if (summaryThreadRenameBtn) {
+    summaryThreadRenameBtn.disabled = !state.summaryDialog.aiSidebarEnabled || pinnedActive;
+  }
   if (summaryThreadDeleteBtn) {
-    summaryThreadDeleteBtn.disabled = !state.summaryDialog.aiSidebarEnabled;
+    summaryThreadDeleteBtn.disabled = !state.summaryDialog.aiSidebarEnabled || pinnedActive;
   }
 }
 
@@ -719,7 +809,8 @@ function renderConversationSelector() {
   ensureConversationList();
   const options = state.summaryDialog.conversations
     .map((conv, idx) => {
-      const label = `${idx + 1}. ${conv.title || "会话"}`;
+      const pinPrefix = isPinnedConversation(conv) ? "📌 " : "";
+      const label = `${idx + 1}. ${pinPrefix}${conv.title || "会话"}`;
       return `<option value="${escapeHtml(conv.id)}">${escapeHtml(label)}</option>`;
     })
     .join("");
@@ -815,6 +906,30 @@ function showSummaryDialogNotice(text) {
   }, 1000);
 }
 
+function renameActiveConversation() {
+  ensureConversationList();
+  const conv = getActiveConversation();
+  if (!conv) return;
+  if (isPinnedConversation(conv)) {
+    showSummaryDialogNotice("该会话是固定 Pin 会话，不能重命名。");
+    return;
+  }
+  const initial = String(conv.title || "").trim();
+  const next = window.prompt("请输入会话名称（最多30字）", initial);
+  if (next === null) return;
+  const value = String(next || "").trim().slice(0, 30);
+  if (!value) {
+    showSummaryDialogNotice("会话名称不能为空。");
+    return;
+  }
+  conv.title = value;
+  conv.customTitle = true;
+  conv.updatedAt = new Date().toISOString();
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+  showSummaryDialogNotice("会话名称已更新。");
+}
+
 function setSummaryLoading(active, statusText = "") {
   state.summaryDialog.loading = Boolean(active);
   state.summaryDialog.loadingStatus = String(statusText || "").trim();
@@ -863,7 +978,7 @@ function setActiveSummaryPaper(meta = {}) {
   state.summaryDialog.activePaperPdfUrl = String(meta.paperPdfUrl || "");
   state.summaryDialog.activePaperField = String(meta.fieldCode || "");
   const conv = getActiveConversation();
-  if (conv) {
+  if (conv && !conv.customTitle && !isPinnedConversation(conv)) {
     conv.title = buildConversationTitle(meta, conv.title || "会话");
   }
   persistSummaryDialogMemory();
@@ -1858,6 +1973,7 @@ async function triggerSummaryDailyViaWorker() {
   }
   stopSummaryStatusPolling();
   stopRealtimeStream();
+  activatePinnedDailyConversation();
   setSummaryDialogOpen(true);
   triggerSummaryDailyBtn.disabled = true;
   triggerSummaryDailyBtn.textContent = "总结中...";
@@ -2274,10 +2390,18 @@ function bindEvents() {
     });
   }
 
+  if (summaryThreadRenameBtn) {
+    summaryThreadRenameBtn.addEventListener("click", () => {
+      renameActiveConversation();
+    });
+  }
+
   if (summaryThreadDeleteBtn) {
     summaryThreadDeleteBtn.addEventListener("click", () => {
-      deleteActiveConversation();
-      showSummaryDialogNotice("当前会话已删除。");
+      const deleted = deleteActiveConversation();
+      if (deleted) {
+        showSummaryDialogNotice("当前会话已删除。");
+      }
     });
   }
 
