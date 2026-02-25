@@ -263,6 +263,46 @@ function normalizeMessages(input) {
     .slice(-20);
 }
 
+function flattenTextPayload(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    return value.map((item) => flattenTextPayload(item)).join("");
+  }
+  if (typeof value === "object") {
+    if (typeof value.text === "string") return value.text;
+    if (typeof value.content === "string") return value.content;
+    if (Array.isArray(value.content)) return flattenTextPayload(value.content);
+    if (typeof value.output_text === "string") return value.output_text;
+  }
+  return "";
+}
+
+function extractTokenParts(parsed) {
+  const choice =
+    parsed?.choices?.[0] ||
+    parsed?.output?.choices?.[0] ||
+    parsed?.data?.choices?.[0] ||
+    null;
+
+  const content =
+    flattenTextPayload(choice?.delta?.content) ||
+    flattenTextPayload(choice?.message?.content) ||
+    flattenTextPayload(choice?.text) ||
+    flattenTextPayload(parsed?.output_text) ||
+    flattenTextPayload(parsed?.content);
+
+  const reasoning =
+    flattenTextPayload(choice?.delta?.reasoning_content) ||
+    flattenTextPayload(choice?.message?.reasoning_content) ||
+    flattenTextPayload(parsed?.reasoning_content);
+
+  return {
+    content: String(content || ""),
+    reasoning: String(reasoning || ""),
+  };
+}
+
 function decodeHtmlEntities(input) {
   return String(input || "")
     .replaceAll("&nbsp;", " ")
@@ -434,7 +474,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
     }
   }
 
-  async function callUpstream(inputMessages) {
+  async function callUpstream(inputMessages, stream = true) {
     return await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -445,15 +485,15 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
         model,
         messages: inputMessages,
         temperature: 0.2,
-        stream: true,
+        stream,
       }),
     });
   }
 
-  let upstream = await callUpstream(messages);
+  let upstream = await callUpstream(messages, true);
   if ((!upstream.ok || !upstream.body) && fullTextLoaded) {
     // Fallback in case full-text context is too large for upstream limits.
-    upstream = await callUpstream(originalMessages);
+    upstream = await callUpstream(originalMessages, true);
     if (upstream.ok && upstream.body) {
       stageMessage = "正文上下文超限，已回退到基础上下文继续回答。";
     }
@@ -482,6 +522,20 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
         controller.enqueue(encoder.encode(sse("stage", { message: stageMessage, fulltext: fullTextMeta || null })));
         const reader = upstream.body.getReader();
         let buffer = "";
+        let emittedTokens = 0;
+
+        const emitParsedToken = (parsed) => {
+          const tokenParts = extractTokenParts(parsed);
+          if (tokenParts.reasoning && !omitReasoning) {
+            controller.enqueue(encoder.encode(sse("token", { text: tokenParts.reasoning })));
+            emittedTokens += 1;
+          }
+          if (tokenParts.content) {
+            controller.enqueue(encoder.encode(sse("token", { text: tokenParts.content })));
+            emittedTokens += 1;
+          }
+        };
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -512,16 +566,63 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
             } catch (_) {
               continue;
             }
-            const delta = String(parsed?.choices?.[0]?.delta?.content || "");
-            const reasoning = String(parsed?.choices?.[0]?.delta?.reasoning_content || "");
-            if (reasoning && !omitReasoning) {
-              controller.enqueue(encoder.encode(sse("token", { text: reasoning })));
-            }
-            if (delta) {
-              controller.enqueue(encoder.encode(sse("token", { text: delta })));
+            emitParsedToken(parsed);
+          }
+        }
+
+        // Some providers may return a plain JSON body (no SSE data: lines) even when stream=true.
+        const tail = String(buffer || "").trim();
+        if (tail) {
+          try {
+            const parsedTail = JSON.parse(tail);
+            emitParsedToken(parsedTail);
+          } catch (_) {
+            // ignore tail parse failure
+          }
+        }
+
+        // Final fallback for models that produce empty stream chunks:
+        // retry once with stream=false and extract full content from message payload.
+        if (emittedTokens === 0) {
+          let plainResp = await callUpstream(messages, false);
+          if (!plainResp.ok && fullTextLoaded) {
+            plainResp = await callUpstream(originalMessages, false);
+          }
+          if (plainResp.ok) {
+            const ctype = String(plainResp.headers.get("content-type") || "");
+            if (ctype.includes("application/json")) {
+              const plainJson = await plainResp.json().catch(() => null);
+              if (plainJson) {
+                emitParsedToken(plainJson);
+              }
+            } else {
+              const plainText = await plainResp.text().catch(() => "");
+              if (plainText) {
+                try {
+                  emitParsedToken(JSON.parse(plainText));
+                } catch (_) {
+                  controller.enqueue(encoder.encode(sse("token", { text: plainText })));
+                  emittedTokens += 1;
+                }
+              }
             }
           }
         }
+
+        if (emittedTokens === 0) {
+          controller.enqueue(
+            encoder.encode(
+              sse("error", {
+                ok: false,
+                message: "upstream returned no textual content for this model",
+                model,
+              })
+            )
+          );
+          controller.close();
+          return;
+        }
+
         controller.enqueue(encoder.encode(sse("done", { ok: true })));
         controller.close();
       } catch (err) {
