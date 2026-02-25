@@ -69,8 +69,11 @@ const state = {
     streamAbort: null,
     streamingText: "",
     streamingActive: false,
+    streamKind: "",
+    streamConversationId: "",
     loading: false,
     loadingStatus: "",
+    loadingConversationId: "",
     aiSidebarEnabled: APP_CONFIG.aiSidebarEnabled !== false,
     chatEnabled: true,
     chatStreaming: false,
@@ -488,6 +491,12 @@ function getActiveConversation() {
   return state.summaryDialog.conversations.find((conv) => conv.id === id) || null;
 }
 
+function getConversationById(conversationId) {
+  const id = String(conversationId || "").trim();
+  if (!id) return null;
+  return state.summaryDialog.conversations.find((conv) => conv.id === id) || null;
+}
+
 function ensureConversationList() {
   if (state.summaryDialog.conversations.length === 0) {
     const now = new Date().toISOString();
@@ -600,9 +609,12 @@ function switchConversation(conversationId) {
   syncRuntimeToConversation();
   const conv = state.summaryDialog.conversations.find((item) => item.id === conversationId);
   if (!conv) return;
-  stopSummaryStatusPolling();
-  stopRealtimeStream();
-  setSummaryLoading(false, "");
+  const keepDailyStreamAlive = state.summaryDialog.streamKind === "daily_summary" && Boolean(state.summaryDialog.streamAbort);
+  if (!keepDailyStreamAlive) {
+    stopSummaryStatusPolling();
+    stopRealtimeStream();
+    setSummaryLoading(false, "");
+  }
   state.summaryDialog.activeConversationId = conv.id;
   applyConversationToRuntime(conv);
   persistSummaryDialogMemory();
@@ -903,6 +915,14 @@ function renderSummaryDialog(options = {}) {
 
 function renderSummaryDialogStatus() {
   if (!summaryDialogStatus) return;
+  const loadingFor = String(state.summaryDialog.loadingConversationId || "");
+  const activeId = String(state.summaryDialog.activeConversationId || "");
+  const visibleForActive = !loadingFor || loadingFor === activeId;
+  if (!visibleForActive) {
+    summaryDialogStatus.classList.add("hidden");
+    summaryDialogStatus.innerHTML = "";
+    return;
+  }
   if (!state.summaryDialog.loading) {
     summaryDialogStatus.classList.add("hidden");
     summaryDialogStatus.innerHTML = "";
@@ -961,9 +981,11 @@ function renameActiveConversation() {
   showSummaryDialogNotice("会话名称已更新。");
 }
 
-function setSummaryLoading(active, statusText = "") {
+function setSummaryLoading(active, statusText = "", options = {}) {
+  const targetConversationId = String(options.conversationId || state.summaryDialog.activeConversationId || "");
   state.summaryDialog.loading = Boolean(active);
   state.summaryDialog.loadingStatus = String(statusText || "").trim();
+  state.summaryDialog.loadingConversationId = active ? targetConversationId : "";
   renderSummaryDialogStatus();
 }
 
@@ -985,20 +1007,32 @@ function setChatEnabled(enabled) {
   syncSummaryUiControls();
 }
 
-function pushSummaryDialogMessage(role, text) {
+function pushSummaryDialogMessage(role, text, options = {}) {
   const value = clampDialogText(text);
   if (!value) return;
-  state.summaryDialog.messages.push(normalizeDialogMessage({
+  const targetConversationId = String(options.conversationId || state.summaryDialog.activeConversationId || "");
+  const targetConv = getConversationById(targetConversationId) || getActiveConversation();
+  if (!targetConv) return;
+  const msg = normalizeDialogMessage({
     id: buildDialogMessageId(),
     role,
     text: value,
     ts: new Date().toISOString(),
-  }));
-  if (state.summaryDialog.messages.length > SUMMARY_DIALOG_MAX_MESSAGES) {
-    state.summaryDialog.messages = state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+  });
+  if (!msg) return;
+
+  targetConv.messages = Array.isArray(targetConv.messages) ? targetConv.messages : [];
+  targetConv.messages.push(msg);
+  if (targetConv.messages.length > SUMMARY_DIALOG_MAX_MESSAGES) {
+    targetConv.messages = targetConv.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+  }
+  targetConv.updatedAt = new Date().toISOString();
+
+  if (String(state.summaryDialog.activeConversationId || "") === String(targetConv.id || "")) {
+    state.summaryDialog.messages = targetConv.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+    renderSummaryDialog({ stickBottom: true });
   }
   persistSummaryDialogMemory();
-  renderSummaryDialog({ stickBottom: true });
 }
 
 function deleteSummaryDialogMessage(messageId) {
@@ -1370,6 +1404,8 @@ function stopRealtimeStream() {
   state.summaryDialog.streamAbort = null;
   state.summaryDialog.streamingActive = false;
   state.summaryDialog.streamingText = "";
+  state.summaryDialog.streamKind = "";
+  state.summaryDialog.streamConversationId = "";
   state.summaryDialog.chatStreaming = false;
   syncSummaryUiControls();
 }
@@ -1428,6 +1464,8 @@ async function streamSummaryViaRealtime(meta) {
   const ctrl = new AbortController();
   state.summaryDialog.streamAbort = ctrl;
   state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamKind = "one_summary_realtime";
+  state.summaryDialog.streamConversationId = String(state.summaryDialog.activeConversationId || "");
   state.summaryDialog.streamingText = "";
   renderSummaryDialog();
 
@@ -1599,6 +1637,8 @@ async function streamChatViaWorker(userText) {
   const ctrl = new AbortController();
   state.summaryDialog.streamAbort = ctrl;
   state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamKind = "chat";
+  state.summaryDialog.streamConversationId = String(state.summaryDialog.activeConversationId || "");
   state.summaryDialog.streamingText = "";
   state.summaryDialog.chatStreaming = true;
   syncSummaryUiControls();
@@ -2365,7 +2405,7 @@ function highlightReferencedPapers(arxivIds = []) {
   });
 }
 
-async function generateDailyBriefViaWorker(latestDateKey, items) {
+async function generateDailyBriefViaWorker(latestDateKey, items, options = {}) {
   if (!WORKER_TRIGGER_URL) {
     throw new Error("未配置 Worker 触发地址");
   }
@@ -2375,7 +2415,10 @@ async function generateDailyBriefViaWorker(latestDateKey, items) {
   }
 
   const ctrl = new AbortController();
+  const taskConversationId = String(options.conversationId || state.summaryDialog.activeConversationId || "");
   state.summaryDialog.streamAbort = ctrl;
+  state.summaryDialog.streamKind = "daily_summary";
+  state.summaryDialog.streamConversationId = taskConversationId;
   state.summaryDialog.chatStreaming = true;
   syncSummaryUiControls();
 
@@ -2439,6 +2482,7 @@ async function triggerSummaryDailyViaWorker() {
   stopSummaryStatusPolling();
   stopRealtimeStream();
   activatePinnedDailyConversation();
+  const taskConversationId = String(state.summaryDialog.activeConversationId || "");
   setSummaryDialogOpen(true);
   triggerSummaryDailyBtn.disabled = true;
   triggerSummaryDailyBtn.textContent = "总结中...";
@@ -2446,18 +2490,18 @@ async function triggerSummaryDailyViaWorker() {
   try {
     const latest = collectLatestDayPapersAcrossFields();
     if (!latest.items.length) {
-      setSummaryLoading(false, "");
-      pushSummaryDialogMessage("system", "最近1天没有可用于总结的论文摘要。");
+      setSummaryLoading(false, "", { conversationId: taskConversationId });
+      pushSummaryDialogMessage("system", "最近1天没有可用于总结的论文摘要。", { conversationId: taskConversationId });
       setSummaryMessage("没有可总结数据。");
       return;
     }
 
-    setSummaryLoading(true, "正在总结今日最新论文ing～");
-    const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items);
-    setSummaryLoading(false, "");
+    setSummaryLoading(true, "正在总结今日最新论文ing～", { conversationId: taskConversationId });
+    const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items, { conversationId: taskConversationId });
+    setSummaryLoading(false, "", { conversationId: taskConversationId });
 
     if (!dailyText) {
-      pushSummaryDialogMessage("system", "日报生成完成，但返回内容为空。");
+      pushSummaryDialogMessage("system", "日报生成完成，但返回内容为空。", { conversationId: taskConversationId });
       setSummaryMessage("日报生成完成（空结果）。");
       return;
     }
@@ -2467,20 +2511,25 @@ async function triggerSummaryDailyViaWorker() {
     const annotatedBody = annotateDailySummaryWithReferences(sanitized.text, refEntries);
     const appendix = buildDailyReferenceAppendix(refEntries);
     const finalText = `${annotatedBody}${appendix}`;
-    pushSummaryDialogMessage("assistant", finalText);
+    pushSummaryDialogMessage("assistant", finalText, { conversationId: taskConversationId });
     highlightReferencedPapers(refEntries.map((entry) => entry.canonicalId));
+    if (String(state.summaryDialog.activeConversationId || "") !== taskConversationId) {
+      showSummaryDialogNotice("后台总结已完成，可切回原会话查看结果。");
+    }
     setSummaryMessage("最近1天新文日报已生成。");
   } catch (err) {
     console.error(err);
     stopRealtimeStream();
-    setSummaryLoading(false, "");
+    setSummaryLoading(false, "", { conversationId: taskConversationId });
     const msg = String(err?.message || err);
-    pushSummaryDialogMessage("system", `最近1天新文日报生成失败：${msg}`);
+    pushSummaryDialogMessage("system", `最近1天新文日报生成失败：${msg}`, { conversationId: taskConversationId });
     setSummaryMessage(`日报生成失败：${msg}`);
   } finally {
     triggerSummaryDailyBtn.disabled = false;
     triggerSummaryDailyBtn.textContent = "一键总结最近1天新文";
     state.summaryDialog.streamAbort = null;
+    state.summaryDialog.streamKind = "";
+    state.summaryDialog.streamConversationId = "";
     state.summaryDialog.chatStreaming = false;
     syncSummaryUiControls();
   }
