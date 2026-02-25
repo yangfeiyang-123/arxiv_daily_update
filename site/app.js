@@ -2152,81 +2152,29 @@ function sanitizeDailyBriefText(rawText) {
   };
 }
 
-function normalizeDailyCategoryLabel(label) {
-  return String(label || "")
-    .replace(/^[\d\s.、)）-]+/, "")
-    .replace(/^["“”'`]+|["“”'`]+$/g, "")
-    .replace(/[：:。；;，,]+$/g, "")
-    .trim();
-}
-
 function normalizeDailyBriefLayout(rawText) {
   let text = String(rawText || "").replace(/\r\n/g, "\n").trim();
   if (!text) return "";
 
   text = text
+    // Ensure section headings are isolated on their own lines.
     .replace(/([^\n])\s*(##\s*1\.\s*每日问候与祝福)/g, "$1\n\n$2")
     .replace(/([^\n])\s*(##\s*2\.\s*今日新论文主要类别)/g, "$1\n\n$2")
     .replace(/([^\n])\s*(##\s*3\.\s*分类摘要)/g, "$1\n\n$2")
+    // Convert plain numbered section titles into markdown headings.
+    .replace(/^\s*1[.)、]\s*每日问候与祝福\s*(.*)$/gm, (_m, tail) => `## 1. 每日问候与祝福${tail ? `\n${tail.trim()}` : ""}`)
+    .replace(/^\s*2[.)、]\s*今日新论文主要类别\s*(.*)$/gm, (_m, tail) => `## 2. 今日新论文主要类别${tail ? `\n${tail.trim()}` : ""}`)
+    .replace(/^\s*3[.)、]\s*分类摘要\s*(.*)$/gm, (_m, tail) => `## 3. 分类摘要${tail ? `\n${tail.trim()}` : ""}`)
+    // Remove accidental list markers before headings, e.g. "- ## 3. 分类摘要".
+    .replace(/^\s*[-*•]\s*(#{2,6}\s*.+)$/gm, "$1")
+    // Fix hyphen-wrapped English titles becoming extra bullets.
+    .replace(/([A-Za-z])-\s*\n[-*]\s*([A-Za-z])/g, "$1-$2")
+    // Merge lines like "\n: 说明" back to previous title line.
+    .replace(/\n\s*[:：]\s*/g, "：")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  const sec2Match = text.match(
-    /(##\s*2\.\s*今日新论文主要类别\s*\n)([\s\S]*?)(?=\n##\s*3\.\s*分类摘要\b|$)/
-  );
-  if (!sec2Match) return text;
-
-  const sec2Header = sec2Match[1];
-  const sec2Body = sec2Match[2] || "";
-  const lines = sec2Body.split("\n").map((line) => String(line || "").trim()).filter(Boolean);
-  const introLines = [];
-  const categories = [];
-  const seen = new Set();
-
-  const pushCategory = (raw) => {
-    const clean = normalizeDailyCategoryLabel(raw);
-    if (!clean) return;
-    const key = clean.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    categories.push(clean);
-  };
-
-  lines.forEach((line) => {
-    const lineWithFirstCategory = line.match(/^(.*[：:])\s*\d+[.)、）]?\s*(.+)$/);
-    if (lineWithFirstCategory) {
-      const intro = String(lineWithFirstCategory[1] || "").trim();
-      if (intro) introLines.push(intro);
-      pushCategory(lineWithFirstCategory[2]);
-      return;
-    }
-    const numbered = line.match(/^\d+[.)、）]?\s*(.+)$/);
-    if (numbered) {
-      pushCategory(numbered[1]);
-      return;
-    }
-    if (/^[\-*•]\s+/.test(line)) {
-      pushCategory(line.replace(/^[\-*•]\s+/, ""));
-      return;
-    }
-    const looksLikeCategory = line.length <= 32 && !/[。；;!?！？]/.test(line);
-    if (looksLikeCategory) {
-      pushCategory(line);
-      return;
-    }
-    introLines.push(line);
-  });
-
-  if (categories.length === 0) return text;
-
-  const rebuiltSec2 = [
-    sec2Header.trimEnd(),
-    ...(introLines.length ? [introLines[0]] : ["今日论文主要分布如下："]),
-    "",
-    ...categories.map((item) => `- ${item}`),
-  ].join("\n");
-
-  return text.replace(sec2Match[0], rebuiltSec2).replace(/\n{3,}/g, "\n\n").trim();
+  return text;
 }
 
 function buildPaperMetaFromRecord(paperRecord, fallback = {}) {
@@ -2366,14 +2314,12 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
         "分类摘要中，凡提及具体论文，必须使用真实论文标题，不要用“论文1/论文2/论文3”这类代号。",
         "不要输出任何参考文献编号（如 [1]、[2]）或“参考文献”小节。",
         "分类摘要里不要在标题后追加数字编号，例如不要出现“标题”1 或 “标题”[1]。",
-        "输出结构必须严格是：",
+        "请按下列结构输出（格式自然可读即可，不需要僵硬模板）：",
         "## 1. 每日问候与祝福",
         "## 2. 今日新论文主要类别",
         "## 3. 分类摘要",
-        "每个标题必须独立成行，标题前后保留空行。",
-        "“今日新论文主要类别”部分只允许使用无序列表：每行格式为 `- 类别名`，不要使用有序编号。",
-        "“分类摘要”中每个类别必须用三级标题 `### 类别名`，并在其下用若干 `- ` 项描述论文。",
-        "每条论文描述格式：`- 论文标题：一句话总结。`",
+        "标题请尽量独立成行。",
+        "分类摘要尽量按类别分段，每条论文使用“论文标题：简述”写法。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
     },
@@ -2447,6 +2393,7 @@ function annotateDailySummaryWithReferences(text, refEntries = []) {
     .replace(/([”"])\s*\d+(?=\s*[，。；：:、\n])/g, "$1")
     .replace(/(\]\(#paper-[^)]+\))\s*\d+(?=\s*[，。；：:、\n])/g, "$1")
     .replace(/[［\[]\s*\d+(?:\s*[,，、]\s*\d+)*\s*[］\]]/g, "")
+    .replace(/([^\n])\s+(##\s*[23]\.\s*)/g, "$1\n\n$2")
     .replace(/[ \t]+$/gm, "")
     .replace(/\s{2,}/g, " ")
     .trim();
