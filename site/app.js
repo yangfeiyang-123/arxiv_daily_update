@@ -2049,9 +2049,18 @@ function sanitizeDailyBriefText(rawText) {
   const lines = String(rawText || "").replace(/\r\n/g, "\n").split("\n");
   const matchedIds = [];
   const out = [];
+  let inRefSection = false;
 
   lines.forEach((line) => {
     const trimmed = String(line || "").trim();
+    if (/^#{1,6}\s*参考链接\s*$/i.test(trimmed)) {
+      inRefSection = true;
+      return;
+    }
+    if (inRefSection) {
+      // Drop model-generated reference block and keep only normalized appendix we add later.
+      return;
+    }
     if (!trimmed) {
       out.push("");
       return;
@@ -2410,7 +2419,7 @@ async function triggerSummaryDailyViaWorker() {
       return;
     }
     const sanitized = sanitizeDailyBriefText(dailyText);
-    const refIds = [...new Set([...extractArxivIdsFromText(sanitized.text), ...sanitized.matchedIds])];
+    const refIds = [...new Set([...extractArxivIdsFromText(dailyText), ...sanitized.matchedIds])];
     const appendix = buildDailyReferenceAppendix(refIds);
     const finalText = `${sanitized.text}${appendix}`;
     pushSummaryDialogMessage("assistant", finalText);
