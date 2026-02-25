@@ -158,6 +158,29 @@ git push -u origin main
 git remote set-url origin https://github.com/<你的用户名>/<你的仓库名>.git
 ```
 
+### 一键部署脚本（推荐）
+
+仓库已提供脚本：`scripts/deploy_one_click.sh`
+
+```bash
+cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv
+bash scripts/deploy_one_click.sh
+```
+
+可选：顺带部署 Worker
+
+```bash
+cd /Users/yangfeiyang/Desktop/Work_Space/myArxiv
+bash scripts/deploy_one_click.sh --with-worker
+```
+
+也可以直接用 Make:
+
+```bash
+make deploy
+make deploy-worker
+```
+
 ## 可调参数
 
 抓取脚本支持：

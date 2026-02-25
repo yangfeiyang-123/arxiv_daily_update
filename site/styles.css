@@ -480,9 +480,12 @@ select:focus {
   display: flex;
   gap: 10px;
   margin-top: auto;
+  flex-wrap: wrap;
 }
 
 .paper-link {
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   color: #09131f;
   background: var(--accent);
@@ -490,6 +493,9 @@ select:focus {
   border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 700;
+  border: 1px solid transparent;
+  font: inherit;
+  cursor: pointer;
 }
 
 .paper-link.alt {
@@ -568,6 +574,8 @@ select:focus {
 
 .summary-dialog-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
 }
 
@@ -580,6 +588,26 @@ select:focus {
   font-size: 0.78rem;
   padding: 6px 9px;
   cursor: pointer;
+}
+
+.summary-thread-bar {
+  padding: 0 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-thread-bar label {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.summary-thread-bar select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
 }
 
 .summary-dialog-body {

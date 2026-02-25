@@ -1,4 +1,4 @@
-.PHONY: update update-fast serve
+.PHONY: update update-fast serve deploy deploy-worker
 
 update:
 	python3 scripts/fetch_cs_ro.py
@@ -8,3 +8,9 @@ update-fast:
 
 serve:
 	python3 -m http.server 8000
+
+deploy:
+	bash scripts/deploy_one_click.sh
+
+deploy-worker:
+	bash scripts/deploy_one_click.sh --with-worker

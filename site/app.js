@@ -30,6 +30,7 @@ const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
 const SUMMARY_UI_PREF_KEY = "myarxiv_summary_ui_pref_v1";
 const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
+const SUMMARY_CONVERSATION_MAX = 24;
 const SUMMARY_STATUS_POLL_MS = 4500;
 const INITIAL_VISIBLE_COUNT = 120;
 const VISIBLE_STEP = 120;
@@ -48,9 +49,15 @@ const state = {
   summaryIndex: null,
   summaryDialog: {
     open: false,
+    conversations: [],
+    activeConversationId: "",
     activeArxivId: "",
     activeTitle: "",
     activePublished: "",
+    activePaperSummary: "",
+    activePaperUrl: "",
+    activePaperPdfUrl: "",
+    activePaperField: "",
     messages: [],
     pollTimerId: 0,
     pollContext: null,
@@ -90,6 +97,9 @@ const summaryDialogSub = document.getElementById("summaryDialogSub");
 const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogClearBtn = document.getElementById("summaryDialogClearBtn");
 const summaryDialogRefreshBtn = document.getElementById("summaryDialogRefreshBtn");
+const summaryThreadSelect = document.getElementById("summaryThreadSelect");
+const summaryThreadNewBtn = document.getElementById("summaryThreadNewBtn");
+const summaryThreadDeleteBtn = document.getElementById("summaryThreadDeleteBtn");
 const summaryChatEnabledToggle = document.getElementById("summaryChatEnabledToggle");
 const summaryChatForm = document.getElementById("summaryChatForm");
 const summaryChatInput = document.getElementById("summaryChatInput");
@@ -248,14 +258,181 @@ function extractCanonicalArxivId(arxivId) {
   return String(arxivId || "").replace(/v\d+$/i, "");
 }
 
+function buildConversationId() {
+  return `conv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function buildConversationTitle(meta = {}, fallback = "新会话") {
+  const arxivId = extractArxivId(meta.arxivId || "");
+  if (arxivId) {
+    const title = String(meta.title || "").trim();
+    if (title) return `${arxivId} · ${shortText(title, 24)}`;
+    return arxivId;
+  }
+  const raw = String(meta.title || "").trim();
+  if (raw) return shortText(raw, 30);
+  return fallback;
+}
+
+function getActiveConversation() {
+  const id = state.summaryDialog.activeConversationId;
+  if (!id) return null;
+  return state.summaryDialog.conversations.find((conv) => conv.id === id) || null;
+}
+
+function ensureConversationList() {
+  if (state.summaryDialog.conversations.length > 0) return;
+  const now = new Date().toISOString();
+  const seed = {
+    id: buildConversationId(),
+    title: "默认会话",
+    createdAt: now,
+    updatedAt: now,
+    activeArxivId: "",
+    activeTitle: "",
+    activePublished: "",
+    activePaperSummary: "",
+    activePaperUrl: "",
+    activePaperPdfUrl: "",
+    activePaperField: "",
+    messages: [],
+  };
+  state.summaryDialog.conversations = [seed];
+  state.summaryDialog.activeConversationId = seed.id;
+}
+
+function applyConversationToRuntime(conv) {
+  if (!conv) return;
+  state.summaryDialog.activeArxivId = String(conv.activeArxivId || "");
+  state.summaryDialog.activeTitle = String(conv.activeTitle || "");
+  state.summaryDialog.activePublished = String(conv.activePublished || "");
+  state.summaryDialog.activePaperSummary = String(conv.activePaperSummary || "");
+  state.summaryDialog.activePaperUrl = String(conv.activePaperUrl || "");
+  state.summaryDialog.activePaperPdfUrl = String(conv.activePaperPdfUrl || "");
+  state.summaryDialog.activePaperField = String(conv.activePaperField || "");
+  state.summaryDialog.messages = Array.isArray(conv.messages)
+    ? conv.messages
+        .filter((x) => x && typeof x === "object")
+        .map((x) => ({
+          role: String(x.role || "system"),
+          text: clampDialogText(x.text || ""),
+          ts: String(x.ts || ""),
+        }))
+        .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
+    : [];
+}
+
+function syncRuntimeToConversation() {
+  ensureConversationList();
+  const conv = getActiveConversation();
+  if (!conv) return;
+  conv.activeArxivId = String(state.summaryDialog.activeArxivId || "");
+  conv.activeTitle = String(state.summaryDialog.activeTitle || "");
+  conv.activePublished = String(state.summaryDialog.activePublished || "");
+  conv.activePaperSummary = String(state.summaryDialog.activePaperSummary || "");
+  conv.activePaperUrl = String(state.summaryDialog.activePaperUrl || "");
+  conv.activePaperPdfUrl = String(state.summaryDialog.activePaperPdfUrl || "");
+  conv.activePaperField = String(state.summaryDialog.activePaperField || "");
+  conv.messages = (state.summaryDialog.messages || []).slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+  if (conv.messages.length > 0 && !conv.title) {
+    conv.title = buildConversationTitle({ arxivId: conv.activeArxivId, title: conv.activeTitle }, "会话");
+  }
+  conv.updatedAt = new Date().toISOString();
+}
+
+function createConversation(meta = {}) {
+  syncRuntimeToConversation();
+  const now = new Date().toISOString();
+  const conv = {
+    id: buildConversationId(),
+    title: buildConversationTitle(meta),
+    createdAt: now,
+    updatedAt: now,
+    activeArxivId: String(meta.arxivId || ""),
+    activeTitle: String(meta.title || ""),
+    activePublished: String(meta.published || ""),
+    activePaperSummary: String(meta.paperSummary || ""),
+    activePaperUrl: String(meta.paperUrl || ""),
+    activePaperPdfUrl: String(meta.paperPdfUrl || ""),
+    activePaperField: String(meta.fieldCode || ""),
+    messages: [],
+  };
+  state.summaryDialog.conversations.unshift(conv);
+  if (state.summaryDialog.conversations.length > SUMMARY_CONVERSATION_MAX) {
+    state.summaryDialog.conversations = state.summaryDialog.conversations.slice(0, SUMMARY_CONVERSATION_MAX);
+  }
+  state.summaryDialog.activeConversationId = conv.id;
+  applyConversationToRuntime(conv);
+  state.summaryDialog.pollContext = null;
+  state.summaryDialog.lastStatusSignature = "";
+  return conv;
+}
+
+function switchConversation(conversationId) {
+  if (!conversationId) return;
+  if (conversationId === state.summaryDialog.activeConversationId) return;
+  syncRuntimeToConversation();
+  const conv = state.summaryDialog.conversations.find((item) => item.id === conversationId);
+  if (!conv) return;
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+  setSummaryLoading(false, "");
+  state.summaryDialog.activeConversationId = conv.id;
+  applyConversationToRuntime(conv);
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+}
+
+function deleteActiveConversation() {
+  ensureConversationList();
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+  setSummaryLoading(false, "");
+  if (state.summaryDialog.conversations.length <= 1) {
+    state.summaryDialog.messages = [];
+    state.summaryDialog.activeArxivId = "";
+    state.summaryDialog.activeTitle = "";
+    state.summaryDialog.activePublished = "";
+    state.summaryDialog.activePaperSummary = "";
+    state.summaryDialog.activePaperUrl = "";
+    state.summaryDialog.activePaperPdfUrl = "";
+    state.summaryDialog.activePaperField = "";
+    syncRuntimeToConversation();
+    persistSummaryDialogMemory();
+    renderSummaryDialog();
+    return;
+  }
+  const activeId = state.summaryDialog.activeConversationId;
+  const nextList = state.summaryDialog.conversations.filter((conv) => conv.id !== activeId);
+  state.summaryDialog.conversations = nextList;
+  state.summaryDialog.activeConversationId = nextList[0]?.id || "";
+  applyConversationToRuntime(getActiveConversation());
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+}
+
 function persistSummaryDialogMemory() {
+  syncRuntimeToConversation();
   try {
     const mem = {
       open: state.summaryDialog.open,
-      activeArxivId: state.summaryDialog.activeArxivId,
-      activeTitle: state.summaryDialog.activeTitle,
-      activePublished: state.summaryDialog.activePublished,
-      messages: state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES),
+      activeConversationId: state.summaryDialog.activeConversationId,
+      conversations: state.summaryDialog.conversations
+        .map((conv) => ({
+          id: String(conv.id || ""),
+          title: String(conv.title || ""),
+          createdAt: String(conv.createdAt || ""),
+          updatedAt: String(conv.updatedAt || ""),
+          activeArxivId: String(conv.activeArxivId || ""),
+          activeTitle: String(conv.activeTitle || ""),
+          activePublished: String(conv.activePublished || ""),
+          activePaperSummary: String(conv.activePaperSummary || ""),
+          activePaperUrl: String(conv.activePaperUrl || ""),
+          activePaperPdfUrl: String(conv.activePaperPdfUrl || ""),
+          activePaperField: String(conv.activePaperField || ""),
+          messages: Array.isArray(conv.messages) ? conv.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES) : [],
+        }))
+        .slice(0, SUMMARY_CONVERSATION_MAX),
     };
     localStorage.setItem(SUMMARY_DIALOG_MEMORY_KEY, JSON.stringify(mem));
   } catch (err) {
@@ -266,25 +443,83 @@ function persistSummaryDialogMemory() {
 function loadSummaryDialogMemory() {
   try {
     const raw = localStorage.getItem(SUMMARY_DIALOG_MEMORY_KEY);
-    if (!raw) return;
-    const mem = JSON.parse(raw);
-    if (!mem || typeof mem !== "object") return;
-    state.summaryDialog.open = Boolean(mem.open);
-    state.summaryDialog.activeArxivId = String(mem.activeArxivId || "");
-    state.summaryDialog.activeTitle = String(mem.activeTitle || "");
-    state.summaryDialog.activePublished = String(mem.activePublished || "");
-    if (Array.isArray(mem.messages)) {
-      state.summaryDialog.messages = mem.messages
-        .filter((x) => x && typeof x === "object")
-        .map((x) => ({
-          role: String(x.role || "system"),
-          text: clampDialogText(x.text || ""),
-          ts: String(x.ts || ""),
-        }))
-        .slice(-SUMMARY_DIALOG_MAX_MESSAGES);
+    if (!raw) {
+      ensureConversationList();
+      applyConversationToRuntime(getActiveConversation());
+      return;
     }
+    const mem = JSON.parse(raw);
+    if (!mem || typeof mem !== "object") {
+      ensureConversationList();
+      applyConversationToRuntime(getActiveConversation());
+      return;
+    }
+    state.summaryDialog.open = Boolean(mem.open);
+    const parsedConversations = [];
+    if (Array.isArray(mem.conversations)) {
+      mem.conversations.forEach((rawConv, idx) => {
+        if (!rawConv || typeof rawConv !== "object") return;
+        const conv = {
+          id: String(rawConv.id || buildConversationId()),
+          title: String(rawConv.title || `会话 ${idx + 1}`),
+          createdAt: String(rawConv.createdAt || ""),
+          updatedAt: String(rawConv.updatedAt || ""),
+          activeArxivId: String(rawConv.activeArxivId || ""),
+          activeTitle: String(rawConv.activeTitle || ""),
+          activePublished: String(rawConv.activePublished || ""),
+          activePaperSummary: String(rawConv.activePaperSummary || ""),
+          activePaperUrl: String(rawConv.activePaperUrl || ""),
+          activePaperPdfUrl: String(rawConv.activePaperPdfUrl || ""),
+          activePaperField: String(rawConv.activePaperField || ""),
+          messages: Array.isArray(rawConv.messages)
+            ? rawConv.messages
+                .filter((x) => x && typeof x === "object")
+                .map((x) => ({
+                  role: String(x.role || "system"),
+                  text: clampDialogText(x.text || ""),
+                  ts: String(x.ts || ""),
+                }))
+                .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
+            : [],
+        };
+        parsedConversations.push(conv);
+      });
+    } else if (Array.isArray(mem.messages) || mem.activeArxivId || mem.activeTitle) {
+      // Backward compatible migration from single-conversation storage.
+      parsedConversations.push({
+        id: buildConversationId(),
+        title: buildConversationTitle({ arxivId: mem.activeArxivId, title: mem.activeTitle }, "默认会话"),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        activeArxivId: String(mem.activeArxivId || ""),
+        activeTitle: String(mem.activeTitle || ""),
+        activePublished: String(mem.activePublished || ""),
+        activePaperSummary: "",
+        activePaperUrl: "",
+        activePaperPdfUrl: "",
+        activePaperField: "",
+        messages: Array.isArray(mem.messages)
+          ? mem.messages
+              .filter((x) => x && typeof x === "object")
+              .map((x) => ({
+                role: String(x.role || "system"),
+                text: clampDialogText(x.text || ""),
+                ts: String(x.ts || ""),
+              }))
+              .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
+          : [],
+      });
+    }
+    state.summaryDialog.conversations = parsedConversations.slice(0, SUMMARY_CONVERSATION_MAX);
+    ensureConversationList();
+    const activeId = String(mem.activeConversationId || "");
+    state.summaryDialog.activeConversationId =
+      state.summaryDialog.conversations.find((conv) => conv.id === activeId)?.id || state.summaryDialog.conversations[0].id;
+    applyConversationToRuntime(getActiveConversation());
   } catch (err) {
     console.warn("load summary dialog memory failed", err);
+    ensureConversationList();
+    applyConversationToRuntime(getActiveConversation());
   }
 }
 
@@ -332,6 +567,25 @@ function syncSummaryUiControls() {
   if (summaryChatSendBtn) {
     summaryChatSendBtn.disabled = !chatEnabled || chatBusy;
   }
+  if (summaryThreadSelect) {
+    summaryThreadSelect.disabled = !state.summaryDialog.aiSidebarEnabled;
+  }
+  if (summaryThreadDeleteBtn) {
+    summaryThreadDeleteBtn.disabled = !state.summaryDialog.aiSidebarEnabled;
+  }
+}
+
+function renderConversationSelector() {
+  if (!summaryThreadSelect) return;
+  ensureConversationList();
+  const options = state.summaryDialog.conversations
+    .map((conv, idx) => {
+      const label = `${idx + 1}. ${conv.title || "会话"}`;
+      return `<option value="${escapeHtml(conv.id)}">${escapeHtml(label)}</option>`;
+    })
+    .join("");
+  summaryThreadSelect.innerHTML = options;
+  summaryThreadSelect.value = state.summaryDialog.activeConversationId;
 }
 
 function setSummaryDialogOpen(open) {
@@ -342,16 +596,20 @@ function setSummaryDialogOpen(open) {
     summaryDialog.classList.toggle("is-open", state.summaryDialog.open);
   }
   document.body.classList.toggle("summary-open", state.summaryDialog.open);
+  renderConversationSelector();
   syncSummaryUiControls();
   persistSummaryDialogMemory();
 }
 
 function renderSummaryDialog() {
   if (!summaryDialog || !summaryDialogBody || !summaryDialogSub) return;
+  renderConversationSelector();
+  const conv = getActiveConversation();
+  const convName = conv?.title || "会话";
 
   const sub = state.summaryDialog.activeArxivId
-    ? `${state.summaryDialog.activeArxivId}${state.summaryDialog.activeTitle ? ` · ${state.summaryDialog.activeTitle}` : ""}`
-    : "未选择论文";
+    ? `${convName} · ${state.summaryDialog.activeArxivId}${state.summaryDialog.activeTitle ? ` · ${state.summaryDialog.activeTitle}` : ""}`
+    : `${convName} · 未选择论文`;
   summaryDialogSub.textContent = sub;
 
   const hasHistory = state.summaryDialog.messages.length > 0;
@@ -364,7 +622,7 @@ function renderSummaryDialog() {
     : "";
 
   if (!hasHistory && !hasStreaming) {
-    summaryDialogBody.innerHTML = `${loadingHtml}<article class="summary-msg system">点击“AI总结此文”后，这里会显示总结结果。</article>`;
+    summaryDialogBody.innerHTML = `${loadingHtml}<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或点击“AI总结此文”直接触发总结。</article>`;
   } else {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
@@ -432,6 +690,14 @@ function setActiveSummaryPaper(meta = {}) {
   state.summaryDialog.activeArxivId = String(meta.arxivId || "");
   state.summaryDialog.activeTitle = String(meta.title || "");
   state.summaryDialog.activePublished = String(meta.published || "");
+  state.summaryDialog.activePaperSummary = String(meta.paperSummary || "");
+  state.summaryDialog.activePaperUrl = String(meta.paperUrl || "");
+  state.summaryDialog.activePaperPdfUrl = String(meta.paperPdfUrl || "");
+  state.summaryDialog.activePaperField = String(meta.fieldCode || "");
+  const conv = getActiveConversation();
+  if (conv) {
+    conv.title = buildConversationTitle(meta, conv.title || "会话");
+  }
   persistSummaryDialogMemory();
   renderSummaryDialog();
 }
@@ -933,7 +1199,29 @@ async function streamSummaryViaRealtime(meta) {
 }
 
 function buildChatContextMessages() {
-  return (state.summaryDialog.messages || [])
+  const paperPrompt = [];
+  if (state.summaryDialog.activeArxivId) {
+    paperPrompt.push(`当前讨论论文：${state.summaryDialog.activeArxivId}`);
+  }
+  if (state.summaryDialog.activeTitle) {
+    paperPrompt.push(`标题：${state.summaryDialog.activeTitle}`);
+  }
+  if (state.summaryDialog.activePublished) {
+    paperPrompt.push(`发布时间：${state.summaryDialog.activePublished}`);
+  }
+  if (state.summaryDialog.activePaperField) {
+    paperPrompt.push(`领域：${state.summaryDialog.activePaperField}`);
+  }
+  if (state.summaryDialog.activePaperSummary) {
+    paperPrompt.push(`论文摘要：${state.summaryDialog.activePaperSummary}`);
+  }
+  if (state.summaryDialog.activePaperUrl || state.summaryDialog.activePaperPdfUrl) {
+    paperPrompt.push(
+      `参考链接：${[state.summaryDialog.activePaperUrl, state.summaryDialog.activePaperPdfUrl].filter(Boolean).join(" | ")}`
+    );
+  }
+
+  const history = (state.summaryDialog.messages || [])
     .filter((m) => ["user", "assistant"].includes(m.role))
     .slice(-8)
     .map((m) => ({
@@ -941,6 +1229,15 @@ function buildChatContextMessages() {
       content: m.text || "",
     }))
     .filter((m) => m.content.trim());
+
+  if (paperPrompt.length === 0) return history;
+  return [
+    {
+      role: "system",
+      content: `${paperPrompt.join("\n")}\n请围绕这篇论文回答用户问题；如信息不在摘要中，请明确说“摘要未提及”。`,
+    },
+    ...history,
+  ];
 }
 
 async function streamChatViaWorker(userText) {
@@ -1093,6 +1390,54 @@ function extractArxivId(value) {
     cleaned = cleaned.split("/html/").pop();
   }
   return cleaned.replace(/^\/+|\/+$/g, "");
+}
+
+function findPaperByArxivId(arxivId) {
+  const canonical = extractCanonicalArxivId(extractArxivId(arxivId));
+  if (!canonical) return null;
+  for (const field of state.fields.values()) {
+    for (const paper of field.papers || []) {
+      const pid = extractCanonicalArxivId(extractArxivId(paper.id || paper.pdf_url || ""));
+      if (pid === canonical) {
+        return { paper, fieldCode: field.code };
+      }
+    }
+  }
+  return null;
+}
+
+function buildPaperMetaFromRecord(paperRecord, fallback = {}) {
+  const paper = paperRecord?.paper || {};
+  const fieldCode = paperRecord?.fieldCode || state.selectedField || "";
+  const arxivId = extractArxivId(fallback.arxivId || paper.id || paper.pdf_url || "");
+  return {
+    arxivId,
+    title: fallback.title || paper.title || "",
+    published: fallback.published || paper.published || "",
+    paperSummary: paper.summary || "",
+    paperUrl: paper.id || "",
+    paperPdfUrl: paper.pdf_url || paper.id || "",
+    fieldCode,
+  };
+}
+
+function startConversationForPaper(meta) {
+  if (!state.summaryDialog.aiSidebarEnabled) {
+    setSummaryMessage("AI侧边栏已关闭，请先开启。");
+    return;
+  }
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+  const conv = createConversation(meta);
+  setSummaryDialogOpen(true);
+  setActiveSummaryPaper(meta);
+  pushSummaryDialogMessage(
+    "system",
+    `已将论文加入当前会话：${meta.arxivId || "unknown"}${meta.title ? ` · ${meta.title}` : ""}\n现在你可以直接提问。`
+  );
+  if (summaryThreadSelect) {
+    summaryThreadSelect.value = conv.id;
+  }
 }
 
 async function triggerSummaryDailyViaWorker() {
@@ -1390,6 +1735,7 @@ function renderPaperCard(paper, index) {
   const arxivUrl = escapeHtml(paper.id || "#");
   const pdfUrl = escapeHtml(paper.pdf_url || paper.id || "#");
   const arxivId = escapeHtml(extractArxivId(paper.id || paper.pdf_url || ""));
+  const fieldCode = escapeHtml(state.selectedField || "");
   const published = escapeHtml(paper.published || "");
   const title = escapeHtml(paper.title || "Untitled");
 
@@ -1406,6 +1752,7 @@ function renderPaperCard(paper, index) {
       <div class="paper-links">
         <a class="paper-link" href="${pdfUrl}" target="_blank" rel="noreferrer">阅读 PDF</a>
         <a class="paper-link alt" href="${arxivUrl}" target="_blank" rel="noreferrer">arXiv 页面</a>
+        <button type="button" class="paper-link alt js-chat-paper" data-arxiv-id="${arxivId}" data-published="${published}" data-title="${title}" data-field-code="${fieldCode}">加入AI侧栏</button>
         <button type="button" class="paper-link ai js-summarize-one" data-arxiv-id="${arxivId}" data-published="${published}" data-title="${title}">AI总结此文</button>
       </div>
     </article>
@@ -1528,6 +1875,30 @@ function bindEvents() {
     });
   }
 
+  if (summaryThreadSelect) {
+    summaryThreadSelect.addEventListener("change", (event) => {
+      const target = event.target;
+      const nextId = String(target && target.value ? target.value : "");
+      switchConversation(nextId);
+    });
+  }
+
+  if (summaryThreadNewBtn) {
+    summaryThreadNewBtn.addEventListener("click", () => {
+      createConversation({ title: "新会话" });
+      setSummaryDialogOpen(true);
+      renderSummaryDialog();
+      pushSummaryDialogMessage("system", "已创建新会话，可直接开始提问。");
+    });
+  }
+
+  if (summaryThreadDeleteBtn) {
+    summaryThreadDeleteBtn.addEventListener("click", () => {
+      deleteActiveConversation();
+      pushSummaryDialogMessage("system", "当前会话已删除。");
+    });
+  }
+
   if (aiPanelEnabledToggle) {
     aiPanelEnabledToggle.addEventListener("change", (event) => {
       const target = event.target;
@@ -1564,13 +1935,30 @@ function bindEvents() {
   paperGroups.addEventListener("click", (event) => {
     const el = event.target instanceof Element ? event.target : null;
     if (!el) return;
+    const chatTarget = el.closest(".js-chat-paper");
+    if (chatTarget) {
+      const fallbackMeta = {
+        arxivId: chatTarget.getAttribute("data-arxiv-id") || "",
+        title: chatTarget.getAttribute("data-title") || "",
+        published: chatTarget.getAttribute("data-published") || "",
+        fieldCode: chatTarget.getAttribute("data-field-code") || state.selectedField || "",
+      };
+      const paperRecord = findPaperByArxivId(fallbackMeta.arxivId);
+      const meta = buildPaperMetaFromRecord(paperRecord, fallbackMeta);
+      startConversationForPaper(meta);
+      return;
+    }
+
     const target = el.closest(".js-summarize-one");
     if (!target) return;
-    const meta = {
+    const fallbackMeta = {
       arxivId: target.getAttribute("data-arxiv-id") || "",
       title: target.getAttribute("data-title") || "",
       published: target.getAttribute("data-published") || "",
+      fieldCode: state.selectedField || "",
     };
+    const paperRecord = findPaperByArxivId(fallbackMeta.arxivId);
+    const meta = buildPaperMetaFromRecord(paperRecord, fallbackMeta);
     showSummaryInDialogForPaper(meta, target);
   });
 
