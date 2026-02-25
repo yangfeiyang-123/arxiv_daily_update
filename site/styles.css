@@ -632,7 +632,7 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 10px 11px;
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
   line-height: 1.45;
   font-size: 0.86rem;
@@ -650,6 +650,71 @@ select:focus {
 
 .summary-msg.system {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-msg p,
+.summary-msg ul,
+.summary-msg ol,
+.summary-msg blockquote,
+.summary-msg pre {
+  margin: 0 0 9px;
+}
+
+.summary-msg p:last-child,
+.summary-msg ul:last-child,
+.summary-msg ol:last-child,
+.summary-msg blockquote:last-child,
+.summary-msg pre:last-child {
+  margin-bottom: 0;
+}
+
+.summary-msg h1,
+.summary-msg h2,
+.summary-msg h3,
+.summary-msg h4,
+.summary-msg h5,
+.summary-msg h6 {
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.summary-msg ul,
+.summary-msg ol {
+  padding-left: 18px;
+}
+
+.summary-msg code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.summary-msg .md-code {
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  white-space: pre;
+}
+
+.summary-msg .md-code code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.summary-msg a {
+  color: #8de7ff;
+  text-decoration: underline;
+}
+
+.summary-msg blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.25);
+  padding-left: 10px;
+  color: rgba(234, 241, 248, 0.8);
 }
 
 .summary-dialog-footer {

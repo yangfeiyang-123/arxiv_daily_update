@@ -115,6 +115,141 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function renderInlineMarkdown(line) {
+  let html = String(line || "");
+  const codeTokens = [];
+
+  html = html.replace(/`([^`\n]+)`/g, (_m, code) => {
+    const idx = codeTokens.length;
+    codeTokens.push(`<code>${code}</code>`);
+    return `@@MD_CODE_${idx}@@`;
+  });
+
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, text, url) => {
+    return `<a href="${url}" target="_blank" rel="noreferrer">${text}</a>`;
+  });
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+
+  html = html.replace(/@@MD_CODE_(\d+)@@/g, (_m, idx) => codeTokens[Number(idx)] || "");
+  return html;
+}
+
+function renderMarkdown(text) {
+  const source = escapeHtml(String(text || "").replace(/\r\n/g, "\n"));
+  if (!source.trim()) return "";
+
+  const codeBlocks = [];
+  let body = source.replace(/```([a-zA-Z0-9_-]+)?\n?([\s\S]*?)```/g, (_m, lang, code) => {
+    const idx = codeBlocks.length;
+    const langAttr = lang ? ` data-lang="${lang}"` : "";
+    codeBlocks.push(`<pre class="md-code"><code${langAttr}>${String(code || "").trim()}</code></pre>`);
+    return `@@MD_BLOCK_${idx}@@`;
+  });
+
+  const lines = body.split("\n");
+  const out = [];
+  let para = [];
+  let inUl = false;
+  let inOl = false;
+
+  const flushPara = () => {
+    if (!para.length) return;
+    out.push(`<p>${para.map((line) => renderInlineMarkdown(line)).join("<br>")}</p>`);
+    para = [];
+  };
+  const closeLists = () => {
+    if (inUl) {
+      out.push("</ul>");
+      inUl = false;
+    }
+    if (inOl) {
+      out.push("</ol>");
+      inOl = false;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = String(raw || "");
+    const trimmed = line.trim();
+
+    if (/^@@MD_BLOCK_\d+@@$/.test(trimmed)) {
+      flushPara();
+      closeLists();
+      out.push(trimmed);
+      continue;
+    }
+    if (!trimmed) {
+      flushPara();
+      closeLists();
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      flushPara();
+      closeLists();
+      const level = heading[1].length;
+      out.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    const ul = trimmed.match(/^[-*]\s+(.+)$/);
+    if (ul) {
+      flushPara();
+      if (inOl) {
+        out.push("</ol>");
+        inOl = false;
+      }
+      if (!inUl) {
+        out.push("<ul>");
+        inUl = true;
+      }
+      out.push(`<li>${renderInlineMarkdown(ul[1])}</li>`);
+      continue;
+    }
+
+    const ol = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (ol) {
+      flushPara();
+      if (inUl) {
+        out.push("</ul>");
+        inUl = false;
+      }
+      if (!inOl) {
+        out.push("<ol>");
+        inOl = true;
+      }
+      out.push(`<li>${renderInlineMarkdown(ol[1])}</li>`);
+      continue;
+    }
+
+    const quote = trimmed.match(/^>\s?(.+)$/);
+    if (quote) {
+      flushPara();
+      closeLists();
+      out.push(`<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`);
+      continue;
+    }
+
+    if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
+      flushPara();
+      closeLists();
+      out.push("<hr />");
+      continue;
+    }
+
+    para.push(line);
+  }
+
+  flushPara();
+  closeLists();
+
+  body = out.join("");
+  body = body.replace(/@@MD_BLOCK_(\d+)@@/g, (_m, idx) => codeBlocks[Number(idx)] || "");
+  return body;
+}
+
 function formatDateTime(raw) {
   if (!raw) return "未知时间";
   const dt = new Date(raw);
@@ -620,12 +755,16 @@ function renderSummaryDialog() {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
         const role = ["user", "assistant", "system"].includes(msg.role) ? msg.role : "system";
-        return `<article class="summary-msg ${role}">${escapeHtml(msg.text || "")}</article>`;
+        const isMarkdownRole = role === "assistant" || role === "system";
+        const content = isMarkdownRole
+          ? renderMarkdown(msg.text || "")
+          : escapeHtml(msg.text || "").replace(/\n/g, "<br>");
+        return `<article class="summary-msg ${role}">${content}</article>`;
       })
       .join("");
 
     const streamingHtml = hasStreaming
-      ? `<article class="summary-msg assistant">${escapeHtml(state.summaryDialog.streamingText)}</article>`
+      ? `<article class="summary-msg assistant">${escapeHtml(state.summaryDialog.streamingText).replace(/\n/g, "<br>")}</article>`
       : "";
 
     summaryDialogBody.innerHTML = `${historyHtml}${streamingHtml}`;
