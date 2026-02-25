@@ -2094,7 +2094,7 @@ function sanitizeDailyBriefText(rawText) {
 
   lines.forEach((line) => {
     const trimmed = String(line || "").trim();
-    if (/^#{1,6}\s*参考链接\s*$/i.test(trimmed)) {
+    if (/^#{1,6}\s*(?:\d+\.?\s*)?(?:参考链接|参考文献)\s*$/i.test(trimmed)) {
       inRefSection = true;
       return;
     }
@@ -2229,13 +2229,12 @@ function buildDailyBriefCorpus(items, options = {}) {
 
   for (let i = 0; i < items.length; i += 1) {
     if (usedCount >= maxItems) break;
-    const entry = items[i];
-    const paper = entry.paper || {};
-    const title = String(paper.title || "Untitled").trim();
-    const categories = Array.isArray(paper.categories) ? paper.categories.slice(0, 3).join(", ") : "";
-    const abs = String(paper.summary || "").replace(/\s+/g, " ").trim();
-    const arxivUrl = String(paper.id || "").trim();
-    const pdfUrl = String(paper.pdf_url || "").trim();
+    const entry = items[i] || {};
+    const title = String(entry.title || "Untitled").trim();
+    const categories = Array.isArray(entry.categories) ? entry.categories.slice(0, 3).join(", ") : "";
+    const abs = String(entry.abstract || "").replace(/\s+/g, " ").trim();
+    const arxivUrl = String(entry.url || "").trim();
+    const pdfUrl = String(entry.pdfUrl || "").trim();
     if (!abs) continue;
 
     const row = [
@@ -2267,7 +2266,8 @@ function buildDailyBriefCorpus(items, options = {}) {
 function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
   const dateLabel = latestDateKey ? formatDateOnly(`${latestDateKey}T00:00:00Z`) : "未知日期";
   const dist = new Map();
-  items.forEach((entry) => {
+  const source = Array.isArray(refEntries) && refEntries.length > 0 ? refEntries : items;
+  source.forEach((entry) => {
     const key = entry.fieldCode || "unknown";
     dist.set(key, (dist.get(key) || 0) + 1);
   });
@@ -2275,8 +2275,8 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
     .map(([k, v]) => `${k}:${v}`)
     .join(", ");
 
-  const corpus = buildDailyBriefCorpus(items, {
-    maxItems: items.length,
+  const corpus = buildDailyBriefCorpus(source, {
+    maxItems: source.length,
     maxChars: Number.POSITIVE_INFINITY,
   });
   if (corpus.truncated > 0 || corpus.usedCount < corpus.totalCount) {
@@ -2308,13 +2308,15 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
         "你是我的论文日报助手。",
         "仅基于给定摘要生成中文 Markdown，不要输出思考过程、推理过程、分析草稿。",
         "必须覆盖输入中的全部论文，不允许遗漏。",
-        "正文中凡提及具体论文，必须附带对应引用编号 [n]，且 n 与参考文献编号一一对应。",
+        "分类摘要中，凡提及具体论文，必须写成“论文标题”[n]，且 n 与参考文献编号一一对应。",
+        "禁止使用“论文1/论文2/论文3”这类代号替代真实论文标题。",
         "输出结构必须是：",
-        "## 今日问候",
-        "## 今日新论文主要类别",
-        "## 分类摘要",
+        "## 1. 每日问候与祝福",
+        "## 2. 今日新论文主要类别",
+        "## 3. 分类摘要",
+        "## 4. 参考文献",
         "其中“主要类别”给出 3-6 类；“分类摘要”按类别给小标题并简要总结。",
-        "在输出末尾必须追加“## 参考文献”小节；按“编号. 标题 - URL”列出全部论文。",
+        "参考文献格式固定为“编号. 标题 - URL”。",
         "参考文献数量必须严格等于样本总数（例如 45 篇就必须 45 条）。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
@@ -2343,6 +2345,7 @@ function extractArxivIdsFromText(rawText) {
 
 function buildDailyReferenceEntriesFromItems(items = []) {
   if (!Array.isArray(items) || items.length === 0) return [];
+  const seen = new Set();
   const entries = [];
   items.forEach((entry) => {
     const paper = entry?.paper || {};
@@ -2350,10 +2353,17 @@ function buildDailyReferenceEntriesFromItems(items = []) {
     const canonical = extractCanonicalArxivId(extractArxivId(rawId));
     const title = String(paper.title || canonical || "Untitled").replace(/\s+/g, " ").trim();
     const url = String(paper.id || (canonical ? `https://arxiv.org/abs/${canonical}` : "")).trim();
+    const dedupeKey = canonical || `${normalizeTitleForMatch(title)}|${url}`;
+    if (!dedupeKey || seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
     entries.push({
       canonicalId: canonical,
       title,
       url,
+      pdfUrl: String(paper.pdf_url || "").trim(),
+      abstract: String(paper.summary || "").replace(/\s+/g, " ").trim(),
+      fieldCode: String(entry?.fieldCode || "").trim(),
+      categories: Array.isArray(paper.categories) ? paper.categories : [],
     });
   });
   return entries;
@@ -2362,35 +2372,48 @@ function buildDailyReferenceEntriesFromItems(items = []) {
 function annotateDailySummaryWithReferences(text, refEntries = []) {
   let output = String(text || "").trim();
   if (!output || !Array.isArray(refEntries) || refEntries.length === 0) return output;
-  let markedCount = 0;
+  const marked = new Set();
 
   refEntries.forEach((entry, idx) => {
     const title = String(entry?.title || "").trim();
     const canonical = String(entry?.canonicalId || "").trim();
-    if (!title || !canonical) return;
+    if (!title) return;
     const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = new RegExp(escaped, "i");
     if (!pattern.test(output)) return;
-    output = output.replace(pattern, (matched) => `[${matched}](#paper-${canonical}) [${idx + 1}](#paper-${canonical})`);
-    markedCount += 1;
+    const citation = canonical
+      ? `“${title}”[${idx + 1}](#paper-${canonical})`
+      : `“${title}”[${idx + 1}]`;
+    output = output.replace(pattern, citation);
+    marked.add(idx + 1);
   });
 
-  if (markedCount === 0) {
-    const inlineRefs = refEntries.map((entry, idx) => `[${idx + 1}](#paper-${entry.canonicalId})`).join(" ");
-    if (inlineRefs) {
-      output = `${output}\n\n文中参考序号：${inlineRefs}`;
+  const missing = [];
+  refEntries.forEach((entry, idx) => {
+    if (!marked.has(idx + 1)) {
+      missing.push({ ...entry, index: idx + 1 });
     }
+  });
+  if (missing.length > 0) {
+    const lines = missing.map((entry) => {
+      const title = String(entry.title || "").trim();
+      const brief = shortText(String(entry.abstract || "摘要信息不足"), 88);
+      if (entry.canonicalId) {
+        return `- “${title}”[${entry.index}](#paper-${entry.canonicalId})：${brief}`;
+      }
+      return `- “${title}”[${entry.index}]：${brief}`;
+    });
+    output = `${output}\n\n### 分类摘要补充覆盖\n${lines.join("\n")}`;
   }
   return output;
 }
 
 function buildDailyReferenceAppendix(refEntries = []) {
   if (!Array.isArray(refEntries) || refEntries.length === 0) return "";
-  const lines = [""];
+  const lines = ["", "## 4. 参考文献"];
   refEntries.forEach((entry, idx) => {
-    const title = String(entry?.title || "").trim();
-    const url = String(entry?.url || "").trim();
-    if (!title || !url) return;
+    const title = String(entry?.title || entry?.canonicalId || `Paper-${idx + 1}`).trim();
+    const url = String(entry?.url || (entry?.canonicalId ? `https://arxiv.org/abs/${entry.canonicalId}` : "URL未提供")).trim();
     lines.push(`${idx + 1}. ${title} - ${url}`);
   });
   return lines.join("\n");
