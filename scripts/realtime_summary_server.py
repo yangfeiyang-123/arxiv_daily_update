@@ -62,43 +62,6 @@ class StreamEventEmitter:
         return out
 
 
-def build_final_prompt(paper: core.PaperRecord, source_type: str, chunk_summaries: list[dict[str, Any]]) -> list[dict[str, str]]:
-    evidence_catalog = "\n".join([f"- {item['chunk_id']}: {item['evidence_pointer']}" for item in chunk_summaries])
-    summaries_blob = "\n\n".join(
-        [
-            f"### {item['chunk_id']}\n"
-            f"Evidence: {item['evidence_pointer']}\n"
-            f"key_points: {json.dumps(item['summary'].get('key_points', []), ensure_ascii=False)}\n"
-            f"method_details: {json.dumps(item['summary'].get('method_details', []), ensure_ascii=False)}\n"
-            f"experiment_details: {json.dumps(item['summary'].get('experiment_details', []), ensure_ascii=False)}\n"
-            f"resources: {json.dumps(item['summary'].get('resources', []), ensure_ascii=False)}"
-            for item in chunk_summaries
-        ]
-    )
-
-    date_text = paper.published_date or "Not specified"
-    user_prompt = (
-        "Read this robotics paper as a research collaborator.\n\n"
-        f"{core.FINAL_OUTPUT_PROMPT}\n\n"
-        "Constraints:\n"
-        "- Use only the section summaries and evidence catalog below.\n"
-        "- Do not fabricate any claim or citation.\n"
-        "- In [9], only cite evidence pointers from the catalog exactly as written.\n"
-        "- If a requested item is not present, write 'Not specified'.\n\n"
-        f"Paper metadata:\nTitle: {paper.title}\narXiv ID: {paper.arxiv_id}\nDate: {date_text}\nSource type: {source_type}\n\n"
-        f"Evidence catalog:\n{evidence_catalog}\n\n"
-        f"Section summaries:\n{summaries_blob}"
-    )
-
-    return [
-        {
-            "role": "system",
-            "content": "You are a robotics research collaborator. Produce concise, technical, structured Markdown.",
-        },
-        {"role": "user", "content": user_prompt},
-    ]
-
-
 def pick_record(records: list[core.PaperRecord], arxiv_id: str) -> core.PaperRecord:
     target = core.normalize_arxiv_id(arxiv_id)
     if not target:
@@ -115,6 +78,7 @@ def pick_record(records: list[core.PaperRecord], arxiv_id: str) -> core.PaperRec
         html_url=html_url,
         pdf_url=pdf_url,
         published_date="",
+        abstract="",
     )
 
 
@@ -174,28 +138,16 @@ def create_app(allowed_origins: str) -> FastAPI:
                 for chunk in emitter.flush():
                     yield chunk.encode("utf-8")
 
-                session = core.build_http_session()
-
-                emitter.emit("stage", {"name": "full_text_fetch", "message": "Fetching full text (HTML preferred)..."})
-                for chunk in emitter.flush():
-                    yield chunk.encode("utf-8")
-
-                extracted = core.retrieve_full_text(session=session, paper=paper, min_chars=req.min_chars)
-
+                abstract = core.clean_text(paper.abstract)
+                if not abstract:
+                    raise RuntimeError("Abstract未提供，无法总结。")
                 emitter.emit(
                     "stage",
                     {
-                        "name": "full_text_ready",
-                        "message": f"Full text ready via {extracted.source_type}, chars={len(extracted.full_text)}",
-                        "source_type": extracted.source_type,
-                        "source_url": extracted.source_url,
+                        "name": "abstract_ready",
+                        "message": f"Abstract ready, chars={len(abstract)}",
                     },
                 )
-                for chunk in emitter.flush():
-                    yield chunk.encode("utf-8")
-
-                chunks = core.build_chunks(extracted, max_chars=req.chunk_max_chars)
-                emitter.emit("stage", {"name": "chunking_done", "message": f"Chunked into {len(chunks)} chunks"})
                 for chunk in emitter.flush():
                     yield chunk.encode("utf-8")
 
@@ -205,38 +157,11 @@ def create_app(allowed_origins: str) -> FastAPI:
                     base_url=base_url,
                 )
 
-                chunk_summaries: list[dict[str, Any]] = []
-                for idx, text_chunk in enumerate(chunks, start=1):
-                    emitter.emit(
-                        "chunk",
-                        {
-                            "index": idx,
-                            "total": len(chunks),
-                            "chunk_id": text_chunk.chunk_id,
-                            "evidence": text_chunk.evidence_pointer,
-                        },
-                    )
-                    for chunk in emitter.flush():
-                        yield chunk.encode("utf-8")
-
-                    summary_obj = runner.summarize_chunk(paper=paper, chunk=text_chunk, mode=req.mode)
-                    chunk_summaries.append(
-                        {
-                            "chunk_id": text_chunk.chunk_id,
-                            "evidence_pointer": text_chunk.evidence_pointer,
-                            "summary": summary_obj,
-                        }
-                    )
-
-                emitter.emit("stage", {"name": "final_synthesis", "message": "Streaming final synthesis..."})
+                emitter.emit("stage", {"name": "abstract_summarize", "message": "Streaming abstract summary..."})
                 for chunk in emitter.flush():
                     yield chunk.encode("utf-8")
 
-                messages = build_final_prompt(
-                    paper=paper,
-                    source_type=extracted.source_type,
-                    chunk_summaries=chunk_summaries,
-                )
+                messages = core.build_abstract_messages(paper)
 
                 stream = runner.client.chat.completions.create(
                     model=model_name,

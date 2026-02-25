@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""arXiv Robotics Paper Full-Text Summarizer.
+"""arXiv Robotics Paper Abstract Summarizer.
 
 Features:
 - summarize newest N papers from a local JSON/SQLite input.
 - summarize one paper by arxiv_id or index.
-- enforce full-body checks (length + method/evaluation presence).
-- hierarchical summarization for long papers with evidence pointers.
+- use abstract-only summarization for lower latency and higher stability.
 """
 
 from __future__ import annotations
@@ -57,52 +56,19 @@ DEFAULT_HTTP_BACKOFF = float(os.getenv("FULLTEXT_HTTP_BACKOFF", "1.8"))
 METHOD_KEYWORDS = ["method", "approach", "model", "architecture", "training"]
 EXPERIMENT_KEYWORDS = ["experiment", "evaluation", "results", "ablation"]
 
-FINAL_OUTPUT_PROMPT = """You are a robotics research collaborator reading the full paper text (not abstract-only).
-You MUST ground your summary in the Method/Approach and Experiments/Evaluation sections.
-If information is missing, say “Not specified”.
+ABSTRACT_OUTPUT_PROMPT = """只基于给定的论文 abstract 回答，禁止使用外部信息和臆测。
 
-Output Markdown with these sections:
+请输出 Markdown，包含以下 4 节：
 
-[0] Paper metadata
-- Title:
-- arXiv ID:
-- Date:
-- Task domain:
-- Key resources (code/dataset if mentioned):
+[1] 文章做了什么事
+[2] 文章的创新点是什么
+[3] 文章解决了什么问题
+[4] 效果怎么样
 
-[1] System pipeline
-Describe end-to-end pipeline (perception → representation → policy → execution).
-List stages with inputs/outputs and learning components.
-
-[2] Representation design
-List all representations (vision/tactile/language/state/action).
-For each: modality source, encoder, embedding/token format, temporal modeling, alignment.
-
-[3] Policy architecture
-Policy type, planning vs control decomposition, action parameterization/tokenization,
-stochastic vs deterministic, horizon.
-
-[4] Training signals
-Objectives/losses, supervision sources, offline vs online, RL vs imitation vs preference,
-multi-stage schedule.
-
-[5] Experimental protocol
-Robot platform(s), sensors, data collection, tasks, metrics, baselines, ablations.
-
-[6] Core contribution
-Bullet list of contributions + why they matter.
-
-[7] Research gaps
-Concrete limitations: generalization, embodiment, scalability, sim2real, representation bottlenecks.
-
-[8] Extension ideas
-3–6 actionable follow-up ideas (each: hypothesis + change + expected gain).
-
-[9] Evidence pointers
-Cite supporting locations:
-- HTML: (SectionHeading, paragraph indices / anchor ids)
-- PDF: (page numbers)
-Do not fabricate citations.
+要求：
+- 每节 2-5 条要点，简洁明确。
+- 如果 abstract 没提到，写“Abstract未明确说明”。
+- 在末尾追加“[依据]”小节，列 2-5 条你依据的 abstract 关键句（可简短摘录或近义转述）。
 """
 
 
@@ -117,6 +83,7 @@ class PaperRecord:
     html_url: str
     pdf_url: str
     published_date: str
+    abstract: str
 
 
 @dataclass
@@ -169,7 +136,7 @@ def short_list_preview(values: Any, max_items: int = 2, max_chars: int = 120) ->
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Summarize arXiv robotics papers from full text using OpenAI API."
+        description="Summarize arXiv robotics papers from abstract using OpenAI-compatible API."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -184,13 +151,13 @@ def parse_args() -> argparse.Namespace:
         "--min-chars",
         type=int,
         default=DEFAULT_MIN_CHARS,
-        help=f"Minimum full text chars required (default: {DEFAULT_MIN_CHARS}).",
+        help=f"Legacy option for full-text mode (ignored in abstract mode, default: {DEFAULT_MIN_CHARS}).",
     )
     common.add_argument(
         "--chunk-max-chars",
         type=int,
         default=DEFAULT_CHUNK_MAX_CHARS,
-        help=f"Per-chunk max chars for hierarchical summarization (default: {DEFAULT_CHUNK_MAX_CHARS}).",
+        help=f"Legacy option for full-text mode (ignored in abstract mode, default: {DEFAULT_CHUNK_MAX_CHARS}).",
     )
     common.add_argument(
         "--mode",
@@ -244,12 +211,6 @@ def parse_args() -> argparse.Namespace:
 
 def require_runtime_deps() -> None:
     missing: list[str] = []
-    if requests is None:
-        missing.append("requests")
-    if BeautifulSoup is None:
-        missing.append("beautifulsoup4")
-    if fitz is None:
-        missing.append("PyMuPDF")
     if OpenAI is None:
         missing.append("openai")
     if missing:
@@ -344,6 +305,7 @@ def normalize_record(raw: dict[str, Any]) -> PaperRecord | None:
         html_url=html_url or default_html,
         pdf_url=pdf_url or default_pdf,
         published_date=coalesce(raw.get("published_date"), raw.get("published")),
+        abstract=coalesce(raw.get("summary"), raw.get("abstract")),
     )
 
 
@@ -416,8 +378,9 @@ def load_sqlite_records(path: Path) -> list[PaperRecord]:
         c_html = pick_col("html_url")
         c_pdf = pick_col("pdf_url")
         c_published = pick_col("published_date", "published")
+        c_abstract = pick_col("summary", "abstract")
 
-        select_cols = [c for c in [c_id, c_title, c_html, c_pdf, c_published] if c]
+        select_cols = [c for c in [c_id, c_title, c_html, c_pdf, c_published, c_abstract] if c]
         query = f"SELECT {', '.join(select_cols)} FROM '{table}'"
 
         normalized: list[PaperRecord] = []
@@ -429,6 +392,7 @@ def load_sqlite_records(path: Path) -> list[PaperRecord]:
                 "html_url": row[c_html] if c_html else "",
                 "pdf_url": row[c_pdf] if c_pdf else "",
                 "published_date": row[c_published] if c_published else "",
+                "summary": row[c_abstract] if c_abstract else "",
             }
             item = normalize_record(raw)
             if item is None:
@@ -768,6 +732,29 @@ def parse_json_response(text: str) -> dict[str, Any]:
     }
 
 
+def build_abstract_messages(paper: PaperRecord) -> list[dict[str, str]]:
+    abstract = clean_text(paper.abstract)
+    if not abstract:
+        raise ValueError("Abstract is empty")
+    date_text = paper.published_date or "Not specified"
+    return [
+        {
+            "role": "system",
+            "content": "You are a concise research assistant. Answer only from the provided abstract.",
+        },
+        {
+            "role": "user",
+            "content": (
+                f"{ABSTRACT_OUTPUT_PROMPT}\n\n"
+                f"Title: {paper.title}\n"
+                f"arXiv ID: {paper.arxiv_id}\n"
+                f"Date: {date_text}\n\n"
+                f"Abstract:\n{abstract}"
+            ),
+        },
+    ]
+
+
 class LLMRunner:
     def __init__(self, model_fast: str, model_deep: str, base_url: str | None = None) -> None:
         if OpenAI is None:
@@ -843,6 +830,15 @@ class LLMRunner:
         )
         return parse_json_response(out)
 
+    def summarize_abstract(self, paper: PaperRecord, mode: str) -> str:
+        model = self.model_fast if mode == "fast" else self.model_deep
+        messages = build_abstract_messages(paper)
+        return self._chat(
+            model=model,
+            temperature=0.1,
+            messages=messages,
+        )
+
     def synthesize_final(
         self,
         paper: PaperRecord,
@@ -907,7 +903,7 @@ class LLMRunner:
             )
 
         prompt = (
-            "Create a daily robotics paper report from full-text grounded summaries.\n"
+            "Create a daily robotics paper report from abstract-grounded summaries.\n"
             "Output Markdown with sections:\n"
             "1) Daily highlights\n"
             "2) Method trends\n"
@@ -955,11 +951,12 @@ def summarize_single_paper(
     paper: PaperRecord,
     output_dir: Path,
     runner: LLMRunner,
-    session: requests.Session,
+    _session: requests.Session | None,
     mode: str,
     min_chars: int,
     chunk_max_chars: int,
 ) -> dict[str, Any]:
+    _ = (min_chars, chunk_max_chars)
     aid = paper.arxiv_id
     record: dict[str, Any] = {
         "arxiv_id": aid,
@@ -969,47 +966,12 @@ def summarize_single_paper(
     }
 
     try:
-        live_log(f"{aid} | fetch_full_text start")
-        extracted = retrieve_full_text(session=session, paper=paper, min_chars=min_chars)
-        live_log(
-            f"{aid} | fetch_full_text ok source={extracted.source_type} chars={len(extracted.full_text)}"
-        )
-        chunks = build_chunks(extracted, max_chars=chunk_max_chars)
-        live_log(f"{aid} | chunk_plan total={len(chunks)}")
-
-        chunk_summaries: list[dict[str, Any]] = []
-        for idx, chunk in enumerate(chunks, start=1):
-            live_log(
-                f"{aid} | chunk {idx}/{len(chunks)} start {chunk.chunk_id} {chunk.evidence_pointer}"
-            )
-            summary_obj = runner.summarize_chunk(paper=paper, chunk=chunk, mode=mode)
-            kp_preview = short_list_preview(summary_obj.get("key_points", []))
-            md_preview = short_list_preview(summary_obj.get("method_details", []), max_items=1)
-            ex_preview = short_list_preview(summary_obj.get("experiment_details", []), max_items=1)
-            rs_preview = short_list_preview(summary_obj.get("reasoning_brief", []), max_items=2, max_chars=140)
-            if kp_preview:
-                model_log(f"{aid} | {chunk.chunk_id} key_points: {kp_preview}")
-            if md_preview:
-                model_log(f"{aid} | {chunk.chunk_id} method: {md_preview}")
-            if ex_preview:
-                model_log(f"{aid} | {chunk.chunk_id} eval: {ex_preview}")
-            if rs_preview:
-                model_log(f"{aid} | {chunk.chunk_id} reasoning: {rs_preview}")
-            chunk_summaries.append(
-                {
-                    "chunk_id": chunk.chunk_id,
-                    "evidence_pointer": chunk.evidence_pointer,
-                    "summary": summary_obj,
-                }
-            )
-
-        live_log(f"{aid} | final_synthesis start mode={mode}")
-        final_md = runner.synthesize_final(
-            paper=paper,
-            source_type=extracted.source_type,
-            chunk_summaries=chunk_summaries,
-            mode=mode,
-        )
+        abstract = clean_text(paper.abstract)
+        if not abstract:
+            raise ValueError("Abstract未提供，无法总结。")
+        live_log(f"{aid} | abstract_ready chars={len(abstract)}")
+        live_log(f"{aid} | abstract_summarize start mode={mode}")
+        final_md = runner.summarize_abstract(paper=paper, mode=mode)
         final_preview = clean_text(final_md).replace("\n", " ")[:220]
         if final_preview:
             model_log(f"{aid} | final_preview: {final_preview}")
@@ -1025,10 +987,6 @@ def summarize_single_paper(
         record["summary_excerpt"] = clean_text(final_md)[:1200]
         return record
 
-    except FullTextUnavailableError as err:
-        record["error"] = str(err)
-        live_log(f"{aid} | full_text_unavailable {record['error']}")
-        return record
     except Exception as err:  # noqa: BLE001
         record["error"] = str(err)
         live_log(f"{aid} | summarize_error {record['error']}")
@@ -1134,7 +1092,6 @@ def run_summarize_new(args: argparse.Namespace) -> int:
         model_deep=args.model_deep,
         base_url=args.base_url,
     )
-    session = build_http_session()
 
     run_records: list[dict[str, Any]] = []
     for i, paper in enumerate(selected, start=1):
@@ -1143,7 +1100,7 @@ def run_summarize_new(args: argparse.Namespace) -> int:
             paper=paper,
             output_dir=output_dir,
             runner=runner,
-            session=session,
+            _session=None,
             mode=args.mode,
             min_chars=args.min_chars,
             chunk_max_chars=args.chunk_max_chars,
@@ -1194,13 +1151,12 @@ def run_summarize_one(args: argparse.Namespace) -> int:
         model_deep=args.model_deep,
         base_url=args.base_url,
     )
-    session = build_http_session()
 
     rec = summarize_single_paper(
         paper=paper,
         output_dir=output_dir,
         runner=runner,
-        session=session,
+        _session=None,
         mode=args.mode,
         min_chars=args.min_chars,
         chunk_max_chars=args.chunk_max_chars,

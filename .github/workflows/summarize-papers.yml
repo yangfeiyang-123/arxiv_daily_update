@@ -1,4 +1,4 @@
-name: Summarize arXiv Papers (Full Text)
+name: Summarize arXiv Papers (Abstract)
 run-name: summarize-${{ inputs.target }}-${{ inputs.client_tag }}-${{ inputs.model }}
 
 on:
