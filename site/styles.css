@@ -559,11 +559,15 @@ select:focus {
 
 .summary-dialog-header {
   grid-row: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 12px;
   padding: 14px 14px 0;
+}
+
+.summary-dialog-header > div:first-child {
+  min-width: 0;
 }
 
 .summary-dialog-header h3 {
@@ -575,13 +579,21 @@ select:focus {
   margin: 4px 0 0;
   color: var(--ink-soft);
   font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .summary-dialog-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
   gap: 6px;
+}
+
+.summary-dialog-actions .summary-dialog-btn {
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .summary-dialog-btn {
