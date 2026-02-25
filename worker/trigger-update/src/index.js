@@ -44,6 +44,16 @@ export default {
     const defaultBaseUrl = env.DEFAULT_LLM_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
     const defaultModel = env.DEFAULT_LLM_MODEL || "qwen3.5-397b-a17b";
 
+    if (action === "chat_stream") {
+      return await handleChatStream({
+        payload,
+        env,
+        corsHeaders,
+        defaultBaseUrl,
+        defaultModel,
+      });
+    }
+
     if (action === "summary_status") {
       try {
         const status = await fetchSummaryStatus({
@@ -79,7 +89,7 @@ export default {
         {
           ok: false,
           error: "invalid action",
-          supported_actions: ["update", "summarize_new", "summarize_one", "summary_status"],
+          supported_actions: ["update", "summarize_new", "summarize_one", "summary_status", "chat_stream"],
         },
         400,
         corsHeaders
@@ -230,6 +240,150 @@ function json(data, status, headers = {}) {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       ...headers,
+    },
+  });
+}
+
+function sse(event, data) {
+  return `event: ${event}\ndata: ${JSON.stringify(data, ensureAsciiFalseReplacer)}\n\n`;
+}
+
+function ensureAsciiFalseReplacer(_key, value) {
+  return value;
+}
+
+function normalizeMessages(input) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => ({
+      role: String(item?.role || "").trim(),
+      content: String(item?.content || "").trim(),
+    }))
+    .filter((m) => ["system", "user", "assistant"].includes(m.role) && m.content)
+    .slice(-20);
+}
+
+async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, defaultModel }) {
+  const apiKey = env.LLM_API_KEY || env.DASHSCOPE_API_KEY || env.OPENAI_API_KEY || "";
+  if (!apiKey) {
+    return json(
+      {
+        ok: false,
+        error: "missing llm api key",
+        required: ["LLM_API_KEY (or DASHSCOPE_API_KEY/OPENAI_API_KEY)"],
+      },
+      500,
+      corsHeaders
+    );
+  }
+
+  const model = String(payload.model || defaultModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
+  const baseUrl = String(payload.base_url || defaultBaseUrl || "").trim().replace(/\/+$/, "");
+  const messages = normalizeMessages(payload.messages);
+  if (!messages.length) {
+    return json({ ok: false, error: "messages is required for chat_stream" }, 400, corsHeaders);
+  }
+
+  const upstream = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.2,
+      stream: true,
+    }),
+  });
+
+  if (!upstream.ok || !upstream.body) {
+    const detail = await upstream.text().catch(() => "");
+    return json(
+      {
+        ok: false,
+        error: "upstream chat failed",
+        status: upstream.status,
+        detail,
+      },
+      502,
+      corsHeaders
+    );
+  }
+
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        controller.enqueue(encoder.encode(sse("stage", { message: "LLM connected, generating..." })));
+        const reader = upstream.body.getReader();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          while (true) {
+            const sepIndex = buffer.indexOf("\n\n");
+            if (sepIndex < 0) break;
+            const block = buffer.slice(0, sepIndex);
+            buffer = buffer.slice(sepIndex + 2);
+            if (!block.trim()) continue;
+
+            const dataLine = block
+              .split(/\r?\n/)
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trim())
+              .join("\n");
+            if (!dataLine) continue;
+            if (dataLine === "[DONE]") {
+              controller.enqueue(encoder.encode(sse("done", { ok: true })));
+              controller.close();
+              return;
+            }
+
+            let parsed = null;
+            try {
+              parsed = JSON.parse(dataLine);
+            } catch (_) {
+              continue;
+            }
+            const delta = String(parsed?.choices?.[0]?.delta?.content || "");
+            const reasoning = String(parsed?.choices?.[0]?.delta?.reasoning_content || "");
+            if (reasoning) {
+              controller.enqueue(encoder.encode(sse("token", { text: reasoning })));
+            }
+            if (delta) {
+              controller.enqueue(encoder.encode(sse("token", { text: delta })));
+            }
+          }
+        }
+        controller.enqueue(encoder.encode(sse("done", { ok: true })));
+        controller.close();
+      } catch (err) {
+        controller.enqueue(
+          encoder.encode(
+            sse("error", {
+              ok: false,
+              message: String(err?.message || err),
+            })
+          )
+        );
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
     },
   });
 }

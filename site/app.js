@@ -27,6 +27,7 @@ const SUMMARY_PERSIST_RESULTS = APP_CONFIG.summaryPersistResults === true;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
+const SUMMARY_UI_PREF_KEY = "myarxiv_summary_ui_pref_v1";
 const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
 const SUMMARY_STATUS_POLL_MS = 4500;
@@ -59,6 +60,9 @@ const state = {
     streamingActive: false,
     loading: false,
     loadingStatus: "",
+    aiSidebarEnabled: APP_CONFIG.aiSidebarEnabled !== false,
+    chatEnabled: APP_CONFIG.aiChatEnabled !== false,
+    chatStreaming: false,
   },
 };
 
@@ -78,12 +82,18 @@ const triggerUpdateMsg = document.getElementById("triggerUpdateMsg");
 const triggerSummaryDailyBtn = document.getElementById("triggerSummaryDailyBtn");
 const triggerSummaryMsg = document.getElementById("triggerSummaryMsg");
 const summaryModelInput = document.getElementById("summaryModelInput");
+const aiPanelEnabledToggle = document.getElementById("aiPanelEnabledToggle");
+const openAiPanelBtn = document.getElementById("openAiPanelBtn");
 const summaryDialog = document.getElementById("summaryDialog");
 const summaryDialogBody = document.getElementById("summaryDialogBody");
 const summaryDialogSub = document.getElementById("summaryDialogSub");
 const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogClearBtn = document.getElementById("summaryDialogClearBtn");
 const summaryDialogRefreshBtn = document.getElementById("summaryDialogRefreshBtn");
+const summaryChatEnabledToggle = document.getElementById("summaryChatEnabledToggle");
+const summaryChatForm = document.getElementById("summaryChatForm");
+const summaryChatInput = document.getElementById("summaryChatInput");
+const summaryChatSendBtn = document.getElementById("summaryChatSendBtn");
 const moreWrap = document.getElementById("moreWrap");
 const loadMoreBtn = document.getElementById("loadMoreBtn");
 
@@ -278,13 +288,61 @@ function loadSummaryDialogMemory() {
   }
 }
 
+function persistSummaryUiPrefs() {
+  try {
+    const payload = {
+      aiSidebarEnabled: state.summaryDialog.aiSidebarEnabled,
+      chatEnabled: state.summaryDialog.chatEnabled,
+    };
+    localStorage.setItem(SUMMARY_UI_PREF_KEY, JSON.stringify(payload));
+  } catch (err) {
+    console.warn("save summary ui prefs failed", err);
+  }
+}
+
+function loadSummaryUiPrefs() {
+  try {
+    const raw = localStorage.getItem(SUMMARY_UI_PREF_KEY);
+    if (!raw) return;
+    const payload = JSON.parse(raw);
+    if (!payload || typeof payload !== "object") return;
+    if (typeof payload.aiSidebarEnabled === "boolean") {
+      state.summaryDialog.aiSidebarEnabled = payload.aiSidebarEnabled;
+    }
+    if (typeof payload.chatEnabled === "boolean") {
+      state.summaryDialog.chatEnabled = payload.chatEnabled;
+    }
+  } catch (err) {
+    console.warn("load summary ui prefs failed", err);
+  }
+}
+
+function syncSummaryUiControls() {
+  if (aiPanelEnabledToggle) {
+    aiPanelEnabledToggle.checked = state.summaryDialog.aiSidebarEnabled;
+  }
+  if (summaryChatEnabledToggle) {
+    summaryChatEnabledToggle.checked = state.summaryDialog.chatEnabled;
+  }
+  const chatEnabled = state.summaryDialog.chatEnabled && state.summaryDialog.aiSidebarEnabled;
+  const chatBusy = state.summaryDialog.chatStreaming;
+  if (summaryChatInput) {
+    summaryChatInput.disabled = !chatEnabled || chatBusy;
+  }
+  if (summaryChatSendBtn) {
+    summaryChatSendBtn.disabled = !chatEnabled || chatBusy;
+  }
+}
+
 function setSummaryDialogOpen(open) {
-  state.summaryDialog.open = Boolean(open);
+  const allowed = state.summaryDialog.aiSidebarEnabled;
+  state.summaryDialog.open = Boolean(open) && allowed;
   if (summaryDialog) {
     summaryDialog.classList.remove("hidden");
     summaryDialog.classList.toggle("is-open", state.summaryDialog.open);
   }
   document.body.classList.toggle("summary-open", state.summaryDialog.open);
+  syncSummaryUiControls();
   persistSummaryDialogMemory();
 }
 
@@ -329,6 +387,24 @@ function setSummaryLoading(active, statusText = "") {
   state.summaryDialog.loading = Boolean(active);
   state.summaryDialog.loadingStatus = String(statusText || "").trim();
   renderSummaryDialog();
+}
+
+function setAiSidebarEnabled(enabled) {
+  state.summaryDialog.aiSidebarEnabled = Boolean(enabled);
+  persistSummaryUiPrefs();
+  syncSummaryUiControls();
+  if (!state.summaryDialog.aiSidebarEnabled) {
+    stopSummaryStatusPolling();
+    stopRealtimeStream();
+    setSummaryDialogOpen(false);
+    setSummaryMessage("AI侧边栏已关闭。可重新打开后再使用总结/对话。");
+  }
+}
+
+function setChatEnabled(enabled) {
+  state.summaryDialog.chatEnabled = Boolean(enabled);
+  persistSummaryUiPrefs();
+  syncSummaryUiControls();
 }
 
 function pushSummaryDialogMessage(role, text) {
@@ -690,6 +766,8 @@ function stopRealtimeStream() {
   state.summaryDialog.streamAbort = null;
   state.summaryDialog.streamingActive = false;
   state.summaryDialog.streamingText = "";
+  state.summaryDialog.chatStreaming = false;
+  syncSummaryUiControls();
 }
 
 function appendStreamingToken(text) {
@@ -854,6 +932,125 @@ async function streamSummaryViaRealtime(meta) {
   return true;
 }
 
+function buildChatContextMessages() {
+  return (state.summaryDialog.messages || [])
+    .filter((m) => ["user", "assistant"].includes(m.role))
+    .slice(-8)
+    .map((m) => ({
+      role: m.role,
+      content: m.text || "",
+    }))
+    .filter((m) => m.content.trim());
+}
+
+async function streamChatViaWorker(userText) {
+  if (!WORKER_TRIGGER_URL) {
+    pushSummaryDialogMessage("system", "未配置 Worker，无法使用实时对话。");
+    return;
+  }
+  if (!state.summaryDialog.aiSidebarEnabled) {
+    setSummaryMessage("AI侧边栏已关闭，请先开启。");
+    return;
+  }
+  if (!state.summaryDialog.chatEnabled) {
+    pushSummaryDialogMessage("system", "实时对话已关闭，请先勾选“启用实时对话”。");
+    return;
+  }
+  const text = String(userText || "").trim();
+  if (!text) return;
+
+  setSummaryDialogOpen(true);
+  pushSummaryDialogMessage("user", text);
+  setSummaryLoading(true, "AI 正在思考中...");
+
+  stopSummaryStatusPolling();
+  stopRealtimeStream();
+  const ctrl = new AbortController();
+  state.summaryDialog.streamAbort = ctrl;
+  state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamingText = "";
+  state.summaryDialog.chatStreaming = true;
+  syncSummaryUiControls();
+  renderSummaryDialog();
+
+  let response;
+  try {
+    response = await fetch(WORKER_TRIGGER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "chat_stream",
+        messages: buildChatContextMessages(),
+        model: getSelectedSummaryModel(),
+        base_url: SUMMARY_BASE_URL,
+      }),
+      signal: ctrl.signal,
+    });
+  } catch (err) {
+    stopRealtimeStream();
+    setSummaryLoading(false, "");
+    pushSummaryDialogMessage("system", `实时对话请求失败：${String(err?.message || err)}`);
+    return;
+  }
+
+  if (!response.ok || !response.body) {
+    const detail = await response.text().catch(() => "");
+    stopRealtimeStream();
+    setSummaryLoading(false, "");
+    pushSummaryDialogMessage("system", `实时对话启动失败：HTTP ${response.status} ${detail}`);
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      while (true) {
+        const sepIndex = buffer.indexOf("\n\n");
+        if (sepIndex < 0) break;
+        const rawBlock = buffer.slice(0, sepIndex);
+        buffer = buffer.slice(sepIndex + 2);
+        if (!rawBlock.trim()) continue;
+        const evt = parseSseBlock(rawBlock);
+        const data = evt.data && typeof evt.data === "object" ? evt.data : {};
+        if (evt.eventName === "stage") {
+          const msg = String(data.message || "").trim();
+          if (msg) setSummaryLoading(true, msg);
+          continue;
+        }
+        if (evt.eventName === "token") {
+          appendStreamingToken(String(data.text || ""));
+          continue;
+        }
+        if (evt.eventName === "error") {
+          finalizeStreamingAsAssistant();
+          stopRealtimeStream();
+          setSummaryLoading(false, "");
+          pushSummaryDialogMessage("system", `对话失败：${String(data.message || "unknown error")}`);
+          return;
+        }
+        if (evt.eventName === "done") {
+          finalizeStreamingAsAssistant();
+          stopRealtimeStream();
+          setSummaryLoading(false, "");
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    if (!ctrl.signal.aborted) {
+      finalizeStreamingAsAssistant();
+      pushSummaryDialogMessage("system", `对话中断：${String(err?.message || err)}`);
+    }
+  }
+  stopRealtimeStream();
+  setSummaryLoading(false, "");
+}
+
 async function triggerUpdateViaWorker() {
   if (!WORKER_TRIGGER_URL) {
     setTriggerMessage("未配置 Worker 触发地址，正在打开 Actions 页面。");
@@ -900,6 +1097,10 @@ function extractArxivId(value) {
 
 async function triggerSummaryDailyViaWorker() {
   if (!triggerSummaryDailyBtn) return;
+  if (!state.summaryDialog.aiSidebarEnabled) {
+    setSummaryMessage("AI侧边栏已关闭，请先开启后再触发总结。");
+    return;
+  }
   stopRealtimeStream();
   setSummaryDialogOpen(true);
   if (!WORKER_TRIGGER_URL) {
@@ -992,6 +1193,10 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
 }
 
 async function showSummaryInDialogForPaper(meta, btn) {
+  if (!state.summaryDialog.aiSidebarEnabled) {
+    setSummaryMessage("AI侧边栏已关闭，请先开启。");
+    return;
+  }
   setSummaryDialogOpen(true);
   setActiveSummaryPaper(meta);
   pushSummaryDialogMessage("user", `请总结论文：${meta.arxivId}`);
@@ -1252,9 +1457,11 @@ function renderPapersGroupedByDate() {
 }
 
 function bindEvents() {
+  loadSummaryUiPrefs();
   loadSummaryDialogMemory();
   renderSummaryDialog();
   setSummaryDialogOpen(state.summaryDialog.open);
+  syncSummaryUiControls();
 
   if (summaryModelInput && SUMMARY_MODEL_DEFAULT) {
     summaryModelInput.value = SUMMARY_MODEL_DEFAULT;
@@ -1318,6 +1525,39 @@ function bindEvents() {
   if (summaryDialogRefreshBtn) {
     summaryDialogRefreshBtn.addEventListener("click", () => {
       refreshSummaryDialog();
+    });
+  }
+
+  if (aiPanelEnabledToggle) {
+    aiPanelEnabledToggle.addEventListener("change", (event) => {
+      const target = event.target;
+      setAiSidebarEnabled(Boolean(target && target.checked));
+    });
+  }
+
+  if (openAiPanelBtn) {
+    openAiPanelBtn.addEventListener("click", () => {
+      if (!state.summaryDialog.aiSidebarEnabled) {
+        setSummaryMessage("AI侧边栏当前已关闭，请先打开“启用AI侧边栏”。");
+        return;
+      }
+      setSummaryDialogOpen(true);
+    });
+  }
+
+  if (summaryChatEnabledToggle) {
+    summaryChatEnabledToggle.addEventListener("change", (event) => {
+      const target = event.target;
+      setChatEnabled(Boolean(target && target.checked));
+    });
+  }
+
+  if (summaryChatForm) {
+    summaryChatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = summaryChatInput ? summaryChatInput.value : "";
+      if (summaryChatInput) summaryChatInput.value = "";
+      streamChatViaWorker(text);
     });
   }
 

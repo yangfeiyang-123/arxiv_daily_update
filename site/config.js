@@ -15,6 +15,9 @@ window.MYARXIV_CONFIG = {
   summaryModel: "qwen3.5-397b-a17b",
   // false: show result in dialog only, do not commit summaries into repository.
   summaryPersistResults: false,
+  // Sidebar UI default switches (user can still toggle in page, with local memory).
+  aiSidebarEnabled: true,
+  aiChatEnabled: true,
   // Optional realtime backend for streaming single-paper summaries.
   // Example: "http://127.0.0.1:8788"
   realtimeEndpoint: "",

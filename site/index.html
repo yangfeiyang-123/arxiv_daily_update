@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260224-7" />
+    <link rel="stylesheet" href="./styles.css?v=20260225-2" />
   </head>
   <body>
     <div class="bg-orb orb-a"></div>
@@ -82,6 +82,13 @@
             <button id="triggerUpdateBtn" class="manual-btn" type="button">一键触发更新</button>
             <button id="triggerSummaryDailyBtn" class="manual-btn alt" type="button">一键总结最近1天新文</button>
           </div>
+          <div class="ai-panel-tools">
+            <label class="toggle-wrap" for="aiPanelEnabledToggle">
+              <input id="aiPanelEnabledToggle" type="checkbox" checked />
+              <span>启用AI侧边栏</span>
+            </label>
+            <button id="openAiPanelBtn" class="manual-btn ghost" type="button">打开AI侧栏</button>
+          </div>
           <p id="triggerUpdateMsg" class="manual-msg">更新数据：点按钮可直接触发更新；若未配置 Worker，则自动打开 Actions 页面。</p>
           <p id="triggerSummaryMsg" class="manual-msg">总结任务：支持“最近1天批量总结”和“单篇总结”（卡片按钮），过程会在右侧对话框实时显示。</p>
         </div>
@@ -111,11 +118,21 @@
       </header>
       <div id="summaryDialogBody" class="summary-dialog-body"></div>
       <footer class="summary-dialog-footer">
-        <small>记忆说明：本地浏览器会保留最近对话和查看记录。</small>
+        <div class="summary-chat-head">
+          <label class="toggle-wrap" for="summaryChatEnabledToggle">
+            <input id="summaryChatEnabledToggle" type="checkbox" checked />
+            <span>启用实时对话</span>
+          </label>
+          <small>记忆说明：本地浏览器会保留最近对话和查看记录。</small>
+        </div>
+        <form id="summaryChatForm" class="summary-chat-form">
+          <input id="summaryChatInput" type="text" placeholder="在这里和 AI 对话（回车发送）" />
+          <button id="summaryChatSendBtn" type="submit" class="summary-dialog-btn">发送</button>
+        </form>
       </footer>
     </aside>
 
-    <script src="./config.js?v=20260225-1" defer></script>
-    <script src="./app.js?v=20260225-1" defer></script>
+    <script src="./config.js?v=20260225-2" defer></script>
+    <script src="./app.js?v=20260225-2" defer></script>
   </body>
 </html>
