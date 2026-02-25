@@ -1827,6 +1827,7 @@ function findPaperRecordByTitle(rawTitle) {
 function normalizeDialogTitleText(raw) {
   let text = String(raw || "").replace(/\s+/g, " ").trim();
   text = text.replace(/^[•\-*]\s*/, "");
+  text = text.replace(/^(?:\[\d+\]|\d+[.)])\s*/, "");
   text = text.replace(/\s*[-–—]\s*\[?\s*arxiv[^\]\n]*未提供\s*\]?$/i, "");
   text = text.replace(/\s*[-–—]\s*URL[:：]\s*未提供\s*(?:（[^）]*）|\([^)]*\))?\s*$/i, "");
   text = text.replace(/\s*URL[:：]\s*未提供\s*(?:（[^）]*）|\([^)]*\))?\s*$/i, "");
@@ -2283,11 +2284,12 @@ function extractArxivIdsFromText(rawText) {
   return [...new Set(ids.map((x) => extractCanonicalArxivId(extractArxivId(x))).filter(Boolean))];
 }
 
-function buildDailyReferenceAppendix(arxivIds = []) {
-  if (!Array.isArray(arxivIds) || arxivIds.length === 0) return "";
-  const lines = [""];
+function buildDailyReferenceEntries(arxivIds = []) {
+  if (!Array.isArray(arxivIds) || arxivIds.length === 0) return [];
   const seen = new Set();
-  arxivIds.forEach((id) => {
+  const entries = [];
+  arxivIds.forEach((idRaw) => {
+    const id = extractArxivId(idRaw);
     const canonical = extractCanonicalArxivId(extractArxivId(id));
     if (!canonical || seen.has(canonical)) return;
     seen.add(canonical);
@@ -2295,7 +2297,48 @@ function buildDailyReferenceAppendix(arxivIds = []) {
     const paper = record?.paper || {};
     const title = String(paper.title || canonical).replace(/\s+/g, " ").trim();
     const url = String(paper.id || `https://arxiv.org/abs/${canonical}`).trim();
-    lines.push(`- ${title} - ${url}`);
+    entries.push({
+      canonicalId: canonical,
+      title,
+      url,
+    });
+  });
+  return entries;
+}
+
+function annotateDailySummaryWithReferences(text, refEntries = []) {
+  let output = String(text || "").trim();
+  if (!output || !Array.isArray(refEntries) || refEntries.length === 0) return output;
+  let markedCount = 0;
+
+  refEntries.forEach((entry, idx) => {
+    const title = String(entry?.title || "").trim();
+    const canonical = String(entry?.canonicalId || "").trim();
+    if (!title || !canonical) return;
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(escaped, "i");
+    if (!pattern.test(output)) return;
+    output = output.replace(pattern, (matched) => `[${matched}](#paper-${canonical}) [${idx + 1}]`);
+    markedCount += 1;
+  });
+
+  if (markedCount === 0) {
+    const inlineRefs = refEntries.slice(0, 12).map((entry, idx) => `[${idx + 1}](#paper-${entry.canonicalId})`).join(" ");
+    if (inlineRefs) {
+      output = `${output}\n\n文中参考序号：${inlineRefs}`;
+    }
+  }
+  return output;
+}
+
+function buildDailyReferenceAppendix(refEntries = []) {
+  if (!Array.isArray(refEntries) || refEntries.length === 0) return "";
+  const lines = [""];
+  refEntries.forEach((entry, idx) => {
+    const title = String(entry?.title || "").trim();
+    const url = String(entry?.url || "").trim();
+    if (!title || !url) return;
+    lines.push(`${idx + 1}. ${title} - ${url}`);
   });
   return lines.join("\n");
 }
@@ -2420,10 +2463,12 @@ async function triggerSummaryDailyViaWorker() {
     }
     const sanitized = sanitizeDailyBriefText(dailyText);
     const refIds = [...new Set([...extractArxivIdsFromText(dailyText), ...sanitized.matchedIds])];
-    const appendix = buildDailyReferenceAppendix(refIds);
-    const finalText = `${sanitized.text}${appendix}`;
+    const refEntries = buildDailyReferenceEntries(refIds);
+    const annotatedBody = annotateDailySummaryWithReferences(sanitized.text, refEntries);
+    const appendix = buildDailyReferenceAppendix(refEntries);
+    const finalText = `${annotatedBody}${appendix}`;
     pushSummaryDialogMessage("assistant", finalText);
-    highlightReferencedPapers(refIds);
+    highlightReferencedPapers(refEntries.map((entry) => entry.canonicalId));
     setSummaryMessage("最近1天新文日报已生成。");
   } catch (err) {
     console.error(err);

@@ -558,6 +558,7 @@ select:focus {
 }
 
 .summary-dialog-header {
+  grid-row: 1;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -595,6 +596,7 @@ select:focus {
 }
 
 .summary-thread-bar {
+  grid-row: 2;
   padding: 0 14px;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -615,6 +617,7 @@ select:focus {
 }
 
 .summary-dialog-notice {
+  grid-row: 3;
   margin: 0 14px;
   padding: 8px 10px;
   border-radius: 10px;
@@ -631,6 +634,8 @@ select:focus {
 }
 
 .summary-dialog-body {
+  grid-row: 4;
+  min-height: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -822,6 +827,7 @@ select:focus {
 }
 
 .summary-dialog-footer {
+  grid-row: 5;
   padding: 0 14px 12px;
   color: var(--ink-soft);
   display: grid;
@@ -850,6 +856,7 @@ select:focus {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+  align-items: center;
 }
 
 .summary-chat-form input {
@@ -859,7 +866,12 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   font: inherit;
+  min-height: 44px;
   padding: 8px 10px;
+}
+
+.summary-chat-form .summary-dialog-btn {
+  min-height: 44px;
 }
 
 .summary-chat-form input:disabled {
