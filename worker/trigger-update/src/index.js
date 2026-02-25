@@ -1,3 +1,5 @@
+const LOCKED_MODEL = "qwen3.5-397b-a17b";
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
@@ -42,7 +44,7 @@ export default {
     const updateWorkflow = env.UPDATE_WORKFLOW_FILE || env.GITHUB_WORKFLOW_FILE || "update-cs-ro.yml";
     const summarizeWorkflow = env.SUMMARIZE_WORKFLOW_FILE || "summarize-papers.yml";
     const defaultBaseUrl = env.DEFAULT_LLM_BASE_URL || "https://dashscope.aliyuncs.com/compatible-mode/v1";
-    const defaultModel = env.DEFAULT_LLM_MODEL || "qwen3.5-397b-a17b";
+    const defaultModel = LOCKED_MODEL;
 
     if (action === "chat_stream") {
       return await handleChatStream({
@@ -50,7 +52,6 @@ export default {
         env,
         corsHeaders,
         defaultBaseUrl,
-        defaultModel,
       });
     }
 
@@ -164,9 +165,7 @@ function resolveWorkflow(action, updateWorkflow, summarizeWorkflow) {
 
 function buildWorkflowInputs(action, payload, defaults = {}) {
   const baseUrl = String(payload.base_url || defaults.defaultBaseUrl || "").trim();
-  const model =
-    String(payload.model || defaults.defaultModel || "qwen3.5-397b-a17b").trim() ||
-    "qwen3.5-397b-a17b";
+  const model = LOCKED_MODEL;
   const clientTag = String(payload.client_tag || "").trim();
   const saveResult = payload.save_result === true || String(payload.save_result || "").toLowerCase() === "true";
   if (action === "summarize_new") {
@@ -422,7 +421,7 @@ async function fetchArxivFullText(arxivId, maxChars = 90000) {
   return { ok: false, error: "full text fetch failed" };
 }
 
-async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, defaultModel }) {
+async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl }) {
   const apiKey = env.LLM_API_KEY || env.DASHSCOPE_API_KEY || env.OPENAI_API_KEY || "";
   if (!apiKey) {
     return json(
@@ -436,7 +435,7 @@ async function handleChatStream({ payload, env, corsHeaders, defaultBaseUrl, def
     );
   }
 
-  const model = String(payload.model || defaultModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
+  const model = LOCKED_MODEL;
   const baseUrl = String(payload.base_url || defaultBaseUrl || "").trim().replace(/\/+$/, "");
   const omitReasoning = payload.omit_reasoning === true || String(payload.omit_reasoning || "").toLowerCase() === "true";
   const originalMessages = normalizeMessages(payload.messages);

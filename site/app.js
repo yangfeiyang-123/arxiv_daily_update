@@ -22,7 +22,7 @@ const OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER = APP_CONFIG.openSummaryActionsAfterTri
 const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fast";
 const SUMMARY_ONE_MODE = APP_CONFIG.summaryOneMode === "fast" ? "fast" : "deep";
 const SUMMARY_BASE_URL = String(APP_CONFIG.summaryBaseUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1").trim();
-const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
+const SUMMARY_MODEL_LOCKED = "qwen3.5-397b-a17b";
 const SUMMARY_PERSIST_RESULTS = APP_CONFIG.summaryPersistResults === true;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
@@ -1227,10 +1227,7 @@ function openSummaryWorkflowPage(msg) {
 }
 
 function getSelectedSummaryModel() {
-  if (summaryModelInput && summaryModelInput.value) {
-    return summaryModelInput.value.trim();
-  }
-  return SUMMARY_MODEL_DEFAULT;
+  return SUMMARY_MODEL_LOCKED;
 }
 
 async function dispatchWorkerAction(action, payload = {}) {
@@ -2840,8 +2837,10 @@ function bindEvents() {
   setSummaryDialogOpen(state.summaryDialog.open);
   syncSummaryUiControls();
 
-  if (summaryModelInput && SUMMARY_MODEL_DEFAULT) {
-    summaryModelInput.value = SUMMARY_MODEL_DEFAULT;
+  if (summaryModelInput) {
+    summaryModelInput.value = SUMMARY_MODEL_LOCKED;
+    summaryModelInput.readOnly = true;
+    summaryModelInput.setAttribute("title", `模型已锁定：${SUMMARY_MODEL_LOCKED}`);
   }
 
   fieldSelect.addEventListener("change", (event) => {

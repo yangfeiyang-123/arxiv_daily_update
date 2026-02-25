@@ -1,5 +1,5 @@
 name: Summarize arXiv Papers (Abstract)
-run-name: summarize-${{ inputs.target }}-${{ inputs.client_tag }}-${{ inputs.model }}
+run-name: summarize-${{ inputs.target }}-${{ inputs.client_tag }}-qwen3.5-397b-a17b
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ on:
           - deep
         default: fast
       model:
-        description: "LLM model name, e.g. qwen3.5-397b-a17b / qwen3-max / qwen-plus-latest"
+        description: "Locked model (ignored if changed): qwen3.5-397b-a17b"
         required: false
         default: "qwen3.5-397b-a17b"
       base_url:
@@ -93,6 +93,7 @@ jobs:
         env:
           LLM_API_KEY: ${{ secrets.DASHSCOPE_API_KEY || secrets.OPENAI_API_KEY }}
           PYTHONUNBUFFERED: "1"
+          MODEL_LOCKED: "qwen3.5-397b-a17b"
         run: |
           mkdir -p outputs/summaries
           SAVE_EXTRA=""
@@ -109,8 +110,8 @@ jobs:
               --arxiv_id "${{ inputs.arxiv_id }}" \
               --mode "${{ inputs.mode }}" \
               --base-url "${{ inputs.base_url }}" \
-              --model-fast "${{ inputs.model }}" \
-              --model-deep "${{ inputs.model }}" \
+              --model-fast "${MODEL_LOCKED}" \
+              --model-deep "${MODEL_LOCKED}" \
               --output-dir outputs/summaries \
               $SAVE_EXTRA
           else
@@ -126,8 +127,8 @@ jobs:
               --n "${{ inputs.n }}" \
               --mode "${{ inputs.mode }}" \
               --base-url "${{ inputs.base_url }}" \
-              --model-fast "${{ inputs.model }}" \
-              --model-deep "${{ inputs.model }}" \
+              --model-fast "${MODEL_LOCKED}" \
+              --model-deep "${MODEL_LOCKED}" \
               --output-dir outputs/summaries \
               $EXTRA \
               $SAVE_EXTRA
