@@ -516,7 +516,7 @@ select:focus {
 }
 
 .paper--ref-highlight {
-  animation: paperRefGlow 0.5s ease-out;
+  animation: paperRefGlow 0.25s ease-out;
 }
 
 .empty,

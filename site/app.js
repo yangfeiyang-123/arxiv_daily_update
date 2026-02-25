@@ -1861,7 +1861,7 @@ async function jumpToPaperByCanonicalId(canonicalId) {
   card.classList.add("paper--ref-highlight");
   window.setTimeout(() => {
     card.classList.remove("paper--ref-highlight");
-  }, 520);
+  }, 260);
   return true;
 }
 
@@ -1885,7 +1885,7 @@ async function jumpToPaperRecord(record) {
       card.classList.add("paper--ref-highlight");
       window.setTimeout(() => {
         card.classList.remove("paper--ref-highlight");
-      }, 520);
+      }, 260);
       return true;
     }
   }
@@ -2104,7 +2104,7 @@ function extractArxivIdsFromText(rawText) {
 
 function buildDailyReferenceAppendix(arxivIds = []) {
   if (!Array.isArray(arxivIds) || arxivIds.length === 0) return "";
-  const lines = ["", "## 参考链接（自动补全）"];
+  const lines = [""];
   const seen = new Set();
   arxivIds.forEach((id) => {
     const canonical = extractCanonicalArxivId(extractArxivId(id));
@@ -2138,7 +2138,7 @@ function highlightReferencedPapers(arxivIds = []) {
     card.classList.add("paper--ref-highlight");
     window.setTimeout(() => {
       card.classList.remove("paper--ref-highlight");
-    }, 520);
+    }, 260);
   });
 }
 
