@@ -1794,8 +1794,6 @@ async function generateDailyBriefViaWorker(latestDateKey, items) {
     throw new Error("daily brief messages empty");
   }
 
-  stopSummaryStatusPolling();
-  stopRealtimeStream();
   const ctrl = new AbortController();
   state.summaryDialog.streamAbort = ctrl;
   state.summaryDialog.chatStreaming = true;
