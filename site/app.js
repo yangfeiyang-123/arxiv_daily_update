@@ -2186,12 +2186,66 @@ function normalizeDailyCategoryLine(line) {
     .trim();
 }
 
+function isGenericDailyCategoryText(line) {
+  const t = normalizeDailyCategoryLine(line);
+  if (!t) return true;
+  if (/^(今日|今天).*(主要类别|主要分布|涵盖|包括)/.test(t)) return true;
+  if (/^今日收录论文的主要类别如下/.test(t)) return true;
+  if (/^今日收录的?\d+篇论文主要分布/.test(t)) return true;
+  if (/^主要涵盖以下/.test(t)) return true;
+  return false;
+}
+
 function looksLikeCategoryLine(line) {
   const t = normalizeDailyCategoryLine(line);
   if (!t) return false;
-  if (t.length > 36) return false;
+  if (isGenericDailyCategoryText(t)) return false;
+  if (/\(cs\.[a-z]{2,4}\)/i.test(t)) return true;
+  if (t.length > 28) return false;
   if (/[。！？!?:：;]/.test(t)) return false;
   return true;
+}
+
+function extractCategoryCandidate(line) {
+  const raw = String(line || "").trim().replace(/^[-*•]\s+/, "").replace(/^\d+[.)、）]?\s*/, "").trim();
+  if (!raw) return "";
+  if (isGenericDailyCategoryText(raw)) return "";
+
+  const csTagged = raw.match(/^(.+?\(cs\.[a-z]{2,4}\))/i);
+  if (csTagged) {
+    const tagged = normalizeDailyCategoryLine(csTagged[1]);
+    if (looksLikeCategoryLine(tagged)) return tagged;
+  }
+
+  const pair = raw.split(/[：:]/);
+  if (pair.length >= 2) {
+    const left = normalizeDailyCategoryLine(pair[0]);
+    const right = normalizeDailyCategoryLine(pair.slice(1).join("："));
+    if (looksLikeCategoryLine(left)) return left;
+    if (looksLikeCategoryLine(right)) return right;
+  }
+
+  const clean = normalizeDailyCategoryLine(raw);
+  if (looksLikeCategoryLine(clean)) return clean;
+  return "";
+}
+
+function buildCategoryFallbackFromEntries(refEntries = []) {
+  const labels = {
+    "cs.RO": "机器人与具身智能",
+    "cs.CV": "计算机视觉与图像理解",
+    "cs.CL": "自然语言处理与大模型",
+    "cs.SY": "系统与控制",
+  };
+  const counter = new Map();
+  (Array.isArray(refEntries) ? refEntries : []).forEach((entry) => {
+    const code = String(entry?.fieldCode || "").trim();
+    if (!code) return;
+    counter.set(code, (counter.get(code) || 0) + 1);
+  });
+  return [...counter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([code]) => `${labels[code] || code} (${code})`);
 }
 
 function splitDailySections(rawText) {
@@ -2224,12 +2278,14 @@ function splitDailySections(rawText) {
   return sec;
 }
 
-function formatDailySection2(lines) {
+function formatDailySection2(lines, options = {}) {
+  const fallbackCategories = Array.isArray(options.fallbackCategories) ? options.fallbackCategories : [];
   const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()).filter(Boolean) : [];
   if (!rows.length) {
+    const fallback = fallbackCategories.length ? fallbackCategories : ["信息不足"];
     return {
-      text: "今日收录论文的主要类别如下：\n- 信息不足",
-      categories: [],
+      text: ["今日收录论文的主要类别如下：", "", ...fallback.map((x) => `- ${x}`)].join("\n"),
+      categories: fallback,
     };
   }
 
@@ -2238,7 +2294,7 @@ function formatDailySection2(lines) {
   const seen = new Set();
 
   const addCat = (value) => {
-    const c = normalizeDailyCategoryLine(value);
+    const c = extractCategoryCandidate(value);
     if (!c) return;
     const key = c.toLowerCase();
     if (seen.has(key)) return;
@@ -2249,7 +2305,8 @@ function formatDailySection2(lines) {
   rows.forEach((line) => {
     const mixed = line.match(/^(.*[：:])\s*[-*•]?\s*(.+)$/);
     if (mixed && looksLikeCategoryLine(mixed[2])) {
-      intro.push(String(mixed[1] || "").trim());
+      const introText = String(mixed[1] || "").trim();
+      if (introText && !isGenericDailyCategoryText(introText)) intro.push(introText);
       addCat(mixed[2]);
       return;
     }
@@ -2266,14 +2323,17 @@ function formatDailySection2(lines) {
       addCat(line);
       return;
     }
-    intro.push(line);
+    if (!isGenericDailyCategoryText(line)) {
+      intro.push(line);
+    }
   });
 
+  const finalCats = cats.length ? cats : fallbackCategories;
   const introLine = intro.find(Boolean) || "今日收录论文的主要类别如下：";
-  const listLines = cats.length ? cats.map((c) => `- ${c}`) : ["- 信息不足"];
+  const listLines = finalCats.length ? finalCats.map((c) => `- ${c}`) : ["- 信息不足"];
   return {
     text: [introLine, "", ...listLines].join("\n"),
-    categories: cats,
+    categories: finalCats,
   };
 }
 
@@ -2340,10 +2400,10 @@ function formatDailySection3(lines, categoryHints = []) {
   return out.join("\n");
 }
 
-function formatDailyReportMarkdown(rawText) {
+function formatDailyReportMarkdown(rawText, options = {}) {
   const sec = splitDailySections(rawText);
   const sec1Body = sec[1].map((x) => String(x || "").trim()).filter(Boolean).join("\n");
-  const sec2 = formatDailySection2(sec[2]);
+  const sec2 = formatDailySection2(sec[2], options);
   const sec2Body = sec2.text;
   const sec3Body = formatDailySection3(sec[3], sec2.categories || []);
   return [
@@ -2381,7 +2441,9 @@ function reformatLatestDailyReportInActiveConversation() {
     return false;
   }
   const before = String(list[idx].text || "");
-  const after = formatDailyReportMarkdown(before);
+  const latest = collectLatestDayPapersAcrossFields();
+  const fallbackCategories = buildCategoryFallbackFromEntries(buildDailyReferenceEntriesFromItems(latest.items || []));
+  const after = formatDailyReportMarkdown(before, { fallbackCategories });
   if (!after || after === before) {
     showSummaryDialogNotice("当前日报格式已是最新。");
     return false;
@@ -2756,7 +2818,8 @@ async function triggerSummaryDailyViaWorker() {
     const sanitized = sanitizeDailyBriefText(dailyText);
     const normalizedLayout = normalizeDailyBriefLayout(sanitized.text);
     const annotatedBody = annotateDailySummaryWithReferences(normalizedLayout, refEntries);
-    const finalText = formatDailyReportMarkdown(annotatedBody);
+    const fallbackCategories = buildCategoryFallbackFromEntries(refEntries);
+    const finalText = formatDailyReportMarkdown(annotatedBody, { fallbackCategories });
     pushSummaryDialogMessage("assistant", finalText, { conversationId: taskConversationId });
     highlightReferencedPapers(refEntries.map((entry) => entry.canonicalId));
     if (String(state.summaryDialog.activeConversationId || "") !== taskConversationId) {
