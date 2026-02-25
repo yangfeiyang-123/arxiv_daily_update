@@ -106,7 +106,6 @@ const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogStatus = document.getElementById("summaryDialogStatus");
 const summaryThreadSelect = document.getElementById("summaryThreadSelect");
 const summaryThreadNewBtn = document.getElementById("summaryThreadNewBtn");
-const summaryReformatBtn = document.getElementById("summaryReformatBtn");
 const summaryThreadRenameBtn = document.getElementById("summaryThreadRenameBtn");
 const summaryThreadDeleteBtn = document.getElementById("summaryThreadDeleteBtn");
 const summaryChatEnabledToggle = document.getElementById("summaryChatEnabledToggle");
@@ -2905,41 +2904,6 @@ function formatDailyReportMarkdown(rawText, options = {}) {
     .trim();
 }
 
-function isLikelyDailyReportText(text) {
-  const raw = String(text || "");
-  return raw.includes("每日问候与祝福") && raw.includes("今日新论文主要类别") && raw.includes("分类摘要");
-}
-
-function reformatLatestDailyReportInActiveConversation() {
-  const list = state.summaryDialog.messages || [];
-  let idx = -1;
-  for (let i = list.length - 1; i >= 0; i -= 1) {
-    const msg = list[i];
-    if (msg && msg.role === "assistant" && isLikelyDailyReportText(msg.text || "")) {
-      idx = i;
-      break;
-    }
-  }
-  if (idx < 0) {
-    showSummaryDialogNotice("当前会话未找到可重排的日报内容。");
-    return false;
-  }
-  const before = String(list[idx].text || "");
-  const latest = collectLatestDayPapersAcrossFields();
-  const refEntries = buildDailyReferenceEntriesFromItems(latest.items || []);
-  const fallbackCategories = buildCategoryFallbackFromEntries(refEntries);
-  const after = formatDailyReportMarkdown(before, { fallbackCategories, refEntries });
-  if (!after || after === before) {
-    showSummaryDialogNotice("当前日报格式已是最新。");
-    return false;
-  }
-  list[idx].text = clampDialogText(after);
-  syncRuntimeToConversation();
-  persistSummaryDialogMemory();
-  renderSummaryDialog({ preserveScroll: true, followIfNearBottom: false });
-  showSummaryDialogNotice("已重排当前日报格式。");
-  return true;
-}
 
 function buildPaperMetaFromRecord(paperRecord, fallback = {}) {
   const paper = paperRecord?.paper || {};
@@ -3717,12 +3681,6 @@ function bindEvents() {
       if (deleted) {
         showSummaryDialogNotice("当前会话已删除。");
       }
-    });
-  }
-
-  if (summaryReformatBtn) {
-    summaryReformatBtn.addEventListener("click", () => {
-      reformatLatestDailyReportInActiveConversation();
     });
   }
 
