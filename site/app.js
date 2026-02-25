@@ -2219,8 +2219,10 @@ function collectLatestDayPapersAcrossFields() {
 }
 
 function buildDailyBriefCorpus(items, options = {}) {
-  const maxItems = Number(options.maxItems || 120);
-  const maxChars = Number(options.maxChars || 70000);
+  const maxItemsRaw = Number(options.maxItems);
+  const maxCharsRaw = Number(options.maxChars);
+  const maxItems = Number.isFinite(maxItemsRaw) && maxItemsRaw > 0 ? maxItemsRaw : Number.POSITIVE_INFINITY;
+  const maxChars = Number.isFinite(maxCharsRaw) && maxCharsRaw > 0 ? maxCharsRaw : Number.POSITIVE_INFINITY;
   const lines = [];
   let usedChars = 0;
   let usedCount = 0;
@@ -2262,7 +2264,7 @@ function buildDailyBriefCorpus(items, options = {}) {
   };
 }
 
-function buildDailyBriefMessages(latestDateKey, items) {
+function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
   const dateLabel = latestDateKey ? formatDateOnly(`${latestDateKey}T00:00:00Z`) : "未知日期";
   const dist = new Map();
   items.forEach((entry) => {
@@ -2273,13 +2275,25 @@ function buildDailyBriefMessages(latestDateKey, items) {
     .map(([k, v]) => `${k}:${v}`)
     .join(", ");
 
-  const corpus = buildDailyBriefCorpus(items);
+  const corpus = buildDailyBriefCorpus(items, {
+    maxItems: items.length,
+    maxChars: Number.POSITIVE_INFINITY,
+  });
+  if (corpus.truncated > 0 || corpus.usedCount < corpus.totalCount) {
+    throw new Error(`daily corpus truncated: used=${corpus.usedCount}, total=${corpus.totalCount}`);
+  }
+  const refGuide = Array.isArray(refEntries)
+    ? refEntries.map((entry, idx) => `[${idx + 1}] ${entry.title} | ${entry.url}`).join("\n")
+    : "";
   const userPayload = [
     `日期: ${dateLabel}`,
     `样本总数: ${corpus.totalCount}`,
     `已纳入总结: ${corpus.usedCount}`,
     corpus.truncated > 0 ? `未纳入（超长截断）: ${corpus.truncated}` : "",
     fieldDist ? `领域分布: ${fieldDist}` : "",
+    "",
+    "参考编号映射（正文提及论文时必须使用对应 [编号]）：",
+    refGuide || "(empty)",
     "",
     "以下是论文摘要列表：",
     corpus.corpusText || "(empty)",
@@ -2293,12 +2307,15 @@ function buildDailyBriefMessages(latestDateKey, items) {
       content: [
         "你是我的论文日报助手。",
         "仅基于给定摘要生成中文 Markdown，不要输出思考过程、推理过程、分析草稿。",
+        "必须覆盖输入中的全部论文，不允许遗漏。",
+        "正文中凡提及具体论文，必须附带对应引用编号 [n]，且 n 与参考文献编号一一对应。",
         "输出结构必须是：",
         "## 今日问候",
         "## 今日新论文主要类别",
         "## 分类摘要",
         "其中“主要类别”给出 3-6 类；“分类摘要”按类别给小标题并简要总结。",
-        "在输出末尾必须追加“## 参考链接”小节；列出你在总结里提到的论文，格式为 Markdown 列表，每条都包含 arXiv URL。",
+        "在输出末尾必须追加“## 参考文献”小节；按“编号. 标题 - URL”列出全部论文。",
+        "参考文献数量必须严格等于样本总数（例如 45 篇就必须 45 条）。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
     },
@@ -2324,19 +2341,15 @@ function extractArxivIdsFromText(rawText) {
   return [...new Set(ids.map((x) => extractCanonicalArxivId(extractArxivId(x))).filter(Boolean))];
 }
 
-function buildDailyReferenceEntries(arxivIds = []) {
-  if (!Array.isArray(arxivIds) || arxivIds.length === 0) return [];
-  const seen = new Set();
+function buildDailyReferenceEntriesFromItems(items = []) {
+  if (!Array.isArray(items) || items.length === 0) return [];
   const entries = [];
-  arxivIds.forEach((idRaw) => {
-    const id = extractArxivId(idRaw);
-    const canonical = extractCanonicalArxivId(extractArxivId(id));
-    if (!canonical || seen.has(canonical)) return;
-    seen.add(canonical);
-    const record = findPaperByArxivId(canonical);
-    const paper = record?.paper || {};
-    const title = String(paper.title || canonical).replace(/\s+/g, " ").trim();
-    const url = String(paper.id || `https://arxiv.org/abs/${canonical}`).trim();
+  items.forEach((entry) => {
+    const paper = entry?.paper || {};
+    const rawId = String(paper.id || paper.pdf_url || "").trim();
+    const canonical = extractCanonicalArxivId(extractArxivId(rawId));
+    const title = String(paper.title || canonical || "Untitled").replace(/\s+/g, " ").trim();
+    const url = String(paper.id || (canonical ? `https://arxiv.org/abs/${canonical}` : "")).trim();
     entries.push({
       canonicalId: canonical,
       title,
@@ -2358,12 +2371,12 @@ function annotateDailySummaryWithReferences(text, refEntries = []) {
     const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = new RegExp(escaped, "i");
     if (!pattern.test(output)) return;
-    output = output.replace(pattern, (matched) => `[${matched}](#paper-${canonical}) [${idx + 1}]`);
+    output = output.replace(pattern, (matched) => `[${matched}](#paper-${canonical}) [${idx + 1}](#paper-${canonical})`);
     markedCount += 1;
   });
 
   if (markedCount === 0) {
-    const inlineRefs = refEntries.slice(0, 12).map((entry, idx) => `[${idx + 1}](#paper-${entry.canonicalId})`).join(" ");
+    const inlineRefs = refEntries.map((entry, idx) => `[${idx + 1}](#paper-${entry.canonicalId})`).join(" ");
     if (inlineRefs) {
       output = `${output}\n\n文中参考序号：${inlineRefs}`;
     }
@@ -2409,7 +2422,7 @@ async function generateDailyBriefViaWorker(latestDateKey, items, options = {}) {
   if (!WORKER_TRIGGER_URL) {
     throw new Error("未配置 Worker 触发地址");
   }
-  const messages = buildDailyBriefMessages(latestDateKey, items);
+  const messages = buildDailyBriefMessages(latestDateKey, items, options.refEntries || []);
   if (!messages.length) {
     throw new Error("daily brief messages empty");
   }
@@ -2495,9 +2508,19 @@ async function triggerSummaryDailyViaWorker() {
       setSummaryMessage("没有可总结数据。");
       return;
     }
+    const refEntries = buildDailyReferenceEntriesFromItems(latest.items);
+    if (!refEntries.length) {
+      setSummaryLoading(false, "", { conversationId: taskConversationId });
+      pushSummaryDialogMessage("system", "最近1天论文列表为空，无法生成参考文献。", { conversationId: taskConversationId });
+      setSummaryMessage("日报生成失败：未获取到参考文献列表。");
+      return;
+    }
 
     setSummaryLoading(true, "正在总结今日最新论文ing～", { conversationId: taskConversationId });
-    const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items, { conversationId: taskConversationId });
+    const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items, {
+      conversationId: taskConversationId,
+      refEntries,
+    });
     setSummaryLoading(false, "", { conversationId: taskConversationId });
 
     if (!dailyText) {
@@ -2506,8 +2529,6 @@ async function triggerSummaryDailyViaWorker() {
       return;
     }
     const sanitized = sanitizeDailyBriefText(dailyText);
-    const refIds = [...new Set([...extractArxivIdsFromText(dailyText), ...sanitized.matchedIds])];
-    const refEntries = buildDailyReferenceEntries(refIds);
     const annotatedBody = annotateDailySummaryWithReferences(sanitized.text, refEntries);
     const appendix = buildDailyReferenceAppendix(refEntries);
     const finalText = `${annotatedBody}${appendix}`;
