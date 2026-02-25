@@ -2387,6 +2387,13 @@ function getRefEntryKey(entry) {
   return `title:${normalizeTitleForMatch(String(entry?.title || ""))}`;
 }
 
+function firstSentenceFromAbstract(text, max = 120) {
+  const raw = String(text || "").replace(/\s+/g, " ").trim();
+  if (!raw) return "摘要信息不足";
+  const first = raw.split(/[。.!?！？；;\n]/)[0] || raw;
+  return shortText(first.trim(), max);
+}
+
 function scoreSpecificCategoryForEntry(entry, rule) {
   const haystack = `${String(entry?.title || "")}\n${String(entry?.abstract || "")}`.toLowerCase();
   let score = 0;
@@ -2435,6 +2442,97 @@ function buildSpecificCategoryPlan(refEntries = []) {
     entryCategoryMap,
     total: entries.length,
   };
+}
+
+function extractModelSummaryHints(lines, refEntries = []) {
+  const hints = new Map();
+  const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()).filter(Boolean) : [];
+  if (!rows.length || !Array.isArray(refEntries) || refEntries.length === 0) return hints;
+
+  const refs = refEntries.map((entry) => ({
+    entry,
+    key: getRefEntryKey(entry),
+    title: String(entry?.title || "").trim(),
+    titleNorm: normalizeTitleForMatch(String(entry?.title || "")),
+  }));
+
+  rows.forEach((row) => {
+    const cleaned = row
+      .replace(/^[-*•]\s+/, "")
+      .replace(/^#{1,6}\s+/, "")
+      .trim();
+    if (!cleaned) return;
+    const rowNorm = normalizeTitleForMatch(cleaned);
+    if (!rowNorm) return;
+
+    let best = null;
+    let bestLen = 0;
+    refs.forEach((ref) => {
+      if (!ref.titleNorm) return;
+      if (rowNorm.includes(ref.titleNorm) && ref.titleNorm.length > bestLen) {
+        best = ref;
+        bestLen = ref.titleNorm.length;
+      }
+    });
+    if (!best || hints.has(best.key)) return;
+
+    let desc = cleaned;
+    const title = best.title;
+    if (title) {
+      const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      desc = desc.replace(new RegExp(`^${escaped}\\s*[:：-–—]?\\s*`, "i"), "").trim();
+    }
+    if (!desc || desc.length < 8) return;
+    hints.set(best.key, shortText(desc, 200));
+  });
+
+  return hints;
+}
+
+function buildStrictSection3FromPlan(refEntries = [], categories = [], categoryPlan = null, modelHints = new Map()) {
+  const orderedCats = Array.isArray(categories) ? categories.filter(Boolean) : [];
+  const entries = Array.isArray(refEntries) ? refEntries : [];
+  if (!entries.length) return "- 信息不足";
+
+  const buckets = new Map();
+  orderedCats.forEach((cat) => buckets.set(cat, []));
+  const fallbackCat = orderedCats[0] || "其他主题";
+
+  entries.forEach((entry) => {
+    const key = getRefEntryKey(entry);
+    const planned =
+      categoryPlan && categoryPlan.entryCategoryMap instanceof Map ? categoryPlan.entryCategoryMap.get(key) : "";
+    const chosen = planned && buckets.has(planned) ? planned : fallbackCat;
+    if (!buckets.has(chosen)) buckets.set(chosen, []);
+    const title = String(entry?.title || entry?.canonicalId || "Untitled").trim();
+    const hint = modelHints instanceof Map ? String(modelHints.get(key) || "").trim() : "";
+    const summary = hint || firstSentenceFromAbstract(entry?.abstract || "", 120);
+    const bullet = entry?.canonicalId
+      ? `- [${title}](#paper-${entry.canonicalId})：${summary}`
+      : `- ${title}：${summary}`;
+    buckets.get(chosen).push(bullet);
+  });
+
+  const parts = [];
+  orderedCats.forEach((cat) => {
+    parts.push(`### ${cat}`);
+    const rows = buckets.get(cat) || [];
+    if (!rows.length) {
+      parts.push("- 信息不足");
+    } else {
+      parts.push(...rows);
+    }
+    parts.push("");
+  });
+
+  const extras = [...buckets.entries()].filter(([cat, rows]) => !orderedCats.includes(cat) && rows.length > 0);
+  extras.forEach(([cat, rows]) => {
+    parts.push(`### ${cat || "其他主题"}`);
+    parts.push(...rows);
+    parts.push("");
+  });
+
+  return parts.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function splitDailySections(rawText) {
@@ -2779,10 +2877,19 @@ function formatDailyReportMarkdown(rawText, options = {}) {
   const sec1Body = sec[1].map((x) => String(x || "").trim()).filter(Boolean).join("\n");
   const sec2 = formatDailySection2(sec[2], options);
   const sec2Body = sec2.text;
-  const sec3Body = formatDailySection3(sec[3], sec2.categories || [], {
-    ...options,
-    categoryPlan: sec2.categoryPlan || null,
-  });
+  const strictRefEntries = Array.isArray(options.refEntries) ? options.refEntries : [];
+  const sec3Body =
+    strictRefEntries.length > 0
+      ? buildStrictSection3FromPlan(
+          strictRefEntries,
+          sec2.categories || [],
+          sec2.categoryPlan || null,
+          extractModelSummaryHints(sec[3], strictRefEntries)
+        )
+      : formatDailySection3(sec[3], sec2.categories || [], {
+          ...options,
+          categoryPlan: sec2.categoryPlan || null,
+        });
   return [
     "## 1. 每日问候与祝福",
     sec1Body || "大家好，祝科研顺利！",
