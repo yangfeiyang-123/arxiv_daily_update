@@ -610,6 +610,22 @@ select:focus {
   border-radius: 10px;
 }
 
+.summary-dialog-notice {
+  margin: 0 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(236, 244, 251, 0.88);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.summary-dialog-notice.is-show {
+  animation: summaryNoticeFadeOut 1s ease forwards;
+}
+
 .summary-dialog-body {
   overflow: auto;
   padding: 0 14px;
@@ -806,6 +822,17 @@ select:focus {
 @keyframes summarySpin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes summaryNoticeFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
   }
 }
 

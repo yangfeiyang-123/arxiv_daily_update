@@ -94,6 +94,7 @@ const openAiPanelBtn = document.getElementById("openAiPanelBtn");
 const summaryDialog = document.getElementById("summaryDialog");
 const summaryDialogBody = document.getElementById("summaryDialogBody");
 const summaryDialogSub = document.getElementById("summaryDialogSub");
+const summaryDialogNotice = document.getElementById("summaryDialogNotice");
 const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogStatus = document.getElementById("summaryDialogStatus");
 const summaryThreadSelect = document.getElementById("summaryThreadSelect");
@@ -105,6 +106,7 @@ const summaryChatInput = document.getElementById("summaryChatInput");
 const summaryChatSendBtn = document.getElementById("summaryChatSendBtn");
 const moreWrap = document.getElementById("moreWrap");
 const loadMoreBtn = document.getElementById("loadMoreBtn");
+let summaryDialogNoticeTimerId = 0;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -785,6 +787,29 @@ function renderSummaryDialogStatus() {
   summaryDialogStatus.innerHTML = `<span class="summary-spinner" aria-hidden="true"></span><span>${escapeHtml(
     state.summaryDialog.loadingStatus || "正在处理中..."
   )}</span>`;
+}
+
+function showSummaryDialogNotice(text) {
+  if (!summaryDialogNotice) return;
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  if (summaryDialogNoticeTimerId) {
+    clearTimeout(summaryDialogNoticeTimerId);
+    summaryDialogNoticeTimerId = 0;
+  }
+
+  summaryDialogNotice.textContent = value;
+  summaryDialogNotice.classList.remove("hidden", "is-show");
+  void summaryDialogNotice.offsetWidth;
+  summaryDialogNotice.classList.add("is-show");
+
+  summaryDialogNoticeTimerId = window.setTimeout(() => {
+    summaryDialogNotice.classList.remove("is-show");
+    summaryDialogNotice.classList.add("hidden");
+    summaryDialogNotice.textContent = "";
+    summaryDialogNoticeTimerId = 0;
+  }, 1000);
 }
 
 function setSummaryLoading(active, statusText = "") {
@@ -2007,7 +2032,7 @@ function bindEvents() {
   if (summaryThreadDeleteBtn) {
     summaryThreadDeleteBtn.addEventListener("click", () => {
       deleteActiveConversation();
-      pushSummaryDialogMessage("system", "当前会话已删除。");
+      showSummaryDialogNotice("当前会话已删除。");
     });
   }
 
