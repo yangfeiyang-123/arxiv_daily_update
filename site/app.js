@@ -1691,28 +1691,30 @@ async function showSummaryInDialogForPaper(meta, btn) {
   setSummaryDialogOpen(true);
   setActiveSummaryPaper(meta);
   pushSummaryDialogMessage("user", `请总结论文：${meta.arxivId}`);
-  pushSummaryDialogMessage("system", "正在检查是否已有总结...");
-
-  const found = await fetchSummaryMarkdown(meta);
-  if (found) {
-    pushSummaryDialogMessage("assistant", `已找到总结（${found.path}）\n\n${found.text}`);
-    return;
-  }
+  setSummaryLoading(true, "正在准备总结任务...");
 
   if (ENABLE_LOCAL_REALTIME && REALTIME_ENDPOINT) {
-    pushSummaryDialogMessage("system", "未找到现成总结，开始实时流式总结...");
+    setSummaryLoading(true, "正在实时总结...");
     const streamed = await streamSummaryViaRealtime(meta);
-    if (streamed) return;
-    pushSummaryDialogMessage("system", "实时流不可用，回退到后台任务模式。");
+    if (streamed) {
+      setSummaryLoading(false, "");
+      return;
+    }
+    setSummaryLoading(true, "实时通道不可用，切换后台任务...");
   }
 
-  pushSummaryDialogMessage("system", "当前还没有可用总结，正在触发后台单篇总结任务。");
+  if (SUMMARY_PERSIST_RESULTS) {
+    const found = await fetchSummaryMarkdown(meta);
+    if (found) {
+      setSummaryLoading(false, "");
+      pushSummaryDialogMessage("assistant", `已找到总结（${found.path}）\n\n${found.text}`);
+      return;
+    }
+  }
+
+  setSummaryLoading(true, "正在触发单篇总结任务...");
   const result = await triggerSummaryOneViaWorker(meta.arxivId, btn, { openWorkflowOnError: false });
   if (result.ok) {
-    pushSummaryDialogMessage(
-      "system",
-      "总结任务已触发。下面会实时显示任务阶段进度。"
-    );
     startSummaryStatusPolling({
       type: "one",
       clientTag: result.clientTag,
@@ -1720,6 +1722,7 @@ async function showSummaryInDialogForPaper(meta, btn) {
       meta,
     });
   } else {
+    setSummaryLoading(false, "");
     pushSummaryDialogMessage(
       "system",
       "总结任务触发失败。请检查 Worker 部署、仓库 Secret（DASHSCOPE_API_KEY）和 Actions 日志。"
