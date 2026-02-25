@@ -72,7 +72,7 @@ const state = {
     loading: false,
     loadingStatus: "",
     aiSidebarEnabled: APP_CONFIG.aiSidebarEnabled !== false,
-    chatEnabled: APP_CONFIG.aiChatEnabled !== false,
+    chatEnabled: true,
     chatStreaming: false,
   },
 };
@@ -776,15 +776,16 @@ function persistSummaryUiPrefs() {
 function loadSummaryUiPrefs() {
   try {
     const raw = localStorage.getItem(SUMMARY_UI_PREF_KEY);
-    if (!raw) return;
-    const payload = JSON.parse(raw);
-    if (!payload || typeof payload !== "object") return;
-    if (typeof payload.aiSidebarEnabled === "boolean") {
-      state.summaryDialog.aiSidebarEnabled = payload.aiSidebarEnabled;
+    if (raw) {
+      const payload = JSON.parse(raw);
+      if (payload && typeof payload === "object") {
+        if (typeof payload.aiSidebarEnabled === "boolean") {
+          state.summaryDialog.aiSidebarEnabled = payload.aiSidebarEnabled;
+        }
+      }
     }
-    if (typeof payload.chatEnabled === "boolean") {
-      state.summaryDialog.chatEnabled = payload.chatEnabled;
-    }
+    // Realtime chat is always on by default.
+    state.summaryDialog.chatEnabled = true;
   } catch (err) {
     console.warn("load summary ui prefs failed", err);
   }
@@ -793,9 +794,6 @@ function loadSummaryUiPrefs() {
 function syncSummaryUiControls() {
   if (aiPanelEnabledToggle) {
     aiPanelEnabledToggle.checked = state.summaryDialog.aiSidebarEnabled;
-  }
-  if (summaryChatEnabledToggle) {
-    summaryChatEnabledToggle.checked = state.summaryDialog.chatEnabled;
   }
   const chatEnabled = state.summaryDialog.chatEnabled && state.summaryDialog.aiSidebarEnabled;
   const chatBusy = state.summaryDialog.chatStreaming;
@@ -864,7 +862,7 @@ function renderSummaryDialog(options = {}) {
   const hasStreaming = state.summaryDialog.streamingActive && state.summaryDialog.streamingText;
 
   if (!hasHistory && !hasStreaming) {
-    summaryDialogBody.innerHTML = `<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或使用“一键总结最近1天新文”。</article>`;
+    summaryDialogBody.innerHTML = "";
   } else {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
@@ -1587,10 +1585,6 @@ async function streamChatViaWorker(userText) {
   }
   if (!state.summaryDialog.aiSidebarEnabled) {
     setSummaryMessage("AI侧边栏已关闭，请先开启。");
-    return;
-  }
-  if (!state.summaryDialog.chatEnabled) {
-    pushSummaryDialogMessage("system", "实时对话已关闭，请先勾选“启用实时对话”。");
     return;
   }
   const text = String(userText || "").trim();
@@ -2820,13 +2814,6 @@ function bindEvents() {
         return;
       }
       setSummaryDialogOpen(true);
-    });
-  }
-
-  if (summaryChatEnabledToggle) {
-    summaryChatEnabledToggle.addEventListener("change", (event) => {
-      const target = event.target;
-      setChatEnabled(Boolean(target && target.checked));
     });
   }
 
