@@ -846,7 +846,7 @@ function renderSummaryDialog() {
   const hasStreaming = state.summaryDialog.streamingActive && state.summaryDialog.streamingText;
 
   if (!hasHistory && !hasStreaming) {
-    summaryDialogBody.innerHTML = `<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或点击“AI总结此文”直接触发总结。</article>`;
+    summaryDialogBody.innerHTML = `<article class="summary-msg system">可先点击论文卡片“加入AI侧栏”建立论文会话，或使用“一键总结最近1天新文”。</article>`;
   } else {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
@@ -2404,7 +2404,6 @@ function renderPaperCard(paper, index) {
         <a class="paper-link" href="${pdfUrl}" target="_blank" rel="noreferrer">阅读 PDF</a>
         <a class="paper-link alt" href="${arxivUrl}" target="_blank" rel="noreferrer">arXiv 页面</a>
         <button type="button" class="paper-link alt js-chat-paper" data-arxiv-id="${arxivId}" data-published="${published}" data-title="${title}" data-field-code="${fieldCode}">加入AI侧栏</button>
-        <button type="button" class="paper-link ai js-summarize-one" data-arxiv-id="${arxivId}" data-published="${published}" data-title="${title}">AI总结此文</button>
       </div>
     </article>
   `;
@@ -2625,18 +2624,6 @@ function bindEvents() {
       startConversationForPaper(meta);
       return;
     }
-
-    const target = el.closest(".js-summarize-one");
-    if (!target) return;
-    const fallbackMeta = {
-      arxivId: target.getAttribute("data-arxiv-id") || "",
-      title: target.getAttribute("data-title") || "",
-      published: target.getAttribute("data-published") || "",
-      fieldCode: state.selectedField || "",
-    };
-    const paperRecord = findPaperByArxivId(fallbackMeta.arxivId);
-    const meta = buildPaperMetaFromRecord(paperRecord, fallbackMeta);
-    showSummaryInDialogForPaper(meta, target);
   });
 
   loadMoreBtn.addEventListener("click", () => {
