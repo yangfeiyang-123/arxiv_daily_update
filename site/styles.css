@@ -561,21 +561,27 @@ select:focus {
   grid-row: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  grid-template-areas:
+    "title actions"
+    "sub sub";
+  align-items: center;
   gap: 10px 12px;
   padding: 14px 14px 0;
 }
 
 .summary-dialog-header > div:first-child {
   min-width: 0;
+  display: contents;
 }
 
 .summary-dialog-header h3 {
+  grid-area: title;
   margin: 0;
   font-size: 1rem;
 }
 
 .summary-dialog-sub {
+  grid-area: sub;
   margin: 4px 0 0;
   color: var(--ink-soft);
   font-size: 0.78rem;
@@ -584,6 +590,7 @@ select:focus {
 }
 
 .summary-dialog-actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-end;
