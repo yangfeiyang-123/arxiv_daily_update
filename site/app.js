@@ -106,6 +106,7 @@ const summaryDialogCloseBtn = document.getElementById("summaryDialogCloseBtn");
 const summaryDialogStatus = document.getElementById("summaryDialogStatus");
 const summaryThreadSelect = document.getElementById("summaryThreadSelect");
 const summaryThreadNewBtn = document.getElementById("summaryThreadNewBtn");
+const summaryReformatBtn = document.getElementById("summaryReformatBtn");
 const summaryThreadRenameBtn = document.getElementById("summaryThreadRenameBtn");
 const summaryThreadDeleteBtn = document.getElementById("summaryThreadDeleteBtn");
 const summaryChatEnabledToggle = document.getElementById("summaryChatEnabledToggle");
@@ -2177,6 +2178,222 @@ function normalizeDailyBriefLayout(rawText) {
   return text;
 }
 
+function normalizeDailyCategoryLine(line) {
+  return String(line || "")
+    .replace(/^[\d\s.、)）-]+/, "")
+    .replace(/^["“”'`]+|["“”'`]+$/g, "")
+    .replace(/[：:。；;，,]+$/g, "")
+    .trim();
+}
+
+function looksLikeCategoryLine(line) {
+  const t = normalizeDailyCategoryLine(line);
+  if (!t) return false;
+  if (t.length > 36) return false;
+  if (/[。！？!?:：;]/.test(t)) return false;
+  return true;
+}
+
+function splitDailySections(rawText) {
+  const text = normalizeDailyBriefLayout(rawText);
+  const lines = text.split("\n");
+  const sec = { 1: [], 2: [], 3: [] };
+  let current = 1;
+
+  const parseHeading = (line) => {
+    const t = String(line || "").trim();
+    let m = t.match(/^(?:#{1,6}\s*)?1[.)、]?\s*每日问候与祝福\s*(.*)$/);
+    if (m) return { no: 1, tail: String(m[1] || "").trim() };
+    m = t.match(/^(?:#{1,6}\s*)?2[.)、]?\s*今日新论文主要类别\s*(.*)$/);
+    if (m) return { no: 2, tail: String(m[1] || "").trim() };
+    m = t.match(/^(?:#{1,6}\s*)?3[.)、]?\s*分类摘要\s*(.*)$/);
+    if (m) return { no: 3, tail: String(m[1] || "").trim() };
+    return null;
+  };
+
+  lines.forEach((line) => {
+    const info = parseHeading(line);
+    if (info) {
+      current = info.no;
+      if (info.tail) sec[current].push(info.tail);
+      return;
+    }
+    sec[current].push(String(line || ""));
+  });
+
+  return sec;
+}
+
+function formatDailySection2(lines) {
+  const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()).filter(Boolean) : [];
+  if (!rows.length) {
+    return {
+      text: "今日收录论文的主要类别如下：\n- 信息不足",
+      categories: [],
+    };
+  }
+
+  const intro = [];
+  const cats = [];
+  const seen = new Set();
+
+  const addCat = (value) => {
+    const c = normalizeDailyCategoryLine(value);
+    if (!c) return;
+    const key = c.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    cats.push(c);
+  };
+
+  rows.forEach((line) => {
+    const mixed = line.match(/^(.*[：:])\s*[-*•]?\s*(.+)$/);
+    if (mixed && looksLikeCategoryLine(mixed[2])) {
+      intro.push(String(mixed[1] || "").trim());
+      addCat(mixed[2]);
+      return;
+    }
+    const numbered = line.match(/^\d+[.)、）]?\s*(.+)$/);
+    if (numbered) {
+      addCat(numbered[1]);
+      return;
+    }
+    if (/^[-*•]\s+/.test(line)) {
+      addCat(line.replace(/^[-*•]\s+/, ""));
+      return;
+    }
+    if (looksLikeCategoryLine(line)) {
+      addCat(line);
+      return;
+    }
+    intro.push(line);
+  });
+
+  const introLine = intro.find(Boolean) || "今日收录论文的主要类别如下：";
+  const listLines = cats.length ? cats.map((c) => `- ${c}`) : ["- 信息不足"];
+  return {
+    text: [introLine, "", ...listLines].join("\n"),
+    categories: cats,
+  };
+}
+
+function looksLikeSummaryContinuation(line) {
+  const t = String(line || "").trim();
+  if (!t) return false;
+  return /^(在|并|通过|其|该|同时|并且|且|从|对|使|以|可|实现|提升|展示|用于|其中|并在|最终|显著|有效|此外|另外|从而|并可)/.test(
+    t
+  );
+}
+
+function formatDailySection3(lines, categoryHints = []) {
+  const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()) : [];
+  const out = [];
+  let lastBulletIndex = -1;
+  let headingCount = 0;
+
+  rows.forEach((line) => {
+    const t = String(line || "").trim();
+    if (!t) return;
+    if (/^[-*•]\s*#{3,6}\s+/.test(t)) {
+      const heading = t.replace(/^[-*•]\s*/, "");
+      out.push(heading);
+      headingCount += 1;
+      lastBulletIndex = -1;
+      return;
+    }
+    if (/^#{3,6}\s+/.test(t)) {
+      out.push(t);
+      headingCount += 1;
+      lastBulletIndex = -1;
+      return;
+    }
+    if (/^#{1,2}\s+/.test(t)) return;
+
+    if (/^[-*•]\s+/.test(t)) {
+      out.push(`- ${t.replace(/^[-*•]\s+/, "").trim()}`);
+      lastBulletIndex = out.length - 1;
+      return;
+    }
+
+    if (/^[：:]\s*/.test(t) && lastBulletIndex >= 0) {
+      const appended = t.replace(/^[：:]\s*/, "").trim();
+      if (appended) {
+        out[lastBulletIndex] = `${out[lastBulletIndex]}：${appended}`;
+      }
+      return;
+    }
+
+    if (lastBulletIndex >= 0 && looksLikeSummaryContinuation(t)) {
+      out[lastBulletIndex] = `${out[lastBulletIndex]} ${t}`;
+      return;
+    }
+
+    out.push(`- ${t}`);
+    lastBulletIndex = out.length - 1;
+  });
+
+  if (headingCount === 0 && out.length > 0) {
+    const firstCategory = String((Array.isArray(categoryHints) ? categoryHints[0] : "") || "").trim();
+    const fallbackHeading = firstCategory ? `### ${firstCategory}` : "### 其他";
+    return [fallbackHeading, ...out].join("\n");
+  }
+  return out.join("\n");
+}
+
+function formatDailyReportMarkdown(rawText) {
+  const sec = splitDailySections(rawText);
+  const sec1Body = sec[1].map((x) => String(x || "").trim()).filter(Boolean).join("\n");
+  const sec2 = formatDailySection2(sec[2]);
+  const sec2Body = sec2.text;
+  const sec3Body = formatDailySection3(sec[3], sec2.categories || []);
+  return [
+    "## 1. 每日问候与祝福",
+    sec1Body || "大家好，祝科研顺利！",
+    "",
+    "## 2. 今日新论文主要类别",
+    sec2Body,
+    "",
+    "## 3. 分类摘要",
+    sec3Body || "- 信息不足",
+  ]
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function isLikelyDailyReportText(text) {
+  const raw = String(text || "");
+  return raw.includes("每日问候与祝福") && raw.includes("今日新论文主要类别") && raw.includes("分类摘要");
+}
+
+function reformatLatestDailyReportInActiveConversation() {
+  const list = state.summaryDialog.messages || [];
+  let idx = -1;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const msg = list[i];
+    if (msg && msg.role === "assistant" && isLikelyDailyReportText(msg.text || "")) {
+      idx = i;
+      break;
+    }
+  }
+  if (idx < 0) {
+    showSummaryDialogNotice("当前会话未找到可重排的日报内容。");
+    return false;
+  }
+  const before = String(list[idx].text || "");
+  const after = formatDailyReportMarkdown(before);
+  if (!after || after === before) {
+    showSummaryDialogNotice("当前日报格式已是最新。");
+    return false;
+  }
+  list[idx].text = clampDialogText(after);
+  syncRuntimeToConversation();
+  persistSummaryDialogMemory();
+  renderSummaryDialog({ preserveScroll: true, followIfNearBottom: false });
+  showSummaryDialogNotice("已重排当前日报格式。");
+  return true;
+}
+
 function buildPaperMetaFromRecord(paperRecord, fallback = {}) {
   const paper = paperRecord?.paper || {};
   const fieldCode = paperRecord?.fieldCode || state.selectedField || "";
@@ -2395,7 +2612,7 @@ function annotateDailySummaryWithReferences(text, refEntries = []) {
     .replace(/[［\[]\s*\d+(?:\s*[,，、]\s*\d+)*\s*[］\]]/g, "")
     .replace(/([^\n])\s+(##\s*[23]\.\s*)/g, "$1\n\n$2")
     .replace(/[ \t]+$/gm, "")
-    .replace(/\s{2,}/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
     .trim();
   return output;
 }
@@ -2539,7 +2756,7 @@ async function triggerSummaryDailyViaWorker() {
     const sanitized = sanitizeDailyBriefText(dailyText);
     const normalizedLayout = normalizeDailyBriefLayout(sanitized.text);
     const annotatedBody = annotateDailySummaryWithReferences(normalizedLayout, refEntries);
-    const finalText = annotatedBody;
+    const finalText = formatDailyReportMarkdown(annotatedBody);
     pushSummaryDialogMessage("assistant", finalText, { conversationId: taskConversationId });
     highlightReferencedPapers(refEntries.map((entry) => entry.canonicalId));
     if (String(state.summaryDialog.activeConversationId || "") !== taskConversationId) {
@@ -2949,6 +3166,12 @@ function bindEvents() {
       if (deleted) {
         showSummaryDialogNotice("当前会话已删除。");
       }
+    });
+  }
+
+  if (summaryReformatBtn) {
+    summaryReformatBtn.addEventListener("click", () => {
+      reformatLatestDailyReportInActiveConversation();
     });
   }
 
