@@ -45,7 +45,7 @@ class StreamOneRequest(BaseModel):
     base_url: str = Field(default="")
     min_chars: int = Field(default=core.DEFAULT_MIN_CHARS)
     chunk_max_chars: int = Field(default=core.DEFAULT_CHUNK_MAX_CHARS)
-    save: bool = Field(default=True)
+    save: bool = Field(default=False)
 
 
 class StreamEventEmitter:

@@ -48,6 +48,10 @@ on:
         description: "Client-side tracking id for UI polling"
         required: false
         default: ""
+      save_result:
+        description: "Whether to persist summaries to repository and deploy Pages"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -91,6 +95,10 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p outputs/summaries
+          SAVE_EXTRA=""
+          if [ "${{ inputs.save_result }}" != "true" ]; then
+            SAVE_EXTRA="--no-save"
+          fi
           if [ "${{ inputs.target }}" = "one" ]; then
             if [ -z "${{ inputs.arxiv_id }}" ]; then
               echo "::error::inputs.arxiv_id is required when target=one"
@@ -103,7 +111,8 @@ jobs:
               --base-url "${{ inputs.base_url }}" \
               --model-fast "${{ inputs.model }}" \
               --model-deep "${{ inputs.model }}" \
-              --output-dir outputs/summaries
+              --output-dir outputs/summaries \
+              $SAVE_EXTRA
           else
             EXTRA=""
             if [ "${{ inputs.latest_day_only }}" = "true" ]; then
@@ -120,10 +129,12 @@ jobs:
               --model-fast "${{ inputs.model }}" \
               --model-deep "${{ inputs.model }}" \
               --output-dir outputs/summaries \
-              $EXTRA
+              $EXTRA \
+              $SAVE_EXTRA
           fi
 
       - name: Commit summaries
+        if: ${{ inputs.save_result == 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -136,6 +147,7 @@ jobs:
           fi
 
       - name: Prepare static files
+        if: ${{ inputs.save_result == 'true' }}
         run: |
           rm -rf public
           mkdir -p public/data
@@ -150,15 +162,18 @@ jobs:
           fi
 
       - name: Configure Pages
+        if: ${{ inputs.save_result == 'true' }}
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload artifact
+        if: ${{ inputs.save_result == 'true' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
       - name: Deploy to GitHub Pages
+        if: ${{ inputs.save_result == 'true' }}
         id: deployment
         uses: actions/deploy-pages@v4

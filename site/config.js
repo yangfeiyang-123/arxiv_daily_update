@@ -13,6 +13,8 @@ window.MYARXIV_CONFIG = {
   summaryBaseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
   // Default summary model for UI input.
   summaryModel: "qwen3.5-397b-a17b",
+  // false: show result in dialog only, do not commit summaries into repository.
+  summaryPersistResults: false,
   // Optional realtime backend for streaming single-paper summaries.
   // Example: "http://127.0.0.1:8788"
   realtimeEndpoint: "",

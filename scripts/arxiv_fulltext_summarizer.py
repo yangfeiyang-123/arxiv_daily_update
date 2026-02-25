@@ -180,6 +180,11 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_MODEL_DEEP,
         help=f"Model used for deep final synthesis (default: {DEFAULT_MODEL_DEEP}).",
     )
+    common.add_argument(
+        "--no-save",
+        action="store_true",
+        help="Do not write summary markdown/index/records files to disk.",
+    )
 
     p_new = subparsers.add_parser(
         "summarize_new", parents=[common], help="Summarize newest N papers."
@@ -955,6 +960,8 @@ def summarize_single_paper(
     mode: str,
     min_chars: int,
     chunk_max_chars: int,
+    save_result: bool,
+    emit_final_stdout: bool = False,
 ) -> dict[str, Any]:
     _ = (min_chars, chunk_max_chars)
     aid = paper.arxiv_id
@@ -975,16 +982,25 @@ def summarize_single_paper(
         final_preview = clean_text(final_md).replace("\n", " ")[:220]
         if final_preview:
             model_log(f"{aid} | final_preview: {final_preview}")
+        if emit_final_stdout:
+            print("[FINAL_BEGIN]", flush=True)
+            print(final_md, flush=True)
+            print("[FINAL_END]", flush=True)
 
-        out_path = output_dir / summary_filename(paper)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(final_md, encoding="utf-8")
-        live_log(f"{aid} | write_summary ok {out_path}")
+        if save_result:
+            out_path = output_dir / summary_filename(paper)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(final_md, encoding="utf-8")
+            live_log(f"{aid} | write_summary ok {out_path}")
+            record["summary_path"] = str(out_path)
+        else:
+            live_log(f"{aid} | save_disabled")
+            record["summary_path"] = ""
 
-        record["summary_path"] = str(out_path)
         record["status"] = "success"
         record["error"] = ""
         record["summary_excerpt"] = clean_text(final_md)[:1200]
+        record["summary_text"] = final_md
         return record
 
     except Exception as err:  # noqa: BLE001
@@ -1092,6 +1108,7 @@ def run_summarize_new(args: argparse.Namespace) -> int:
         model_deep=args.model_deep,
         base_url=args.base_url,
     )
+    save_result = not args.no_save
 
     run_records: list[dict[str, Any]] = []
     for i, paper in enumerate(selected, start=1):
@@ -1104,14 +1121,16 @@ def run_summarize_new(args: argparse.Namespace) -> int:
             mode=args.mode,
             min_chars=args.min_chars,
             chunk_max_chars=args.chunk_max_chars,
+            save_result=save_result,
         )
         run_records.append(rec)
         if rec["status"] == "success":
-            print(f"  success -> {rec['summary_path']}", flush=True)
+            target_path = rec.get("summary_path") or "(in-memory)"
+            print(f"  success -> {target_path}", flush=True)
         else:
             print(f"  failed  -> {rec['error']}", flush=True)
 
-    if args.daily_report:
+    if args.daily_report and save_result:
         successful = [r for r in run_records if r.get("status") == "success"]
         if successful:
             live_log(f"daily_report start source_count={len(successful)}")
@@ -1124,10 +1143,13 @@ def run_summarize_new(args: argparse.Namespace) -> int:
             if preview:
                 model_log(f"daily_report preview: {preview}")
 
-    index_path = upsert_summary_index(output_dir, run_records)
-    print(f"summary index -> {index_path}")
-    records_path = write_records(output_dir, "summarize_new", run_records)
-    print(f"records -> {records_path}")
+    if save_result:
+        index_path = upsert_summary_index(output_dir, run_records)
+        print(f"summary index -> {index_path}")
+        records_path = write_records(output_dir, "summarize_new", run_records)
+        print(f"records -> {records_path}")
+    else:
+        print("save disabled -> no files written")
 
     failed = sum(1 for r in run_records if r.get("status") != "success")
     success = len(run_records) - failed
@@ -1151,6 +1173,7 @@ def run_summarize_one(args: argparse.Namespace) -> int:
         model_deep=args.model_deep,
         base_url=args.base_url,
     )
+    save_result = not args.no_save
 
     rec = summarize_single_paper(
         paper=paper,
@@ -1160,15 +1183,20 @@ def run_summarize_one(args: argparse.Namespace) -> int:
         mode=args.mode,
         min_chars=args.min_chars,
         chunk_max_chars=args.chunk_max_chars,
+        save_result=save_result,
+        emit_final_stdout=True,
     )
-
-    index_path = upsert_summary_index(output_dir, [rec])
-    print(f"summary index -> {index_path}")
-    records_path = write_records(output_dir, "summarize_one", [rec])
-    print(f"records -> {records_path}")
+    if save_result:
+        index_path = upsert_summary_index(output_dir, [rec])
+        print(f"summary index -> {index_path}")
+        records_path = write_records(output_dir, "summarize_one", [rec])
+        print(f"records -> {records_path}")
+    else:
+        print("save disabled -> no files written")
 
     if rec["status"] == "success":
-        print(f"success -> {rec['summary_path']}")
+        target_path = rec.get("summary_path") or "(in-memory)"
+        print(f"success -> {target_path}")
         live_log("single_done success=1 failed=0")
         return 0
 

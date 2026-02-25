@@ -23,6 +23,7 @@ const SUMMARY_DAILY_MODE = APP_CONFIG.summaryDailyMode === "deep" ? "deep" : "fa
 const SUMMARY_ONE_MODE = APP_CONFIG.summaryOneMode === "fast" ? "fast" : "deep";
 const SUMMARY_BASE_URL = String(APP_CONFIG.summaryBaseUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1").trim();
 const SUMMARY_MODEL_DEFAULT = String(APP_CONFIG.summaryModel || "qwen3.5-397b-a17b").trim() || "qwen3.5-397b-a17b";
+const SUMMARY_PERSIST_RESULTS = APP_CONFIG.summaryPersistResults === true;
 const DATA_CACHE_KEY = "myarxiv_cached_payload_v1";
 const DATA_CACHE_NAME = "myarxiv-data-cache-v1";
 const SUMMARY_DIALOG_MEMORY_KEY = "myarxiv_summary_dialog_memory_v1";
@@ -56,6 +57,8 @@ const state = {
     streamAbort: null,
     streamingText: "",
     streamingActive: false,
+    loading: false,
+    loadingStatus: "",
   },
 };
 
@@ -296,8 +299,14 @@ function renderSummaryDialog() {
   const hasHistory = state.summaryDialog.messages.length > 0;
   const hasStreaming = state.summaryDialog.streamingActive && state.summaryDialog.streamingText;
 
+  const loadingHtml = state.summaryDialog.loading
+    ? `<article class="summary-loading"><span class="summary-spinner" aria-hidden="true"></span><span>${escapeHtml(
+        state.summaryDialog.loadingStatus || "正在处理中..."
+      )}</span></article>`
+    : "";
+
   if (!hasHistory && !hasStreaming) {
-    summaryDialogBody.innerHTML = `<article class="summary-msg system">点击“AI总结此文”后，这里会显示总结结果。</article>`;
+    summaryDialogBody.innerHTML = `${loadingHtml}<article class="summary-msg system">点击“AI总结此文”后，这里会显示总结结果。</article>`;
   } else {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
@@ -310,10 +319,16 @@ function renderSummaryDialog() {
       ? `<article class="summary-msg assistant">${escapeHtml(state.summaryDialog.streamingText)}</article>`
       : "";
 
-    summaryDialogBody.innerHTML = `${historyHtml}${streamingHtml}`;
+    summaryDialogBody.innerHTML = `${loadingHtml}${historyHtml}${streamingHtml}`;
   }
 
   summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
+}
+
+function setSummaryLoading(active, statusText = "") {
+  state.summaryDialog.loading = Boolean(active);
+  state.summaryDialog.loadingStatus = String(statusText || "").trim();
+  renderSummaryDialog();
 }
 
 function pushSummaryDialogMessage(role, text) {
@@ -553,16 +568,29 @@ function stopSummaryStatusPolling() {
   state.summaryDialog.pollTimerId = 0;
   state.summaryDialog.pollContext = null;
   state.summaryDialog.lastStatusSignature = "";
+  setSummaryLoading(false, "");
 }
 
-function appendSummaryLiveLines(lines) {
-  if (!Array.isArray(lines) || lines.length === 0) return;
-  const text = lines
-    .map((line) => String(line || "").trim())
-    .filter(Boolean)
-    .join("\n");
-  if (!text) return;
-  appendStreamingToken(`${state.summaryDialog.streamingText ? "\n" : ""}${text}`);
+function deriveSummaryLoadingStatus(statusPayload) {
+  if (!statusPayload || !statusPayload.found || !statusPayload.run) {
+    return "等待任务创建...";
+  }
+  const run = statusPayload.run || {};
+  const liveStatus = String(statusPayload?.live_logs?.latest_status || "").trim();
+  if (liveStatus) return liveStatus;
+
+  const jobs = Array.isArray(statusPayload.jobs) ? statusPayload.jobs : [];
+  for (const job of jobs) {
+    const steps = Array.isArray(job.steps) ? job.steps : [];
+    const runningStep = steps.find((s) => s.status === "in_progress");
+    if (runningStep) {
+      return `正在执行：${runningStep.name || "处理中"}`;
+    }
+  }
+  if (run.status === "queued") return "任务排队中...";
+  if (run.status === "in_progress") return "任务执行中...";
+  if (run.status === "completed") return `任务完成：${run.conclusion || "unknown"}`;
+  return "处理中...";
 }
 
 async function pollSummaryStatusOnce() {
@@ -575,30 +603,10 @@ async function pollSummaryStatusOnce() {
       since_line: Number(ctx.sinceLine || 0),
       max_lines: 90,
     });
-    const statusText = summarizeRunStatusText(statusPayload);
-    if (statusText !== state.summaryDialog.lastStatusSignature) {
-      state.summaryDialog.lastStatusSignature = statusText;
-      pushSummaryDialogMessage("system", statusText);
-    }
+    setSummaryLoading(true, deriveSummaryLoadingStatus(statusPayload));
     const liveLogs = statusPayload?.live_logs;
     if (liveLogs && Number.isFinite(Number(liveLogs.total_lines))) {
       ctx.sinceLine = Number(liveLogs.total_lines);
-    }
-    if (liveLogs && Array.isArray(liveLogs.lines) && liveLogs.lines.length > 0) {
-      appendSummaryLiveLines(liveLogs.lines);
-      ctx.emptyPollCount = 0;
-    } else {
-      ctx.emptyPollCount = Number(ctx.emptyPollCount || 0) + 1;
-      if (ctx.emptyPollCount === 4) {
-        pushSummaryDialogMessage("system", "仍在等待日志流，请稍候（任务已触发）。");
-      }
-    }
-    if (liveLogs?.error) {
-      const errText = `实时日志暂不可用：${String(liveLogs.error)}`;
-      if (errText !== ctx.lastLiveError) {
-        ctx.lastLiveError = errText;
-        pushSummaryDialogMessage("system", errText);
-      }
     }
 
     const run = statusPayload?.run;
@@ -606,7 +614,7 @@ async function pollSummaryStatusOnce() {
       return;
     }
 
-    finalizeStreamingAsAssistant();
+    setSummaryLoading(false, "");
     stopSummaryStatusPolling();
 
     if (run.conclusion !== "success") {
@@ -618,14 +626,21 @@ async function pollSummaryStatusOnce() {
     }
 
     if (ctx.type === "one") {
-      const found = await fetchSummaryMarkdown(ctx.meta || {}, true);
-      if (found) {
-        pushSummaryDialogMessage("assistant", `总结已生成（${found.path}）\n\n${found.text}`);
+      const finalMarkdown = String(liveLogs?.final_markdown || "").trim();
+      if (finalMarkdown) {
+        pushSummaryDialogMessage("assistant", finalMarkdown);
+      } else if (SUMMARY_PERSIST_RESULTS) {
+        const found = await fetchSummaryMarkdown(ctx.meta || {}, true);
+        if (found) {
+          pushSummaryDialogMessage("assistant", `总结已生成（${found.path}）\n\n${found.text}`);
+        } else {
+          pushSummaryDialogMessage("system", "任务成功，但未取到总结文本。请稍后再试。");
+        }
       } else {
-        pushSummaryDialogMessage("system", "任务成功，但网站还未同步到最新总结文件，请稍后点“刷新”。");
+        pushSummaryDialogMessage("system", "任务成功，但日志中未提取到最终文本。请重试一次。");
       }
     } else {
-      pushSummaryDialogMessage("system", "批量总结任务已完成。你可以在页面刷新后查看最新结果。");
+      pushSummaryDialogMessage("system", "批量总结任务已完成。");
     }
   } catch (err) {
     const raw = String(err?.message || err);
@@ -638,9 +653,9 @@ async function pollSummaryStatusOnce() {
       );
       return;
     }
+    setSummaryLoading(true, "状态暂时不可用，正在重试...");
     if (msg !== state.summaryDialog.lastStatusSignature) {
       state.summaryDialog.lastStatusSignature = msg;
-      pushSummaryDialogMessage("system", msg);
     }
   }
 }
@@ -653,8 +668,9 @@ function startSummaryStatusPolling(context) {
     lastLiveError: "",
     emptyPollCount: 0,
   };
-  state.summaryDialog.streamingActive = true;
+  state.summaryDialog.streamingActive = false;
   state.summaryDialog.streamingText = "";
+  setSummaryLoading(true, "任务已触发，准备执行...");
   renderSummaryDialog();
   pollSummaryStatusOnce();
   state.summaryDialog.pollTimerId = window.setInterval(() => {
@@ -750,7 +766,7 @@ async function streamSummaryViaRealtime(meta) {
         base_url: SUMMARY_BASE_URL,
         input_path: "data/latest_cs_daily.json",
         output_dir: "outputs/summaries",
-        save: true,
+        save: SUMMARY_PERSIST_RESULTS,
       }),
       signal: ctrl.signal,
     });
@@ -904,8 +920,9 @@ async function triggerSummaryDailyViaWorker() {
       model: getSelectedSummaryModel(),
       base_url: SUMMARY_BASE_URL,
       client_tag: clientTag,
+      save_result: SUMMARY_PERSIST_RESULTS,
     });
-    setSummaryMessage("批量总结任务已触发。总结完成后会自动写入仓库并部署。");
+    setSummaryMessage("批量总结任务已触发。");
     startSummaryStatusPolling({
       type: "daily",
       clientTag,
@@ -952,6 +969,7 @@ async function triggerSummaryOneViaWorker(arxivId, btn, options = {}) {
       model: getSelectedSummaryModel(),
       base_url: SUMMARY_BASE_URL,
       client_tag: clientTag,
+      save_result: SUMMARY_PERSIST_RESULTS,
     });
     setSummaryMessage(`单篇总结任务已触发：${arxivId}`);
     if (OPEN_SUMMARY_ACTIONS_AFTER_TRIGGER) {
@@ -1025,6 +1043,10 @@ async function refreshSummaryDialog() {
     published: state.summaryDialog.activePublished,
   };
   pushSummaryDialogMessage("system", "正在刷新总结内容...");
+  if (!SUMMARY_PERSIST_RESULTS) {
+    pushSummaryDialogMessage("system", "当前配置为不落盘保存，刷新不会从仓库读取新结果。请重新触发总结。");
+    return;
+  }
   const found = await fetchSummaryMarkdown(meta, true);
   if (found) {
     pushSummaryDialogMessage("assistant", `刷新成功（${found.path}）\n\n${found.text}`);

@@ -158,6 +158,7 @@ function buildWorkflowInputs(action, payload, defaults = {}) {
     String(payload.model || defaults.defaultModel || "qwen3.5-397b-a17b").trim() ||
     "qwen3.5-397b-a17b";
   const clientTag = String(payload.client_tag || "").trim();
+  const saveResult = payload.save_result === true || String(payload.save_result || "").toLowerCase() === "true";
   if (action === "summarize_new") {
     return {
       target: "new",
@@ -168,6 +169,7 @@ function buildWorkflowInputs(action, payload, defaults = {}) {
       base_url: baseUrl,
       model,
       client_tag: clientTag,
+      save_result: saveResult ? "true" : "false",
     };
   }
 
@@ -183,6 +185,7 @@ function buildWorkflowInputs(action, payload, defaults = {}) {
       base_url: baseUrl,
       model,
       client_tag: clientTag,
+      save_result: saveResult ? "true" : "false",
     };
   }
 
@@ -359,16 +362,36 @@ function normalizeLogLine(input) {
     .trim();
 }
 
-function extractLiveLogLines(logText) {
+function extractLiveLogInfo(logText) {
   const rawLines = String(logText || "").split(/\r?\n/);
   const out = [];
+  const finalLines = [];
+  let inFinalBlock = false;
+  let latestStatus = "";
+
   for (const raw of rawLines) {
     const line = normalizeLogLine(raw);
     if (!line) continue;
 
+    if (line.includes("[FINAL_BEGIN]")) {
+      inFinalBlock = true;
+      continue;
+    }
+    if (line.includes("[FINAL_END]")) {
+      inFinalBlock = false;
+      continue;
+    }
+    if (inFinalBlock) {
+      finalLines.push(line);
+      continue;
+    }
+
     const idxLive = line.indexOf("[LIVE]");
     if (idxLive >= 0) {
-      out.push(line.slice(idxLive));
+      const liveLine = line.slice(idxLive);
+      out.push(liveLine);
+      const statusText = liveLine.replace("[LIVE]", "").trim();
+      if (statusText) latestStatus = statusText;
       continue;
     }
 
@@ -388,7 +411,11 @@ function extractLiveLogLines(logText) {
       out.push(line);
     }
   }
-  return out;
+  return {
+    lines: out,
+    latest_status: latestStatus,
+    final_markdown: finalLines.join("\n").trim(),
+  };
 }
 
 function pickSummaryJob(rawJobs) {
@@ -416,7 +443,8 @@ async function fetchJobLiveLogs({ owner, repo, token, jobId, sinceLine, maxLines
 
   const url = `https://api.github.com/repos/${owner}/${repo}/actions/jobs/${jobId}/logs`;
   const text = await ghText(url, token);
-  const lines = extractLiveLogLines(text);
+  const info = extractLiveLogInfo(text);
+  const lines = info.lines;
   const total = lines.length;
   const fromLine = Number.isFinite(sinceLine) && sinceLine > 0 ? Math.min(Math.floor(sinceLine), total) : 0;
   const limit = Number.isFinite(maxLines) && maxLines > 0 ? Math.min(Math.floor(maxLines), 200) : 80;
@@ -426,6 +454,8 @@ async function fetchJobLiveLogs({ owner, repo, token, jobId, sinceLine, maxLines
     from_line: fromLine,
     lines: next,
     truncated: fromLine + limit < total,
+    latest_status: info.latest_status || "",
+    final_markdown: info.final_markdown || "",
   };
 }
 

@@ -562,6 +562,28 @@ select:focus {
   align-content: start;
 }
 
+.summary-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 10px 11px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.summary-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-top-color: var(--accent-2);
+  animation: summarySpin 0.85s linear infinite;
+  flex: 0 0 auto;
+}
+
 .summary-msg {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
@@ -624,6 +646,12 @@ select:focus {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes summarySpin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
