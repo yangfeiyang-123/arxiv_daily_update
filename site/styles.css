@@ -653,16 +653,22 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 10px 40px 10px 11px;
+  max-height: 1600px;
+  overflow: hidden;
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
   font-size: 0.86rem;
-  transition: opacity 1s ease, transform 1s ease;
+  transition: opacity 1s ease, transform 1s ease, max-height 1s ease, padding 1s ease, border-color 1s ease;
 }
 
 .summary-msg.is-removing {
   opacity: 0;
   transform: translateY(-3px);
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
   pointer-events: none;
 }
 
@@ -698,6 +704,14 @@ select:focus {
 .summary-msg-delete:focus-visible {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.summary-msg-delete.is-confirming {
+  color: #ffe7d4;
+  border-color: rgba(255, 173, 107, 0.65);
+  background: rgba(44, 20, 5, 0.92);
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .summary-msg.user {

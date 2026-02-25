@@ -32,6 +32,7 @@ const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
 const SUMMARY_CONVERSATION_MAX = 24;
 const SUMMARY_MESSAGE_DELETE_FADE_MS = 1000;
+const SUMMARY_MESSAGE_DELETE_CONFIRM_MS = 1800;
 const DAILY_PIN_CONVERSATION_ID = "conv-daily-pinned";
 const DAILY_PIN_CONVERSATION_TITLE = "每日新文总结";
 const SUMMARY_STATUS_POLL_MS = 4500;
@@ -844,8 +845,12 @@ function setSummaryDialogOpen(open) {
   persistSummaryDialogMemory();
 }
 
-function renderSummaryDialog() {
+function renderSummaryDialog(options = {}) {
   if (!summaryDialog || !summaryDialogBody || !summaryDialogSub) return;
+  const prevScrollTop = summaryDialogBody.scrollTop || 0;
+  const prevScrollHeight = summaryDialogBody.scrollHeight || 0;
+  const prevClientHeight = summaryDialogBody.clientHeight || 0;
+  const wasNearBottom = prevScrollHeight - (prevScrollTop + prevClientHeight) <= 36;
   renderConversationSelector();
   const conv = getActiveConversation();
   const convName = conv?.title || "会话";
@@ -885,7 +890,16 @@ function renderSummaryDialog() {
     summaryDialogBody.innerHTML = `${historyHtml}${streamingHtml}`;
   }
 
-  summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
+  const followIfNearBottom = options.followIfNearBottom !== false;
+  if (options.stickBottom || (followIfNearBottom && wasNearBottom)) {
+    summaryDialogBody.scrollTop = summaryDialogBody.scrollHeight;
+  } else if (options.preserveScroll) {
+    const newHeight = summaryDialogBody.scrollHeight || 0;
+    const delta = newHeight - prevScrollHeight;
+    summaryDialogBody.scrollTop = Math.max(0, prevScrollTop + delta);
+  } else {
+    summaryDialogBody.scrollTop = prevScrollTop;
+  }
   renderSummaryDialogStatus();
 }
 
@@ -986,7 +1000,7 @@ function pushSummaryDialogMessage(role, text) {
     state.summaryDialog.messages = state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
   }
   persistSummaryDialogMemory();
-  renderSummaryDialog();
+  renderSummaryDialog({ stickBottom: true });
 }
 
 function deleteSummaryDialogMessage(messageId) {
@@ -996,8 +1010,20 @@ function deleteSummaryDialogMessage(messageId) {
   if (idx < 0) return false;
   state.summaryDialog.messages.splice(idx, 1);
   persistSummaryDialogMemory();
-  renderSummaryDialog();
+  renderSummaryDialog({ preserveScroll: true, followIfNearBottom: false });
   return true;
+}
+
+function resetMessageDeleteConfirmState(button) {
+  if (!button) return;
+  const timerId = Number(button.getAttribute("data-confirm-timer") || 0);
+  if (timerId) {
+    window.clearTimeout(timerId);
+  }
+  button.removeAttribute("data-confirm-timer");
+  button.removeAttribute("data-confirming");
+  button.classList.remove("is-confirming");
+  button.textContent = "删除";
 }
 
 function setActiveSummaryPaper(meta = {}) {
@@ -1357,20 +1383,20 @@ function appendStreamingToken(text) {
   if (state.summaryDialog.streamingText.length > SUMMARY_DIALOG_MAX_TEXT * 4) {
     state.summaryDialog.streamingText = state.summaryDialog.streamingText.slice(-SUMMARY_DIALOG_MAX_TEXT * 4);
   }
-  renderSummaryDialog();
+  renderSummaryDialog({ stickBottom: true });
 }
 
 function finalizeStreamingAsAssistant() {
   if (!state.summaryDialog.streamingText) {
     state.summaryDialog.streamingActive = false;
     state.summaryDialog.streamingText = "";
-    renderSummaryDialog();
+    renderSummaryDialog({ stickBottom: true });
     return;
   }
   pushSummaryDialogMessage("assistant", state.summaryDialog.streamingText);
   state.summaryDialog.streamingActive = false;
   state.summaryDialog.streamingText = "";
-  renderSummaryDialog();
+  renderSummaryDialog({ stickBottom: true });
 }
 
 function parseSseBlock(rawBlock) {
@@ -2824,6 +2850,20 @@ function bindEvents() {
         if (!msgId) return;
         const msgNode = msgDeleteBtn.closest(".summary-msg");
         if (!msgNode || msgNode.classList.contains("is-removing")) return;
+        if (msgDeleteBtn.getAttribute("data-confirming") !== "1") {
+          resetMessageDeleteConfirmState(msgDeleteBtn);
+          msgDeleteBtn.setAttribute("data-confirming", "1");
+          msgDeleteBtn.classList.add("is-confirming");
+          msgDeleteBtn.textContent = "确认删除";
+          const timerId = window.setTimeout(() => {
+            resetMessageDeleteConfirmState(msgDeleteBtn);
+          }, SUMMARY_MESSAGE_DELETE_CONFIRM_MS);
+          msgDeleteBtn.setAttribute("data-confirm-timer", String(timerId));
+          return;
+        }
+        resetMessageDeleteConfirmState(msgDeleteBtn);
+        msgNode.style.maxHeight = `${msgNode.offsetHeight}px`;
+        void msgNode.offsetWidth;
         msgNode.classList.add("is-removing");
         window.setTimeout(() => {
           deleteSummaryDialogMessage(msgId);
