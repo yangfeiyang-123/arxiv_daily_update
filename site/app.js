@@ -2218,24 +2218,17 @@ function collectLatestDayPapersAcrossFields() {
   };
 }
 
-function buildDailyBriefCorpus(items, options = {}) {
-  const maxItemsRaw = Number(options.maxItems);
-  const maxCharsRaw = Number(options.maxChars);
-  const maxItems = Number.isFinite(maxItemsRaw) && maxItemsRaw > 0 ? maxItemsRaw : Number.POSITIVE_INFINITY;
-  const maxChars = Number.isFinite(maxCharsRaw) && maxCharsRaw > 0 ? maxCharsRaw : Number.POSITIVE_INFINITY;
+function buildDailyBriefCorpus(items) {
   const lines = [];
-  let usedChars = 0;
   let usedCount = 0;
 
   for (let i = 0; i < items.length; i += 1) {
-    if (usedCount >= maxItems) break;
     const entry = items[i] || {};
     const title = String(entry.title || "Untitled").trim();
     const categories = Array.isArray(entry.categories) ? entry.categories.slice(0, 3).join(", ") : "";
-    const abs = String(entry.abstract || "").replace(/\s+/g, " ").trim();
+    const abs = String(entry.abstract || "").replace(/\s+/g, " ").trim() || "摘要缺失（原始数据为空）";
     const arxivUrl = String(entry.url || "").trim();
     const pdfUrl = String(entry.pdfUrl || "").trim();
-    if (!abs) continue;
 
     const row = [
       `[${usedCount + 1}]`,
@@ -2249,9 +2242,7 @@ function buildDailyBriefCorpus(items, options = {}) {
       .filter(Boolean)
       .join(" | ");
 
-    if (usedChars + row.length > maxChars) break;
     lines.push(row);
-    usedChars += row.length;
     usedCount += 1;
   }
 
@@ -2259,7 +2250,7 @@ function buildDailyBriefCorpus(items, options = {}) {
     corpusText: lines.join("\n"),
     usedCount,
     totalCount: items.length,
-    truncated: Math.max(0, items.length - usedCount),
+    truncated: 0,
   };
 }
 
@@ -2275,18 +2266,14 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
     .map(([k, v]) => `${k}:${v}`)
     .join(", ");
 
-  const corpus = buildDailyBriefCorpus(source, {
-    maxItems: source.length,
-    maxChars: Number.POSITIVE_INFINITY,
-  });
-  if (corpus.truncated > 0 || corpus.usedCount < corpus.totalCount) {
-    throw new Error(`daily corpus truncated: used=${corpus.usedCount}, total=${corpus.totalCount}`);
+  const corpus = buildDailyBriefCorpus(source);
+  if (corpus.usedCount !== corpus.totalCount) {
+    throw new Error(`daily corpus coverage mismatch: used=${corpus.usedCount}, total=${corpus.totalCount}`);
   }
   const userPayload = [
     `日期: ${dateLabel}`,
     `样本总数: ${corpus.totalCount}`,
     `已纳入总结: ${corpus.usedCount}`,
-    corpus.truncated > 0 ? `未纳入（超长截断）: ${corpus.truncated}` : "",
     fieldDist ? `领域分布: ${fieldDist}` : "",
     "",
     "以下是论文摘要列表：",
@@ -2309,6 +2296,7 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
         "## 1. 每日问候与祝福",
         "## 2. 今日新论文主要类别",
         "## 3. 分类摘要",
+        " 三个主要结构要注意分段，否则markdown无法正常渲染",
         "其中“主要类别”给出 3-6 类；“分类摘要”按类别给小标题并简要总结。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
@@ -2511,7 +2499,7 @@ async function triggerSummaryDailyViaWorker() {
       return;
     }
 
-    setSummaryLoading(true, "正在总结今日最新论文ing～", { conversationId: taskConversationId });
+    setSummaryLoading(true, "总结今日最新论文ing～", { conversationId: taskConversationId });
     const dailyText = await generateDailyBriefViaWorker(latest.latestDateKey, latest.items, {
       conversationId: taskConversationId,
       refEntries,
