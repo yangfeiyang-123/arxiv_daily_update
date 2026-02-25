@@ -1695,6 +1695,146 @@ function findPaperByArxivId(arxivId) {
   return null;
 }
 
+function normalizeTitleForMatch(title) {
+  return String(title || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "");
+}
+
+function collectAllPaperRecords() {
+  const records = [];
+  state.fields.forEach((field) => {
+    (field.papers || []).forEach((paper) => {
+      const canonicalId = extractCanonicalArxivId(extractArxivId(paper.id || paper.pdf_url || ""));
+      records.push({
+        fieldCode: field.code || "",
+        paper,
+        canonicalId,
+        title: String(paper.title || ""),
+        titleNorm: normalizeTitleForMatch(paper.title || ""),
+      });
+    });
+  });
+  return records;
+}
+
+function findPaperRecordByTitle(rawTitle) {
+  const query = String(rawTitle || "").trim();
+  const queryNorm = normalizeTitleForMatch(query);
+  if (!queryNorm || queryNorm.length < 8) return null;
+  const records = collectAllPaperRecords();
+  if (!records.length) return null;
+
+  const exact = records.find((rec) => rec.titleNorm === queryNorm);
+  if (exact) return exact;
+
+  let best = null;
+  let bestScore = 0;
+  records.forEach((rec) => {
+    if (!rec.titleNorm) return;
+    if (rec.titleNorm.includes(queryNorm) || queryNorm.includes(rec.titleNorm)) {
+      const score = Math.min(rec.titleNorm.length, queryNorm.length) / Math.max(rec.titleNorm.length, queryNorm.length);
+      if (score > bestScore) {
+        bestScore = score;
+        best = rec;
+      }
+    }
+  });
+  if (best && bestScore >= 0.82) return best;
+  return null;
+}
+
+function normalizeDialogTitleText(raw) {
+  let text = String(raw || "").replace(/\s+/g, " ").trim();
+  text = text.replace(/^[•\-*]\s*/, "");
+  text = text.replace(/\s*[-–—]\s*\[?\s*arxiv[^\]\n]*未提供\s*\]?$/i, "");
+  text = text.replace(/\s*\[?\s*arxiv[^\]\n]*未提供\s*\]?$/i, "");
+  text = text.replace(/\s*[-–—]\s*https?:\/\/\S+\s*$/i, "");
+  text = text.replace(/\s*[-–—]\s*\[左侧定位\]\s*$/i, "");
+  return text.trim();
+}
+
+function extractDialogTitleCandidate(target) {
+  const anchor = target.closest("a");
+  if (anchor) {
+    const text = normalizeDialogTitleText(anchor.textContent || "");
+    if (text) return text;
+  }
+  const li = target.closest("li");
+  if (li) {
+    const whole = normalizeDialogTitleText(li.textContent || "");
+    if (whole) {
+      const parts = whole.split("·").map((x) => x.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        const longest = parts
+          .filter((x) => !/^https?:\/\//i.test(x))
+          .sort((a, b) => b.length - a.length)[0];
+        if (longest) return normalizeDialogTitleText(longest);
+      }
+      return whole;
+    }
+  }
+  return "";
+}
+
+function ensurePaperVisibleForJump(record) {
+  if (!record) return;
+  if (state.selectedField !== record.fieldCode) {
+    state.selectedField = record.fieldCode;
+    if (fieldSelect) {
+      fieldSelect.value = state.selectedField;
+    }
+    updateOriginLink();
+  }
+  if (state.rangeMode !== "month") {
+    state.rangeMode = "month";
+    updateRangeButtons();
+  }
+  if (state.keyword) {
+    state.keyword = "";
+    if (searchInput) searchInput.value = "";
+  }
+  applyFilters();
+  const targetIdx = state.filtered.findIndex(
+    (paper) => extractCanonicalArxivId(extractArxivId(paper.id || paper.pdf_url || "")) === record.canonicalId
+  );
+  if (targetIdx >= 0 && state.visibleCount < targetIdx + 1) {
+    state.visibleCount = targetIdx + 20;
+    renderStats();
+    renderPapersGroupedByDate();
+  }
+}
+
+async function jumpToPaperByCanonicalId(canonicalId) {
+  const clean = extractCanonicalArxivId(extractArxivId(canonicalId));
+  if (!clean) return false;
+  let card = document.getElementById(`paper-${clean}`);
+  if (!card) {
+    const recordById = findPaperByArxivId(clean);
+    if (recordById) {
+      const rec = {
+        fieldCode: recordById.fieldCode,
+        paper: recordById.paper,
+        canonicalId: clean,
+        title: String(recordById.paper?.title || ""),
+        titleNorm: normalizeTitleForMatch(recordById.paper?.title || ""),
+      };
+      ensurePaperVisibleForJump(rec);
+      card = document.getElementById(`paper-${clean}`);
+    }
+  }
+  if (!card) return false;
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  card.classList.remove("paper--ref-highlight");
+  void card.offsetWidth;
+  card.classList.add("paper--ref-highlight");
+  window.setTimeout(() => {
+    card.classList.remove("paper--ref-highlight");
+  }, 1900);
+  return true;
+}
+
 function buildPaperMetaFromRecord(paperRecord, fallback = {}) {
   const paper = paperRecord?.paper || {};
   const fieldCode = paperRecord?.fieldCode || state.selectedField || "";
@@ -2435,6 +2575,37 @@ function bindEvents() {
       const text = summaryChatInput ? summaryChatInput.value : "";
       if (summaryChatInput) summaryChatInput.value = "";
       streamChatViaWorker(text);
+    });
+  }
+
+  if (summaryDialogBody) {
+    summaryDialogBody.addEventListener("click", async (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const inMsg = target.closest(".summary-msg.assistant, .summary-msg.system");
+      if (!inMsg) return;
+
+      const anchor = target.closest("a");
+      if (anchor) {
+        const href = String(anchor.getAttribute("href") || "").trim();
+        if (href.startsWith("#paper-")) {
+          event.preventDefault();
+          const ok = await jumpToPaperByCanonicalId(href.slice("#paper-".length));
+          if (!ok) showSummaryDialogNotice("未在左侧找到对应论文。");
+          return;
+        }
+      }
+
+      const titleCandidate = extractDialogTitleCandidate(target);
+      if (!titleCandidate) return;
+      const record = findPaperRecordByTitle(titleCandidate);
+      if (!record) {
+        return;
+      }
+      const ok = await jumpToPaperByCanonicalId(record.canonicalId);
+      if (!ok) {
+        showSummaryDialogNotice("未在左侧找到对应论文。");
+      }
     });
   }
 
