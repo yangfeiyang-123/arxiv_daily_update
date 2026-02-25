@@ -2231,21 +2231,210 @@ function extractCategoryCandidate(line) {
 }
 
 function buildCategoryFallbackFromEntries(refEntries = []) {
-  const labels = {
-    "cs.RO": "机器人与具身智能",
-    "cs.CV": "计算机视觉与图像理解",
-    "cs.CL": "自然语言处理与大模型",
-    "cs.SY": "系统与控制",
-  };
-  const counter = new Map();
-  (Array.isArray(refEntries) ? refEntries : []).forEach((entry) => {
-    const code = String(entry?.fieldCode || "").trim();
-    if (!code) return;
-    counter.set(code, (counter.get(code) || 0) + 1);
+  const plan = buildSpecificCategoryPlan(refEntries);
+  return plan.categories;
+}
+
+const DAILY_SPECIFIC_CATEGORY_RULES = [
+  {
+    name: "强化学习与策略优化",
+    keywords: [
+      "reinforcement learning",
+      "offline reinforcement",
+      "actor-critic",
+      "policy optimization",
+      "grpo",
+      "reward",
+      "强化学习",
+      "离线强化",
+      "策略优化",
+      "奖励",
+    ],
+  },
+  {
+    name: "VLA与具身决策",
+    keywords: [
+      "vision-language-action",
+      "vla",
+      "embodied",
+      "action reasoning",
+      "test-time planning",
+      "long-horizon",
+      "具身",
+      "动作推理",
+      "测试时规划",
+    ],
+  },
+  {
+    name: "传感器融合与多模态感知",
+    keywords: [
+      "sensor",
+      "sensing",
+      "occupancy sensor",
+      "event camera",
+      "tactile",
+      "multimodal",
+      "传感器",
+      "事件",
+      "多模态",
+      "感知",
+    ],
+  },
+  {
+    name: "路径规划与导航控制",
+    keywords: [
+      "path planning",
+      "any-angle",
+      "navigation",
+      "trajectory",
+      "planner",
+      "control",
+      "路径规划",
+      "导航",
+      "轨迹",
+      "控制",
+    ],
+  },
+  {
+    name: "3D重建与场景表示",
+    keywords: [
+      "3d reconstruction",
+      "radiance field",
+      "nerf",
+      "gaussian splatting",
+      "mesh",
+      "multi-view",
+      "3d",
+      "重建",
+      "辐射场",
+      "高斯",
+      "网格",
+      "多视图",
+    ],
+  },
+  {
+    name: "视频理解与生成",
+    keywords: [
+      "video generation",
+      "videoqa",
+      "spatio-temporal",
+      "human video",
+      "video",
+      "视频",
+      "时空",
+    ],
+  },
+  {
+    name: "医学影像与生物分析",
+    keywords: [
+      "medical",
+      "radiology",
+      "tumor",
+      "brain",
+      "tomography",
+      "医学",
+      "影像",
+      "肿瘤",
+      "断层",
+    ],
+  },
+  {
+    name: "OCR与文档解析",
+    keywords: ["ocr", "optical character", "text recognition", "文档", "字符识别", "文字识别"],
+  },
+  {
+    name: "LLM智能体与评测",
+    keywords: [
+      "agent",
+      "benchmark",
+      "evaluation",
+      "scholarly",
+      "question-answering",
+      "uncertainty",
+      "智能体",
+      "基准",
+      "评测",
+      "问答",
+    ],
+  },
+  {
+    name: "数据与训练范式",
+    keywords: [
+      "distillation",
+      "federated",
+      "semi-supervised",
+      "data engineering",
+      "optimization",
+      "蒸馏",
+      "联邦",
+      "半监督",
+      "数据工程",
+      "优化",
+    ],
+  },
+];
+
+const DAILY_FIELD_FALLBACK_CATEGORY = {
+  "cs.RO": "VLA与具身决策",
+  "cs.CV": "3D重建与场景表示",
+  "cs.CL": "LLM智能体与评测",
+  "cs.SY": "路径规划与导航控制",
+};
+
+function getRefEntryKey(entry) {
+  const canonical = extractCanonicalArxivId(extractArxivId(String(entry?.canonicalId || entry?.url || entry?.pdfUrl || "")));
+  if (canonical) return `id:${canonical}`;
+  return `title:${normalizeTitleForMatch(String(entry?.title || ""))}`;
+}
+
+function scoreSpecificCategoryForEntry(entry, rule) {
+  const haystack = `${String(entry?.title || "")}\n${String(entry?.abstract || "")}`.toLowerCase();
+  let score = 0;
+  const seen = new Set();
+  (rule.keywords || []).forEach((kw) => {
+    const k = String(kw || "").toLowerCase().trim();
+    if (!k || seen.has(k)) return;
+    seen.add(k);
+    if (haystack.includes(k)) score += 1;
   });
-  return [...counter.entries()]
+  return score;
+}
+
+function buildSpecificCategoryPlan(refEntries = []) {
+  const entries = Array.isArray(refEntries) ? refEntries : [];
+  const categoryCounts = new Map();
+  const entryCategoryMap = new Map();
+
+  entries.forEach((entry) => {
+    let bestName = "";
+    let bestScore = 0;
+    DAILY_SPECIFIC_CATEGORY_RULES.forEach((rule) => {
+      const score = scoreSpecificCategoryForEntry(entry, rule);
+      if (score > bestScore) {
+        bestScore = score;
+        bestName = rule.name;
+      }
+    });
+
+    if (!bestName) {
+      const fieldCode = String(entry?.fieldCode || "").toUpperCase();
+      bestName = DAILY_FIELD_FALLBACK_CATEGORY[fieldCode] || "其他主题";
+    }
+    const key = getRefEntryKey(entry);
+    entryCategoryMap.set(key, bestName);
+    categoryCounts.set(bestName, (categoryCounts.get(bestName) || 0) + 1);
+  });
+
+  const categories = [...categoryCounts.entries()]
     .sort((a, b) => b[1] - a[1])
-    .map(([code]) => `${labels[code] || code} (${code})`);
+    .map(([name]) => name);
+
+  return {
+    categories,
+    categoryCounts,
+    entryCategoryMap,
+    total: entries.length,
+  };
 }
 
 function splitDailySections(rawText) {
@@ -2279,6 +2468,19 @@ function splitDailySections(rawText) {
 }
 
 function formatDailySection2(lines, options = {}) {
+  const specificPlan = buildSpecificCategoryPlan(options.refEntries || []);
+  if (specificPlan.categories.length > 0) {
+    return {
+      text: [
+        `今日收录论文共 ${specificPlan.total} 篇，按更细粒度研究方向可分为：`,
+        "",
+        ...specificPlan.categories.map((name) => `- ${name}（${specificPlan.categoryCounts.get(name) || 0} 篇）`),
+      ].join("\n"),
+      categories: specificPlan.categories,
+      categoryPlan: specificPlan,
+    };
+  }
+
   const fallbackCategories = Array.isArray(options.fallbackCategories) ? options.fallbackCategories : [];
   const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()).filter(Boolean) : [];
   if (!rows.length) {
@@ -2286,6 +2488,12 @@ function formatDailySection2(lines, options = {}) {
     return {
       text: ["今日收录论文的主要类别如下：", "", ...fallback.map((x) => `- ${x}`)].join("\n"),
       categories: fallback,
+      categoryPlan: {
+        categories: fallback,
+        categoryCounts: new Map(),
+        entryCategoryMap: new Map(),
+        total: Number(options.refEntries?.length || 0),
+      },
     };
   }
 
@@ -2334,6 +2542,12 @@ function formatDailySection2(lines, options = {}) {
   return {
     text: [introLine, "", ...listLines].join("\n"),
     categories: finalCats,
+    categoryPlan: {
+      categories: finalCats,
+      categoryCounts: new Map(),
+      entryCategoryMap: new Map(),
+      total: Number(options.refEntries?.length || 0),
+    },
   };
 }
 
@@ -2423,6 +2637,11 @@ function pickCategoryForSummaryItem(itemText, options = {}) {
     });
   }
   if (bestMatch) {
+    const planMap = options?.categoryPlan?.entryCategoryMap;
+    const entryKey = getRefEntryKey(bestMatch);
+    if (planMap instanceof Map && planMap.has(entryKey)) {
+      return planMap.get(entryKey);
+    }
     const code = String(bestMatch.fieldCode || "").toUpperCase();
     if (code && fieldMap.has(code)) {
       return fieldMap.get(code);
@@ -2492,17 +2711,55 @@ function formatDailySection3(lines, categoryHints = [], options = {}) {
   const buckets = new Map();
   hints.forEach((cat) => buckets.set(cat, []));
   const fallbackCategory = hints[0] || "其他";
+  const mentionedEntryKeys = new Set();
 
   items.forEach((item) => {
+    const matchedEntry = (() => {
+      const refEntries = Array.isArray(options.refEntries) ? options.refEntries : [];
+      const itemNorm = normalizeTitleForMatch(item.text);
+      if (!itemNorm) return null;
+      let best = null;
+      let bestLen = 0;
+      refEntries.forEach((entry) => {
+        const titleNorm = normalizeTitleForMatch(String(entry?.title || ""));
+        if (!titleNorm) return;
+        if (itemNorm.includes(titleNorm) && titleNorm.length > bestLen) {
+          best = entry;
+          bestLen = titleNorm.length;
+        }
+      });
+      return best;
+    })();
+    if (matchedEntry) {
+      mentionedEntryKeys.add(getRefEntryKey(matchedEntry));
+    }
+
     const chosen =
       item.preferredCategory ||
       pickCategoryForSummaryItem(item.text, {
         categoryHints: hints,
         refEntries: options.refEntries || [],
+        categoryPlan: options.categoryPlan || null,
       }) ||
       fallbackCategory;
-    if (!buckets.has(chosen)) buckets.set(chosen, []);
-    buckets.get(chosen).push(`- ${item.text}`);
+    const finalChosen = buckets.has(chosen) ? chosen : fallbackCategory;
+    if (!buckets.has(finalChosen)) buckets.set(finalChosen, []);
+    buckets.get(finalChosen).push(`- ${item.text}`);
+  });
+
+  // Ensure every paper is covered, and grouped by section-2 specific categories.
+  const refEntries = Array.isArray(options.refEntries) ? options.refEntries : [];
+  refEntries.forEach((entry) => {
+    const key = getRefEntryKey(entry);
+    if (mentionedEntryKeys.has(key)) return;
+    const planned = options?.categoryPlan?.entryCategoryMap instanceof Map ? options.categoryPlan.entryCategoryMap.get(key) : "";
+    const chosen = planned || fallbackCategory;
+    const finalChosen = buckets.has(chosen) ? chosen : fallbackCategory;
+    const abstractFirst = shortText((String(entry.abstract || "").split(/[。.!?！？；;\n]/)[0] || "摘要信息不足").trim(), 96);
+    const title = String(entry.title || entry.canonicalId || "Untitled").trim();
+    const bullet = entry.canonicalId ? `- [${title}](#paper-${entry.canonicalId})：${abstractFirst}` : `- ${title}：${abstractFirst}`;
+    if (!buckets.has(finalChosen)) buckets.set(finalChosen, []);
+    buckets.get(finalChosen).push(bullet);
   });
 
   const ordered = [];
@@ -2510,13 +2767,6 @@ function formatDailySection3(lines, categoryHints = [], options = {}) {
     const rowsForCat = buckets.get(cat) || [];
     if (!rowsForCat.length) return;
     ordered.push(`### ${cat}`);
-    ordered.push(...rowsForCat);
-    ordered.push("");
-  });
-
-  const extra = [...buckets.entries()].filter(([cat, rowsForCat]) => !hints.includes(cat) && rowsForCat.length > 0);
-  extra.forEach(([cat, rowsForCat]) => {
-    ordered.push(`### ${cat || "其他"}`);
     ordered.push(...rowsForCat);
     ordered.push("");
   });
@@ -2529,7 +2779,10 @@ function formatDailyReportMarkdown(rawText, options = {}) {
   const sec1Body = sec[1].map((x) => String(x || "").trim()).filter(Boolean).join("\n");
   const sec2 = formatDailySection2(sec[2], options);
   const sec2Body = sec2.text;
-  const sec3Body = formatDailySection3(sec[3], sec2.categories || [], options);
+  const sec3Body = formatDailySection3(sec[3], sec2.categories || [], {
+    ...options,
+    categoryPlan: sec2.categoryPlan || null,
+  });
   return [
     "## 1. 每日问候与祝福",
     sec1Body || "大家好，祝科研顺利！",
@@ -2723,6 +2976,7 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
         "## 2. 今日新论文主要类别",
         "## 3. 分类摘要",
         "标题请尽量独立成行。",
+        "第2部分请使用细粒度研究方向（例如：强化学习与策略优化、VLA与具身决策、传感器融合与多模态感知），不要只写“视觉/机器人/CL”这类粗分类。",
         "第3部分必须严格使用第2部分列出的类别作为三级标题（### 类别名），不要新增其它方向标题。",
         "分类摘要尽量按类别分段，每条论文使用“论文标题：简述”写法。",
         "第3部分每一条论文都必须以 `- ` 开头。",
