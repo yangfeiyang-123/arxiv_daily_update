@@ -2443,6 +2443,30 @@ function buildSpecificCategoryPlan(refEntries = []) {
   };
 }
 
+function cleanModelHintText(rawText, title = "") {
+  let text = String(rawText || "")
+    .replace(/\[([^\]]+)\]\((?:#[^)]+|https?:\/\/[^\s)]+)\)/gi, "$1")
+    .replace(/^[-*•]\s+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "";
+
+  const baseTitle = String(title || "").trim();
+  if (baseTitle) {
+    const escaped = baseTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    text = text.replace(new RegExp(`^${escaped}\\s*[-:：–—]?\\s*`, "i"), "").trim();
+  }
+  text = text.replace(/^[-:：–—,，;；\s]+/, "").trim();
+  if (!text || text.length < 8) return "";
+
+  const textNorm = normalizeTitleForMatch(text);
+  const titleNorm = normalizeTitleForMatch(baseTitle);
+  if (titleNorm && textNorm && (textNorm === titleNorm || textNorm.includes(titleNorm))) {
+    return "";
+  }
+  return shortText(text, 200);
+}
+
 function extractModelSummaryHints(lines, refEntries = []) {
   const hints = new Map();
   const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()).filter(Boolean) : [];
@@ -2473,16 +2497,16 @@ function extractModelSummaryHints(lines, refEntries = []) {
         bestLen = ref.titleNorm.length;
       }
     });
-    if (!best || hints.has(best.key)) return;
+    if (!best) return;
 
-    let desc = cleaned;
     const title = best.title;
-    if (title) {
-      const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      desc = desc.replace(new RegExp(`^${escaped}\\s*[-:：–—]?\\s*`, "i"), "").trim();
+    const desc = cleanModelHintText(cleaned, title);
+    if (!desc) return;
+
+    const current = String(hints.get(best.key) || "");
+    if (!current || desc.length > current.length) {
+      hints.set(best.key, desc);
     }
-    if (!desc || desc.length < 8) return;
-    hints.set(best.key, shortText(desc, 200));
   });
 
   return hints;
@@ -2505,7 +2529,8 @@ function buildStrictSection3FromPlan(refEntries = [], categories = [], categoryP
     if (!buckets.has(chosen)) buckets.set(chosen, []);
     const title = String(entry?.title || entry?.canonicalId || "Untitled").trim();
     const hint = modelHints instanceof Map ? String(modelHints.get(key) || "").trim() : "";
-    const summary = hint || firstSentenceFromAbstract(entry?.abstract || "", 120);
+    const cleanedHint = cleanModelHintText(hint, title);
+    const summary = cleanedHint || firstSentenceFromAbstract(entry?.abstract || "", 120);
     const bullet = entry?.canonicalId
       ? `- [${title}](#paper-${entry.canonicalId})：${summary}`
       : `- ${title}：${summary}`;
