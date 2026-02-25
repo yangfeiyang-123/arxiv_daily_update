@@ -2345,59 +2345,183 @@ function looksLikeSummaryContinuation(line) {
   );
 }
 
-function formatDailySection3(lines, categoryHints = []) {
+function stripCategoryFieldCode(category) {
+  return String(category || "").replace(/\(\s*cs\.[a-z]{2,4}\s*\)/gi, "").trim();
+}
+
+function extractFieldCodeFromCategory(category) {
+  const m = String(category || "").match(/\b(cs\.[a-z]{2,4})\b/i);
+  return m ? m[1].toUpperCase() : "";
+}
+
+function categoryTokenScore(itemText, category) {
+  const itemTokens = tokenizeTitleForMatch(itemText);
+  const catTokens = tokenizeTitleForMatch(stripCategoryFieldCode(category));
+  if (!itemTokens.length || !catTokens.length) return 0;
+  let hit = 0;
+  catTokens.forEach((tok) => {
+    if (itemTokens.includes(tok)) hit += 1;
+  });
+  return hit / Math.max(1, catTokens.length);
+}
+
+function pickBestCategoryFromHints(text, categoryHints = []) {
+  const hints = Array.isArray(categoryHints) ? categoryHints.filter(Boolean) : [];
+  if (!hints.length) return "";
+  const normText = normalizeTitleForMatch(text);
+  if (!normText) return hints[0];
+
+  let best = "";
+  let bestScore = 0;
+  hints.forEach((cat) => {
+    const cleanCat = stripCategoryFieldCode(cat);
+    const normCat = normalizeTitleForMatch(cleanCat);
+    if (!normCat) return;
+    if (normText.includes(normCat)) {
+      const score = 1 + normCat.length / 100;
+      if (score > bestScore) {
+        best = cat;
+        bestScore = score;
+      }
+      return;
+    }
+    const score = categoryTokenScore(text, cat);
+    if (score > bestScore) {
+      best = cat;
+      bestScore = score;
+    }
+  });
+  return best || hints[0];
+}
+
+function pickCategoryForSummaryItem(itemText, options = {}) {
+  const categoryHints = Array.isArray(options.categoryHints) ? options.categoryHints.filter(Boolean) : [];
+  if (!categoryHints.length) return "";
+  const text = String(itemText || "").trim();
+  if (!text) return categoryHints[0];
+
+  const fieldMap = new Map();
+  categoryHints.forEach((cat) => {
+    const code = extractFieldCodeFromCategory(cat);
+    if (code && !fieldMap.has(code)) {
+      fieldMap.set(code, cat);
+    }
+  });
+
+  const refEntries = Array.isArray(options.refEntries) ? options.refEntries : [];
+  let bestMatch = null;
+  let bestLen = 0;
+  const itemNorm = normalizeTitleForMatch(text);
+  if (itemNorm) {
+    refEntries.forEach((entry) => {
+      const titleNorm = normalizeTitleForMatch(String(entry?.title || ""));
+      if (!titleNorm) return;
+      if (itemNorm.includes(titleNorm) && titleNorm.length > bestLen) {
+        bestLen = titleNorm.length;
+        bestMatch = entry;
+      }
+    });
+  }
+  if (bestMatch) {
+    const code = String(bestMatch.fieldCode || "").toUpperCase();
+    if (code && fieldMap.has(code)) {
+      return fieldMap.get(code);
+    }
+  }
+
+  return pickBestCategoryFromHints(text, categoryHints);
+}
+
+function formatDailySection3(lines, categoryHints = [], options = {}) {
   const rows = Array.isArray(lines) ? lines.map((x) => String(x || "").trim()) : [];
-  const out = [];
-  let lastBulletIndex = -1;
-  let headingCount = 0;
+  const hints = Array.isArray(categoryHints) ? categoryHints.filter(Boolean) : [];
+  const items = [];
+  let currentCategory = hints[0] || "";
+  let lastItemIndex = -1;
+
+  const pushItem = (rawText, preferredCategory = "") => {
+    const text = String(rawText || "").trim();
+    if (!text) return;
+    items.push({
+      text,
+      preferredCategory: preferredCategory || "",
+    });
+    lastItemIndex = items.length - 1;
+  };
 
   rows.forEach((line) => {
     const t = String(line || "").trim();
     if (!t) return;
     if (/^[-*•]\s*#{3,6}\s+/.test(t)) {
-      const heading = t.replace(/^[-*•]\s*/, "");
-      out.push(heading);
-      headingCount += 1;
-      lastBulletIndex = -1;
+      const heading = t.replace(/^[-*•]\s*/, "").replace(/^#{3,6}\s+/, "").trim();
+      currentCategory = pickBestCategoryFromHints(heading, hints) || currentCategory;
       return;
     }
     if (/^#{3,6}\s+/.test(t)) {
-      out.push(t);
-      headingCount += 1;
-      lastBulletIndex = -1;
+      const heading = t.replace(/^#{3,6}\s+/, "").trim();
+      currentCategory = pickBestCategoryFromHints(heading, hints) || currentCategory;
       return;
     }
     if (/^#{1,2}\s+/.test(t)) return;
 
     if (/^[-*•]\s+/.test(t)) {
-      out.push(`- ${t.replace(/^[-*•]\s+/, "").trim()}`);
-      lastBulletIndex = out.length - 1;
+      pushItem(t.replace(/^[-*•]\s+/, "").trim(), currentCategory);
       return;
     }
 
-    if (/^[：:]\s*/.test(t) && lastBulletIndex >= 0) {
+    if (/^[：:]\s*/.test(t) && lastItemIndex >= 0) {
       const appended = t.replace(/^[：:]\s*/, "").trim();
       if (appended) {
-        out[lastBulletIndex] = `${out[lastBulletIndex]}：${appended}`;
+        items[lastItemIndex].text = `${items[lastItemIndex].text}：${appended}`;
       }
       return;
     }
 
-    if (lastBulletIndex >= 0 && looksLikeSummaryContinuation(t)) {
-      out[lastBulletIndex] = `${out[lastBulletIndex]} ${t}`;
+    if (lastItemIndex >= 0 && looksLikeSummaryContinuation(t)) {
+      items[lastItemIndex].text = `${items[lastItemIndex].text} ${t}`;
       return;
     }
 
-    out.push(`- ${t}`);
-    lastBulletIndex = out.length - 1;
+    pushItem(t, currentCategory);
   });
 
-  if (headingCount === 0 && out.length > 0) {
-    const firstCategory = String((Array.isArray(categoryHints) ? categoryHints[0] : "") || "").trim();
-    const fallbackHeading = firstCategory ? `### ${firstCategory}` : "### 其他";
-    return [fallbackHeading, ...out].join("\n");
+  if (!items.length) {
+    return hints.length ? `### ${hints[0]}\n- 信息不足` : "- 信息不足";
   }
-  return out.join("\n");
+
+  const buckets = new Map();
+  hints.forEach((cat) => buckets.set(cat, []));
+  const fallbackCategory = hints[0] || "其他";
+
+  items.forEach((item) => {
+    const chosen =
+      item.preferredCategory ||
+      pickCategoryForSummaryItem(item.text, {
+        categoryHints: hints,
+        refEntries: options.refEntries || [],
+      }) ||
+      fallbackCategory;
+    if (!buckets.has(chosen)) buckets.set(chosen, []);
+    buckets.get(chosen).push(`- ${item.text}`);
+  });
+
+  const ordered = [];
+  hints.forEach((cat) => {
+    const rowsForCat = buckets.get(cat) || [];
+    if (!rowsForCat.length) return;
+    ordered.push(`### ${cat}`);
+    ordered.push(...rowsForCat);
+    ordered.push("");
+  });
+
+  const extra = [...buckets.entries()].filter(([cat, rowsForCat]) => !hints.includes(cat) && rowsForCat.length > 0);
+  extra.forEach(([cat, rowsForCat]) => {
+    ordered.push(`### ${cat || "其他"}`);
+    ordered.push(...rowsForCat);
+    ordered.push("");
+  });
+
+  return ordered.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function formatDailyReportMarkdown(rawText, options = {}) {
@@ -2405,7 +2529,7 @@ function formatDailyReportMarkdown(rawText, options = {}) {
   const sec1Body = sec[1].map((x) => String(x || "").trim()).filter(Boolean).join("\n");
   const sec2 = formatDailySection2(sec[2], options);
   const sec2Body = sec2.text;
-  const sec3Body = formatDailySection3(sec[3], sec2.categories || []);
+  const sec3Body = formatDailySection3(sec[3], sec2.categories || [], options);
   return [
     "## 1. 每日问候与祝福",
     sec1Body || "大家好，祝科研顺利！",
@@ -2442,8 +2566,9 @@ function reformatLatestDailyReportInActiveConversation() {
   }
   const before = String(list[idx].text || "");
   const latest = collectLatestDayPapersAcrossFields();
-  const fallbackCategories = buildCategoryFallbackFromEntries(buildDailyReferenceEntriesFromItems(latest.items || []));
-  const after = formatDailyReportMarkdown(before, { fallbackCategories });
+  const refEntries = buildDailyReferenceEntriesFromItems(latest.items || []);
+  const fallbackCategories = buildCategoryFallbackFromEntries(refEntries);
+  const after = formatDailyReportMarkdown(before, { fallbackCategories, refEntries });
   if (!after || after === before) {
     showSummaryDialogNotice("当前日报格式已是最新。");
     return false;
@@ -2598,7 +2723,9 @@ function buildDailyBriefMessages(latestDateKey, items, refEntries = []) {
         "## 2. 今日新论文主要类别",
         "## 3. 分类摘要",
         "标题请尽量独立成行。",
+        "第3部分必须严格使用第2部分列出的类别作为三级标题（### 类别名），不要新增其它方向标题。",
         "分类摘要尽量按类别分段，每条论文使用“论文标题：简述”写法。",
+        "第3部分每一条论文都必须以 `- ` 开头。",
         "禁止编造；若某类信息不足，直接写“信息不足”。",
       ].join("\n"),
     },
@@ -2819,7 +2946,7 @@ async function triggerSummaryDailyViaWorker() {
     const normalizedLayout = normalizeDailyBriefLayout(sanitized.text);
     const annotatedBody = annotateDailySummaryWithReferences(normalizedLayout, refEntries);
     const fallbackCategories = buildCategoryFallbackFromEntries(refEntries);
-    const finalText = formatDailyReportMarkdown(annotatedBody, { fallbackCategories });
+    const finalText = formatDailyReportMarkdown(annotatedBody, { fallbackCategories, refEntries });
     pushSummaryDialogMessage("assistant", finalText, { conversationId: taskConversationId });
     highlightReferencedPapers(refEntries.map((entry) => entry.canonicalId));
     if (String(state.summaryDialog.activeConversationId || "") !== taskConversationId) {
