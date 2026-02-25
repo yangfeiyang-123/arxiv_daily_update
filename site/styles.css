@@ -516,7 +516,7 @@ select:focus {
 }
 
 .paper--ref-highlight {
-  animation: paperRefGlow 1.8s ease;
+  animation: paperRefGlow 0.5s ease-out;
 }
 
 .empty,
@@ -836,15 +836,12 @@ select:focus {
 
 @keyframes paperRefGlow {
   0% {
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
-    border-color: rgba(255, 255, 255, 0.14);
-  }
-  35% {
-    box-shadow: 0 16px 40px rgba(17, 208, 193, 0.36), 0 0 0 1px rgba(255, 176, 95, 0.45) inset;
-    border-color: rgba(255, 176, 95, 0.9);
-    background: linear-gradient(145deg, rgba(255, 176, 95, 0.22), rgba(17, 208, 193, 0.2)), var(--panel-strong);
+    background: #0f3b2f;
+    border-color: rgba(58, 211, 154, 0.96);
+    box-shadow: 0 16px 42px rgba(15, 59, 47, 0.45), 0 0 0 1px rgba(58, 211, 154, 0.45) inset;
   }
   100% {
+    background: var(--panel-strong);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
     border-color: rgba(255, 255, 255, 0.14);
   }

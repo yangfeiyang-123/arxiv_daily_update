@@ -1719,15 +1719,43 @@ function collectAllPaperRecords() {
   return records;
 }
 
+function tokenizeTitleForMatch(title) {
+  const base = String(title || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ");
+  return [...new Set(base.split(/\s+/).filter(Boolean))];
+}
+
 function findPaperRecordByTitle(rawTitle) {
   const query = String(rawTitle || "").trim();
   const queryNorm = normalizeTitleForMatch(query);
-  if (!queryNorm || queryNorm.length < 8) return null;
+  if (!queryNorm || queryNorm.length < 4) return null;
   const records = collectAllPaperRecords();
   if (!records.length) return null;
 
   const exact = records.find((rec) => rec.titleNorm === queryNorm);
   if (exact) return exact;
+
+  const qTokens = tokenizeTitleForMatch(query);
+  let tokenBest = null;
+  let tokenBestScore = 0;
+  if (qTokens.length > 0) {
+    records.forEach((rec) => {
+      const rTokens = tokenizeTitleForMatch(rec.title);
+      if (!rTokens.length) return;
+      let hit = 0;
+      qTokens.forEach((t) => {
+        if (rTokens.includes(t)) hit += 1;
+      });
+      const score = hit / Math.max(qTokens.length, rTokens.length, 1);
+      if (score > tokenBestScore) {
+        tokenBestScore = score;
+        tokenBest = rec;
+      }
+    });
+  }
+  if (tokenBest && tokenBestScore >= 0.34) return tokenBest;
 
   let best = null;
   let bestScore = 0;
@@ -1833,8 +1861,35 @@ async function jumpToPaperByCanonicalId(canonicalId) {
   card.classList.add("paper--ref-highlight");
   window.setTimeout(() => {
     card.classList.remove("paper--ref-highlight");
-  }, 1900);
+  }, 520);
   return true;
+}
+
+async function jumpToPaperRecord(record) {
+  if (!record) return false;
+  ensurePaperVisibleForJump(record);
+  const canonical = extractCanonicalArxivId(extractArxivId(record.canonicalId || record.paper?.id || record.paper?.pdf_url || ""));
+  if (canonical) {
+    return await jumpToPaperByCanonicalId(canonical);
+  }
+  const titleNorm = normalizeTitleForMatch(record.title || record.paper?.title || "");
+  if (!titleNorm) return false;
+  const cards = document.querySelectorAll(".paper[data-arxiv-id]");
+  for (const card of cards) {
+    const titleNode = card.querySelector(".paper-title a");
+    const cardTitleNorm = normalizeTitleForMatch(titleNode?.textContent || "");
+    if (cardTitleNorm && cardTitleNorm === titleNorm) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.classList.remove("paper--ref-highlight");
+      void card.offsetWidth;
+      card.classList.add("paper--ref-highlight");
+      window.setTimeout(() => {
+        card.classList.remove("paper--ref-highlight");
+      }, 520);
+      return true;
+    }
+  }
+  return false;
 }
 
 function sanitizeDailyBriefText(rawText) {
@@ -1955,6 +2010,8 @@ function buildDailyBriefCorpus(items, options = {}) {
     const title = String(paper.title || "Untitled").trim();
     const categories = Array.isArray(paper.categories) ? paper.categories.slice(0, 3).join(", ") : "";
     const abs = String(paper.summary || "").replace(/\s+/g, " ").trim();
+    const arxivUrl = String(paper.id || "").trim();
+    const pdfUrl = String(paper.pdf_url || "").trim();
     if (!abs) continue;
 
     const row = [
@@ -1962,6 +2019,8 @@ function buildDailyBriefCorpus(items, options = {}) {
       `field=${entry.fieldCode || "-"}`,
       categories ? `cats=${categories}` : "",
       `title=${title}`,
+      arxivUrl ? `arxiv_url=${arxivUrl}` : "",
+      pdfUrl ? `pdf_url=${pdfUrl}` : "",
       `abstract=${abs}`,
     ]
       .filter(Boolean)
@@ -2079,7 +2138,7 @@ function highlightReferencedPapers(arxivIds = []) {
     card.classList.add("paper--ref-highlight");
     window.setTimeout(() => {
       card.classList.remove("paper--ref-highlight");
-    }, 1900);
+    }, 520);
   });
 }
 
@@ -2637,13 +2696,21 @@ function bindEvents() {
           if (!ok) showSummaryDialogNotice("未在左侧找到对应论文。");
           return;
         }
+        if (/^https?:\/\/arxiv\.org\/(?:abs|pdf|html)\//i.test(href)) {
+          event.preventDefault();
+          const idFromHref = extractCanonicalArxivId(extractArxivId(href));
+          if (idFromHref) {
+            const ok = await jumpToPaperByCanonicalId(idFromHref);
+            if (ok) return;
+          }
+        }
         // For reference list titles/links, prefer in-page jump instead of opening new URL.
         const maybeTitle = extractDialogTitleCandidate(anchor) || extractDialogTitleCandidate(target);
         if (maybeTitle) {
           event.preventDefault();
           const record = findPaperRecordByTitle(maybeTitle);
           if (record) {
-            const ok = await jumpToPaperByCanonicalId(record.canonicalId);
+            const ok = await jumpToPaperRecord(record);
             if (!ok) showSummaryDialogNotice("未在左侧找到对应论文。");
             return;
           }
@@ -2656,7 +2723,7 @@ function bindEvents() {
       if (!record) {
         return;
       }
-      const ok = await jumpToPaperByCanonicalId(record.canonicalId);
+      const ok = await jumpToPaperRecord(record);
       if (!ok) {
         showSummaryDialogNotice("未在左侧找到对应论文。");
       }
