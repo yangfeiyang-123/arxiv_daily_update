@@ -31,6 +31,7 @@ const SUMMARY_UI_PREF_KEY = "myarxiv_summary_ui_pref_v1";
 const SUMMARY_DIALOG_MAX_MESSAGES = 40;
 const SUMMARY_DIALOG_MAX_TEXT = 12000;
 const SUMMARY_CONVERSATION_MAX = 24;
+const SUMMARY_MESSAGE_DELETE_FADE_MS = 1000;
 const DAILY_PIN_CONVERSATION_ID = "conv-daily-pinned";
 const DAILY_PIN_CONVERSATION_TITLE = "每日新文总结";
 const SUMMARY_STATUS_POLL_MS = 4500;
@@ -404,6 +405,25 @@ function buildConversationId() {
   return `conv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function buildDialogMessageId() {
+  return `msg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeDialogMessage(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const text = clampDialogText(raw.text || "");
+  if (!text) return null;
+  const role = ["user", "assistant", "system"].includes(String(raw.role || ""))
+    ? String(raw.role || "system")
+    : "system";
+  return {
+    id: String(raw.id || buildDialogMessageId()),
+    role,
+    text,
+    ts: String(raw.ts || ""),
+  };
+}
+
 function buildConversationTitle(meta = {}, fallback = "新会话") {
   const arxivId = extractArxivId(meta.arxivId || "");
   if (arxivId) {
@@ -519,12 +539,8 @@ function applyConversationToRuntime(conv) {
   state.summaryDialog.activePaperField = String(conv.activePaperField || "");
   state.summaryDialog.messages = Array.isArray(conv.messages)
     ? conv.messages
-        .filter((x) => x && typeof x === "object")
-        .map((x) => ({
-          role: String(x.role || "system"),
-          text: clampDialogText(x.text || ""),
-          ts: String(x.ts || ""),
-        }))
+        .map((x) => normalizeDialogMessage(x))
+        .filter(Boolean)
         .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
     : [];
 }
@@ -650,7 +666,12 @@ function persistSummaryDialogMemory() {
           activePaperUrl: String(conv.activePaperUrl || ""),
           activePaperPdfUrl: String(conv.activePaperPdfUrl || ""),
           activePaperField: String(conv.activePaperField || ""),
-          messages: Array.isArray(conv.messages) ? conv.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES) : [],
+          messages: Array.isArray(conv.messages)
+            ? conv.messages
+                .map((x) => normalizeDialogMessage(x))
+                .filter(Boolean)
+                .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
+            : [],
         }))
         .slice(0, SUMMARY_CONVERSATION_MAX),
     };
@@ -695,12 +716,8 @@ function loadSummaryDialogMemory() {
           activePaperField: String(rawConv.activePaperField || ""),
           messages: Array.isArray(rawConv.messages)
             ? rawConv.messages
-                .filter((x) => x && typeof x === "object")
-                .map((x) => ({
-                  role: String(x.role || "system"),
-                  text: clampDialogText(x.text || ""),
-                  ts: String(x.ts || ""),
-                }))
+                .map((x) => normalizeDialogMessage(x))
+                .filter(Boolean)
                 .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
             : [],
         };
@@ -724,12 +741,8 @@ function loadSummaryDialogMemory() {
         activePaperField: "",
         messages: Array.isArray(mem.messages)
           ? mem.messages
-              .filter((x) => x && typeof x === "object")
-              .map((x) => ({
-                role: String(x.role || "system"),
-                text: clampDialogText(x.text || ""),
-                ts: String(x.ts || ""),
-              }))
+              .map((x) => normalizeDialogMessage(x))
+              .filter(Boolean)
               .slice(-SUMMARY_DIALOG_MAX_MESSAGES)
           : [],
       });
@@ -851,11 +864,17 @@ function renderSummaryDialog() {
     const historyHtml = state.summaryDialog.messages
       .map((msg) => {
         const role = ["user", "assistant", "system"].includes(msg.role) ? msg.role : "system";
+        const msgId = String(msg.id || buildDialogMessageId());
         const isMarkdownRole = role === "assistant" || role === "system";
         const content = isMarkdownRole
           ? renderMarkdown(msg.text || "")
           : escapeHtml(msg.text || "").replace(/\n/g, "<br>");
-        return `<article class="summary-msg ${role}">${content}</article>`;
+        return [
+          `<article class="summary-msg ${role}" data-msg-id="${escapeHtml(msgId)}">`,
+          `<button type="button" class="summary-msg-delete" data-msg-delete="${escapeHtml(msgId)}" aria-label="删除这条消息">删除</button>`,
+          `<div class="summary-msg-content">${content}</div>`,
+          `</article>`,
+        ].join("");
       })
       .join("");
 
@@ -957,16 +976,28 @@ function setChatEnabled(enabled) {
 function pushSummaryDialogMessage(role, text) {
   const value = clampDialogText(text);
   if (!value) return;
-  state.summaryDialog.messages.push({
+  state.summaryDialog.messages.push(normalizeDialogMessage({
+    id: buildDialogMessageId(),
     role,
     text: value,
     ts: new Date().toISOString(),
-  });
+  }));
   if (state.summaryDialog.messages.length > SUMMARY_DIALOG_MAX_MESSAGES) {
     state.summaryDialog.messages = state.summaryDialog.messages.slice(-SUMMARY_DIALOG_MAX_MESSAGES);
   }
   persistSummaryDialogMemory();
   renderSummaryDialog();
+}
+
+function deleteSummaryDialogMessage(messageId) {
+  const msgId = String(messageId || "").trim();
+  if (!msgId) return false;
+  const idx = state.summaryDialog.messages.findIndex((msg) => String(msg.id || "") === msgId);
+  if (idx < 0) return false;
+  state.summaryDialog.messages.splice(idx, 1);
+  persistSummaryDialogMemory();
+  renderSummaryDialog();
+  return true;
 }
 
 function setActiveSummaryPaper(meta = {}) {
@@ -1806,6 +1837,108 @@ function extractDialogTitleCandidate(target) {
     }
   }
   return "";
+}
+
+function extractDialogKeywordContext(target) {
+  const sel = window.getSelection ? String(window.getSelection()?.toString() || "").trim() : "";
+  if (sel && sel.length <= 80) return sel;
+  const li = target.closest("li");
+  if (li) {
+    const line = normalizeDialogTitleText(li.textContent || "");
+    if (!line) return "";
+    const prefix = line.split(/[：:]/)[0] || "";
+    if (prefix && prefix.length <= 80) return prefix.trim();
+    return line.slice(0, 120).trim();
+  }
+  const anchor = target.closest("a");
+  if (anchor) {
+    const text = normalizeDialogTitleText(anchor.textContent || "");
+    if (text) return text.slice(0, 120).trim();
+  }
+  const text = normalizeDialogTitleText(target.textContent || "");
+  if (!text) return "";
+  const short = text.split(/[，,。.!?！？；;：:\n]/)[0] || text;
+  return short.slice(0, 120).trim();
+}
+
+function findPaperRecordByKeyword(rawKeyword, rawContext = "") {
+  const keyword = normalizeDialogTitleText(rawKeyword);
+  const queryNorm = normalizeTitleForMatch(keyword);
+  const qTokens = tokenizeTitleForMatch(keyword);
+  if (!queryNorm && qTokens.length === 0) return null;
+  const weakTokens = new Set([
+    "paper",
+    "model",
+    "models",
+    "method",
+    "approach",
+    "learning",
+    "training",
+    "experiment",
+    "experiments",
+    "result",
+    "results",
+    "task",
+    "tasks",
+    "dataset",
+    "robot",
+    "robotics",
+    "vision",
+    "language",
+    "policy",
+    "evaluation",
+    "framework",
+  ]);
+  if (qTokens.length === 1 && weakTokens.has(qTokens[0])) return null;
+
+  const contextTokens = tokenizeTitleForMatch(rawContext).slice(0, 20);
+  const records = collectAllPaperRecords();
+  if (!records.length) return null;
+
+  let best = null;
+  let bestScore = 0;
+
+  records.forEach((rec) => {
+    if (!rec || !rec.titleNorm) return;
+    const rTokens = tokenizeTitleForMatch(rec.title);
+    if (!rTokens.length) return;
+
+    let score = 0;
+    let hit = 0;
+    qTokens.forEach((token) => {
+      if (rTokens.includes(token)) hit += 1;
+    });
+    if (hit > 0) {
+      score += hit * 2;
+      score += hit / Math.max(1, qTokens.length);
+    }
+
+    if (queryNorm) {
+      if (rec.titleNorm === queryNorm) score += 4;
+      else if (rec.titleNorm.includes(queryNorm) || queryNorm.includes(rec.titleNorm)) score += 2.2;
+    }
+
+    if (contextTokens.length > 0) {
+      let contextHit = 0;
+      contextTokens.forEach((token) => {
+        if (rTokens.includes(token)) contextHit += 1;
+      });
+      score += Math.min(2, contextHit * 0.25);
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = rec;
+    }
+  });
+
+  if (!best) return null;
+  if (qTokens.length <= 1) {
+    if (qTokens[0] && qTokens[0].length >= 3 && bestScore >= 2.2) return best;
+    if (queryNorm.length >= 4 && bestScore >= 2.2) return best;
+    return null;
+  }
+  return bestScore >= 3 ? best : null;
 }
 
 function ensurePaperVisibleForJump(record) {
@@ -2684,6 +2817,22 @@ function bindEvents() {
     summaryDialogBody.addEventListener("click", async (event) => {
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
+      const msgDeleteBtn = target.closest("[data-msg-delete]");
+      if (msgDeleteBtn) {
+        event.preventDefault();
+        const msgId = String(msgDeleteBtn.getAttribute("data-msg-delete") || "").trim();
+        if (!msgId) return;
+        const msgNode = msgDeleteBtn.closest(".summary-msg");
+        if (!msgNode || msgNode.classList.contains("is-removing")) return;
+        msgNode.classList.add("is-removing");
+        window.setTimeout(() => {
+          deleteSummaryDialogMessage(msgId);
+        }, SUMMARY_MESSAGE_DELETE_FADE_MS);
+        return;
+      }
+
+      const msgNode = target.closest(".summary-msg");
+      if (!msgNode) return;
       const inMsg = target.closest(".summary-msg.assistant, .summary-msg.system");
       if (!inMsg) return;
 
@@ -2718,8 +2867,14 @@ function bindEvents() {
       }
 
       const titleCandidate = extractDialogTitleCandidate(target);
-      if (!titleCandidate) return;
-      const record = findPaperRecordByTitle(titleCandidate);
+      let record = titleCandidate ? findPaperRecordByTitle(titleCandidate) : null;
+      if (!record) {
+        const keywordCandidate = extractDialogKeywordContext(target);
+        const contextText = normalizeDialogTitleText(
+          target.closest("li")?.textContent || target.closest("p")?.textContent || target.textContent || ""
+        );
+        record = findPaperRecordByKeyword(keywordCandidate, contextText);
+      }
       if (!record) {
         return;
       }

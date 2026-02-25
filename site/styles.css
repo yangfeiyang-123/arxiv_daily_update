@@ -649,13 +649,55 @@ select:focus {
 }
 
 .summary-msg {
+  position: relative;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  padding: 10px 11px;
+  padding: 10px 40px 10px 11px;
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
   font-size: 0.86rem;
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.summary-msg.is-removing {
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+}
+
+.summary-msg-content {
+  min-height: 1.2em;
+}
+
+.summary-msg-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(8, 18, 30, 0.92);
+  color: rgba(235, 242, 249, 0.84);
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 4px 7px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.summary-msg:hover .summary-msg-delete,
+.summary-msg:focus-within .summary-msg-delete {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.summary-msg-delete:hover,
+.summary-msg-delete:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .summary-msg.user {
@@ -740,6 +782,11 @@ select:focus {
 .summary-msg a[href^="#paper-"]:hover {
   transform: scale(0.985);
   color: #bdf4ff;
+}
+
+.summary-msg.assistant li,
+.summary-msg.system li {
+  cursor: pointer;
 }
 
 .summary-msg blockquote {
