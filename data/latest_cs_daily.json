@@ -1,9 +1,9 @@
 {
   "source": "arXiv API",
-  "fetched_at": "2026-02-27T04:23:49.838495+00:00",
+  "fetched_at": "2026-02-27T06:05:04.835067+00:00",
   "window_days": 30,
-  "window_start": "2026-01-28T04:23:49.838495+00:00",
-  "window_end": "2026-02-27T04:23:49.838495+00:00",
+  "window_start": "2026-01-28T06:05:04.835067+00:00",
+  "window_end": "2026-02-27T06:05:04.835067+00:00",
   "fetch_strategy": "incremental",
   "categories": [
     "cs.RO",
@@ -11,18 +11,18 @@
     "cs.CL",
     "cs.SY"
   ],
-  "total_count": 1131,
-  "total_new_count": 45,
-  "total_request_pages": 2,
+  "total_count": 1128,
+  "total_new_count": 0,
+  "total_request_pages": 1,
   "fields": [
     {
       "code": "cs.RO",
       "name": "Robotics",
       "query": "cat:cs.RO",
       "feed_title": "arXiv Query: search_query=cat:cs.RO&id_list=&start=0&max_results=200",
-      "count": 1131,
-      "new_count": 45,
-      "request_pages": 2,
+      "count": 1128,
+      "new_count": 0,
+      "request_pages": 1,
       "papers": [
         {
           "id": "http://arxiv.org/abs/2602.23312v1",
@@ -24581,67 +24581,6 @@
             "cs.RO"
           ],
           "pdf_url": "https://arxiv.org/pdf/2601.20321v2",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.06991v1",
-          "title": "LangGS-SLAM: Real-Time Language-Feature Gaussian Splatting SLAM",
-          "summary": "In this paper, we propose a RGB-D SLAM system that reconstructs a language-aligned dense feature field while sustaining low-latency tracking and mapping. First, we introduce a Top-K Rendering pipeline, a high-throughput and semantic-distortion-free method for efficiently rendering high-dimensional feature maps. To address the resulting semantic-geometric discrepancy and mitigate the memory consumption, we further design a multi-criteria map management strategy that prunes redundant or inconsistent Gaussians while preserving scene integrity. Finally, a hybrid field optimization framework jointly refines the geometric and semantic fields under real-time constraints by decoupling their optimization frequencies according to field characteristics. The proposed system achieves superior geometric fidelity compared to geometric-only baselines and comparable semantic fidelity to offline approaches while operating at 15 FPS. Our results demonstrate that online SLAM with dense, uncompressed language-aligned feature fields is both feasible and effective, bridging the gap between 3D perception and language-based reasoning.",
-          "authors": [
-            "Seongbo Ha",
-            "Sibaek Lee",
-            "Kyungsu Kang",
-            "Joonyeol Choi",
-            "Seungjun Tak",
-            "Hyeonwoo Yu"
-          ],
-          "published": "2026-01-28T05:35:34Z",
-          "updated": "2026-01-28T05:35:34Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO",
-            "cs.CV",
-            "eess.IV"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.06991v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2601.20262v1",
-          "title": "Shallow-π: Knowledge Distillation for Flow-based VLAs",
-          "summary": "The growing demand for real-time robotic deployment necessitates fast and on-device inference for vision-language-action (VLA) models. Within the VLA literature, efficiency has been extensively studied at the token level, such as visual token pruning. In contrast, systematic transformer layer reduction has received limited attention and, to the best of our knowledge, has not been explored for flow-based VLA models under knowledge distillation. In this work, we propose Shallow-pi, a principled knowledge distillation framework that aggressively reduces the transformer depth of both the VLM backbone and the flow-based action head, compressing the model from 18 to 6 layers. Shallow-pi achieves over two times faster inference with less than one percent absolute drop in success rate on standard manipulation benchmarks, establishing state-of-the-art performance among reduced VLA models. Crucially, we validate our approach through industrial-scale real-world experiments on Jetson Orin and Jetson Thor across multiple robot platforms, including humanoid systems, in complex and dynamic manipulation scenarios.",
-          "authors": [
-            "Boseong Jeon",
-            "Yunho Choi",
-            "Taehan Kim"
-          ],
-          "published": "2026-01-28T05:16:26Z",
-          "updated": "2026-01-28T05:16:26Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2601.20262v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.00131v1",
-          "title": "PovNet+: A Deep Learning Architecture for Socially Assistive Robots to Learn and Assist with Multiple Activities of Daily Living",
-          "summary": "A significant barrier to the long-term deployment of autonomous socially assistive robots is their inability to both perceive and assist with multiple activities of daily living (ADLs). In this paper, we present the first multimodal deep learning architecture, POVNet+, for multi-activity recognition for socially assistive robots to proactively initiate assistive behaviors. Our novel architecture introduces the use of both ADL and motion embedding spaces to uniquely distinguish between a known ADL being performed, a new unseen ADL, or a known ADL being performed atypically in order to assist people in real scenarios. Furthermore, we apply a novel user state estimation method to the motion embedding space to recognize new ADLs while monitoring user performance. This ADL perception information is used to proactively initiate robot assistive interactions. Comparison experiments with state-of-the-art human activity recognition methods show our POVNet+ method has higher ADL classification accuracy. Human-robot interaction experiments in a cluttered living environment with multiple users and the socially assistive robot Leia using POVNet+ demonstrate the ability of our multi-modal ADL architecture in successfully identifying different seen and unseen ADLs, and ADLs being performed atypically, while initiating appropriate assistive human-robot interactions.",
-          "authors": [
-            "Fraser Robinson",
-            "Souren Pashangpour",
-            "Matthew Lisondra",
-            "Goldie Nejat"
-          ],
-          "published": "2026-01-28T04:39:56Z",
-          "updated": "2026-01-28T04:39:56Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.00131v1",
           "field": "cs.RO"
         }
       ]
