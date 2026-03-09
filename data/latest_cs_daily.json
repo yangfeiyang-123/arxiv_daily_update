@@ -1,9 +1,9 @@
 {
   "source": "arXiv API",
-  "fetched_at": "2026-03-09T03:14:49.765178+00:00",
+  "fetched_at": "2026-03-09T04:28:42.765674+00:00",
   "window_days": 30,
-  "window_start": "2026-02-07T03:14:49.765178+00:00",
-  "window_end": "2026-03-09T03:14:49.765178+00:00",
+  "window_start": "2026-02-07T04:28:42.765674+00:00",
+  "window_end": "2026-03-09T04:28:42.765674+00:00",
   "fetch_strategy": "incremental",
   "categories": [
     "cs.RO",
@@ -11,18 +11,18 @@
     "cs.CL",
     "cs.SY"
   ],
-  "total_count": 5611,
-  "total_new_count": 342,
-  "total_request_pages": 19,
+  "total_count": 5604,
+  "total_new_count": 0,
+  "total_request_pages": 4,
   "fields": [
     {
       "code": "cs.RO",
       "name": "Robotics",
       "query": "cat:cs.RO",
       "feed_title": "arXiv Query: search_query=cat:cs.RO&id_list=&start=0&max_results=200",
-      "count": 1141,
-      "new_count": 79,
-      "request_pages": 3,
+      "count": 1138,
+      "new_count": 0,
+      "request_pages": 1,
       "papers": [
         {
           "id": "http://arxiv.org/abs/2603.06576v1",
@@ -24719,77 +24719,6 @@
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.07363v1",
           "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07343v1",
-          "title": "Seeing Roads Through Words: A Language-Guided Framework for RGB-T Driving Scene Segmentation",
-          "summary": "Robust semantic segmentation of road scenes under adverse illumination, lighting, and shadow conditions remain a core challenge for autonomous driving applications. RGB-Thermal fusion is a standard approach, yet existing methods apply static fusion strategies uniformly across all conditions, allowing modality-specific noise to propagate throughout the network. Hence, we propose CLARITY that dynamically adapts its fusion strategy to the detected scene condition. Guided by vision-language model (VLM) priors, the network learns to modulate each modality's contribution based on the illumination state while leveraging object embeddings for segmentation, rather than applying a fixed fusion policy. We further introduce two mechanisms, i.e., one which preserves valid dark-object semantics that prior noise-suppression methods incorrectly discard, and a hierarchical decoder that enforces structural consistency across scales to sharpen boundaries on thin objects. Experiments on the MFNet dataset demonstrate that CLARITY establishes a new state-of-the-art (SOTA), achieving 62.3% mIoU and 77.5% mAcc.",
-          "authors": [
-            "Ruturaj Reddy",
-            "Hrishav Bakul Barua",
-            "Junn Yong Loo",
-            "Thanh Thi Nguyen",
-            "Ganesh Krishnasamy"
-          ],
-          "published": "2026-02-07T03:52:04Z",
-          "updated": "2026-02-07T03:52:04Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.LG",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07343v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07341v1",
-          "title": "Scalable Dexterous Robot Learning with AR-based Remote Human-Robot Interactions",
-          "summary": "This paper focuses on the scalable robot learning for manipulation in the dexterous robot arm-hand systems, where the remote human-robot interactions via augmented reality (AR) are established to collect the expert demonstration data for improving efficiency. In such a system, we present a unified framework to address the general manipulation task problem. Specifically, the proposed method consists of two phases: i) In the first phase for pretraining, the policy is created in a behavior cloning (BC) manner, through leveraging the learning data from our AR-based remote human-robot interaction system; ii) In the second phase, a contrastive learning empowered reinforcement learning (RL) method is developed to obtain more efficient and robust policy than the BC, and thus a projection head is designed to accelerate the learning progress. An event-driven augmented reward is adopted for enhancing the safety. To validate the proposed method, both the physics simulations via PyBullet and real-world experiments are carried out. The results demonstrate that compared to the classic proximal policy optimization and soft actor-critic policies, our method not only significantly speeds up the inference, but also achieves much better performance in terms of the success rate for fulfilling the manipulation tasks. By conducting the ablation study, it is confirmed that the proposed RL with contrastive learning overcomes policy collapse. Supplementary demonstrations are available at https://cyberyyc.github.io/.",
-          "authors": [
-            "Yicheng Yang",
-            "Ruijiao Li",
-            "Lifeng Wang",
-            "Shuai Zheng",
-            "Shunzheng Ma",
-            "Keyu Zhang",
-            "Tuoyu Sun",
-            "Chenyun Dai",
-            "Jie Ding",
-            "Zhuo Zou"
-          ],
-          "published": "2026-02-07T03:47:21Z",
-          "updated": "2026-02-07T03:47:21Z",
-          "primary_category": "cs.LG",
-          "categories": [
-            "cs.LG",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07341v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07339v1",
-          "title": "RAPiD: Real-time Deterministic Trajectory Planning via Diffusion Behavior Priors for Safe and Efficient Autonomous Driving",
-          "summary": "Diffusion-based trajectory planners have demonstrated strong capability for modeling the multimodal nature of human driving behavior, but their reliance on iterative stochastic sampling poses critical challenges for real-time, safety-critical deployment. In this work, we present RAPiD, a deterministic policy extraction framework that distills a pretrained diffusion-based planner into an efficient policy while eliminating diffusion sampling. Using score-regularized policy optimization, we leverage the score function of a pre-trained diffusion planner as a behavior prior to regularize policy learning. To promote safety and passenger comfort, the policy is optimized using a critic trained to imitate a predictive driver controller, providing dense, safety-focused supervision beyond conventional imitation learning. Evaluations demonstrate that RAPiD achieves competitive performance on closed-loop nuPlan scenarios with an 8x speedup over diffusion baselines, while achieving state-of-the-art generalization among learning-based planners on the interPlan benchmark. The official website of this work is: https://github.com/ruturajreddy/RAPiD.",
-          "authors": [
-            "Ruturaj Reddy",
-            "Hrishav Bakul Barua",
-            "Junn Yong Loo",
-            "Thanh Thi Nguyen",
-            "Ganesh Krishnasamy"
-          ],
-          "published": "2026-02-07T03:44:50Z",
-          "updated": "2026-02-07T03:44:50Z",
-          "primary_category": "cs.AI",
-          "categories": [
-            "cs.AI",
-            "cs.LG",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07339v1",
-          "field": "cs.RO"
         }
       ]
     },
@@ -24798,9 +24727,9 @@
       "name": "Computer Vision",
       "query": "cat:cs.CV",
       "feed_title": "arXiv Query: search_query=cat:cs.CV&id_list=&start=0&max_results=200",
-      "count": 2803,
-      "new_count": 194,
-      "request_pages": 13,
+      "count": 2801,
+      "new_count": 0,
+      "request_pages": 1,
       "papers": [
         {
           "id": "http://arxiv.org/abs/2603.06578v1",
@@ -85743,53 +85672,6 @@
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.07393v1",
           "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07345v1",
-          "title": "Optimizing Few-Step Generation with Adaptive Matching Distillation",
-          "summary": "Distribution Matching Distillation (DMD) is a powerful acceleration paradigm, yet its stability is often compromised in Forbidden Zone, regions where the real teacher provides unreliable guidance while the fake teacher exerts insufficient repulsive force. In this work, we propose a unified optimization framework that reinterprets prior art as implicit strategies to avoid these corrupted regions. Based on this insight, we introduce Adaptive Matching Distillation (AMD), a self-correcting mechanism that utilizes reward proxies to explicitly detect and escape Forbidden Zones. AMD dynamically prioritizes corrective gradients via structural signal decomposition and introduces Repulsive Landscape Sharpening to enforce steep energy barriers against failure mode collapse. Extensive experiments across image and video generation tasks (e.g., SDXL, Wan2.1) and rigorous benchmarks (e.g., VBench, GenEval) demonstrate that AMD significantly enhances sample fidelity and training robustness. For instance, AMD improves the HPSv2 score on SDXL from 30.64 to 31.25, outperforming state-of-the-art baselines. These findings validate that explicitly rectifying optimization trajectories within Forbidden Zones is essential for pushing the performance ceiling of few-step generative models.",
-          "authors": [
-            "Lichen Bai",
-            "Zikai Zhou",
-            "Shitong Shao",
-            "Wenliang Zhong",
-            "Shuo Yang",
-            "Shuo Chen",
-            "Bojun Chen",
-            "Zeke Xie"
-          ],
-          "published": "2026-02-07T04:00:20Z",
-          "updated": "2026-02-07T04:00:20Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.LG"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07345v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07343v1",
-          "title": "Seeing Roads Through Words: A Language-Guided Framework for RGB-T Driving Scene Segmentation",
-          "summary": "Robust semantic segmentation of road scenes under adverse illumination, lighting, and shadow conditions remain a core challenge for autonomous driving applications. RGB-Thermal fusion is a standard approach, yet existing methods apply static fusion strategies uniformly across all conditions, allowing modality-specific noise to propagate throughout the network. Hence, we propose CLARITY that dynamically adapts its fusion strategy to the detected scene condition. Guided by vision-language model (VLM) priors, the network learns to modulate each modality's contribution based on the illumination state while leveraging object embeddings for segmentation, rather than applying a fixed fusion policy. We further introduce two mechanisms, i.e., one which preserves valid dark-object semantics that prior noise-suppression methods incorrectly discard, and a hierarchical decoder that enforces structural consistency across scales to sharpen boundaries on thin objects. Experiments on the MFNet dataset demonstrate that CLARITY establishes a new state-of-the-art (SOTA), achieving 62.3% mIoU and 77.5% mAcc.",
-          "authors": [
-            "Ruturaj Reddy",
-            "Hrishav Bakul Barua",
-            "Junn Yong Loo",
-            "Thanh Thi Nguyen",
-            "Ganesh Krishnasamy"
-          ],
-          "published": "2026-02-07T03:52:04Z",
-          "updated": "2026-02-07T03:52:04Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.LG",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07343v1",
-          "field": "cs.CV"
         }
       ]
     },
@@ -85798,9 +85680,9 @@
       "name": "Computation and Language",
       "query": "cat:cs.CL",
       "feed_title": "arXiv Query: search_query=cat:cs.CL&id_list=&start=0&max_results=200",
-      "count": 1667,
-      "new_count": 69,
-      "request_pages": 2,
+      "count": 1665,
+      "new_count": 0,
+      "request_pages": 1,
       "papers": [
         {
           "id": "http://arxiv.org/abs/2603.06552v1",
@@ -122377,56 +122259,6 @@
             "cs.IR"
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.07361v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07338v1",
-          "title": "Intent Mismatch Causes LLMs to Get Lost in Multi-Turn Conversation",
-          "summary": "Multi-turn conversation has emerged as a predominant interaction paradigm for Large Language Models (LLMs). Users often employ follow-up questions to refine their intent, expecting LLMs to adapt dynamically. However, recent research reveals that LLMs suffer a substantial performance drop in multi-turn settings compared to single-turn interactions with fully specified instructions, a phenomenon termed ``Lost in Conversation'' (LiC). While this prior work attributes LiC to model unreliability, we argue that the root cause lies in an intent alignment gap rather than intrinsic capability deficits. In this paper, we first demonstrate that LiC is not a failure of model capability but rather a breakdown in interaction between users and LLMs. We theoretically show that scaling model size or improving training alone cannot resolve this gap, as it arises from structural ambiguity in conversational context rather than representational limitations. To address this, we propose to decouple intent understanding from task execution through a Mediator-Assistant architecture. By utilizing an experience-driven Mediator to explicate user inputs into explicit, well-structured instructions based on historical interaction patterns, our approach effectively bridges the gap between vague user intent and model interpretation. Experimental results demonstrate that this method significantly mitigates performance degradation in multi-turn conversations across diverse LLMs.",
-          "authors": [
-            "Geng Liu",
-            "Fei Zhu",
-            "Rong Feng",
-            "Changyi Ma",
-            "Shiqi Wang",
-            "Gaofeng Meng"
-          ],
-          "published": "2026-02-07T03:41:04Z",
-          "updated": "2026-02-07T03:41:04Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07338v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.07333v1",
-          "title": "High Fidelity Textual User Representation over Heterogeneous Sources via Reinforcement Learning",
-          "summary": "Effective personalization on large-scale job platforms requires modeling members based on heterogeneous textual sources, including profiles, professional data, and search activity logs. As recommender systems increasingly adopt Large Language Models (LLMs), creating unified, interpretable, and concise representations from heterogeneous sources becomes critical, especially for latency-sensitive online environments. In this work, we propose a novel Reinforcement Learning (RL) framework to synthesize a unified textual representation for each member. Our approach leverages implicit user engagement signals (e.g., clicks, applies) as the primary reward to distill salient information. Additionally, the framework is complemented by rule-based rewards that enforce formatting and length constraints. Extensive offline experiments across multiple LinkedIn products, one of the world's largest job platforms, demonstrate significant improvements in key downstream business metrics. This work provides a practical, labeling-free, and scalable solution for constructing interpretable user representations that are directly compatible with LLM-based systems.",
-          "authors": [
-            "Rajat Arora",
-            "Ye Tao",
-            "Jianqiang Shen",
-            "Ping Liu",
-            "Muchen Wu",
-            "Qianqi Shen",
-            "Benjamin Le",
-            "Fedor Borisyuk",
-            "Jingwei Wu",
-            "Wenjing Zhang"
-          ],
-          "published": "2026-02-07T03:27:55Z",
-          "updated": "2026-02-07T03:27:55Z",
-          "primary_category": "cs.IR",
-          "categories": [
-            "cs.IR",
-            "cs.AI",
-            "cs.CL",
-            "cs.LG"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.07333v1",
           "field": "cs.CL"
         }
       ]
