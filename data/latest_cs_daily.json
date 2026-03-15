@@ -1,9 +1,9 @@
 {
   "source": "arXiv API",
-  "fetched_at": "2026-03-15T07:03:38.297765+00:00",
+  "fetched_at": "2026-03-15T07:04:08.760713+00:00",
   "window_days": 30,
-  "window_start": "2026-02-13T07:03:38.297765+00:00",
-  "window_end": "2026-03-15T07:03:38.297765+00:00",
+  "window_start": "2026-02-13T07:04:08.760713+00:00",
+  "window_end": "2026-03-15T07:04:08.760713+00:00",
   "fetch_strategy": "incremental",
   "categories": [
     "cs.RO",
