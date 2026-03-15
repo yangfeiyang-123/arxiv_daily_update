@@ -1,9 +1,9 @@
 {
   "source": "arXiv API",
-  "fetched_at": "2026-03-15T04:42:52.217604+00:00",
+  "fetched_at": "2026-03-15T07:03:38.297765+00:00",
   "window_days": 30,
-  "window_start": "2026-02-13T04:42:52.217604+00:00",
-  "window_end": "2026-03-15T04:42:52.217604+00:00",
+  "window_start": "2026-02-13T07:03:38.297765+00:00",
+  "window_end": "2026-03-15T07:03:38.297765+00:00",
   "fetch_strategy": "incremental",
   "categories": [
     "cs.RO",
@@ -11,7 +11,7 @@
     "cs.CL",
     "cs.SY"
   ],
-  "total_count": 5980,
+  "total_count": 5956,
   "total_new_count": 0,
   "total_request_pages": 4,
   "fields": [
@@ -20,7 +20,7 @@
       "name": "Robotics",
       "query": "cat:cs.RO",
       "feed_title": "arXiv Query: search_query=cat:cs.RO&id_list=&start=0&max_results=200",
-      "count": 1278,
+      "count": 1271,
       "new_count": 0,
       "request_pages": 1,
       "papers": [
@@ -27369,165 +27369,6 @@
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.12684v1",
           "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12656v1",
-          "title": "PMG: Parameterized Motion Generator for Human-like Locomotion Control",
-          "summary": "Recent advances in data-driven reinforcement learning and motion tracking have substantially improved humanoid locomotion, yet critical practical challenges remain. In particular, while low-level motion tracking and trajectory-following controllers are mature, whole-body reference-guided methods are difficult to adapt to higher-level command interfaces and diverse task contexts: they require large, high-quality datasets, are brittle across speed and pose regimes, and are sensitive to robot-specific calibration. To address these limitations, we propose the Parameterized Motion Generator (PMG), a real-time motion generator grounded in an analysis of human motion structure that synthesizes reference trajectories using only a compact set of parameterized motion data together with High-dimensional control commands. Combined with an imitation-learning pipeline and an optimization-based sim-to-real motor parameter identification module, we validate the complete approach on our humanoid prototype ZERITH Z1 and show that, within a single integrated system, PMG produces natural, human-like locomotion, responds precisely to high-dimensional control inputs-including VR-based teleoperation-and enables efficient, verifiable sim-to-real transfer. Together, these results establish a practical, experimentally validated pathway toward natural and deployable humanoid control.",
-          "authors": [
-            "Chenxi Han",
-            "Yuheng Min",
-            "Zihao Huang",
-            "Ao Hong",
-            "Hang Liu",
-            "Yi Cheng",
-            "Houde Liu"
-          ],
-          "published": "2026-02-13T06:38:04Z",
-          "updated": "2026-02-13T06:38:04Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12656v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12656v2",
-          "title": "PMG: Parameterized Motion Generator for Human-like Locomotion Control",
-          "summary": "Recent advances in data-driven reinforcement learning and motion tracking have substantially improved humanoid locomotion, yet critical practical challenges remain. In particular, while low-level motion tracking and trajectory-following controllers are mature, whole-body reference-guided methods are difficult to adapt to higher-level command interfaces and diverse task contexts: they require large, high-quality datasets, are brittle across speed and pose regimes, and are sensitive to robot-specific calibration. To address these limitations, we propose the Parameterized Motion Generator (PMG), a real-time motion generator grounded in an analysis of human motion structure that synthesizes reference trajectories using only a compact set of parameterized motion data together with high-dimensional control commands. Combined with an imitation-learning pipeline and an optimization-based sim-to-real motor parameter identification module, we validate the complete approach on our humanoid prototype ZERITH Z1 and show that, within a single integrated system, PMG produces natural, human-like locomotion, responds precisely to high-dimensional control inputs-including VR-based teleoperation-and enables efficient, verifiable sim-to-real transfer. Together, these results establish a practical, experimentally validated pathway toward natural and deployable humanoid control. Website: https://pmg-icra26.github.io/",
-          "authors": [
-            "Chenxi Han",
-            "Yuheng Min",
-            "Zihao Huang",
-            "Ao Hong",
-            "Hang Liu",
-            "Yi Cheng",
-            "Houde Liu"
-          ],
-          "published": "2026-02-13T06:38:04Z",
-          "updated": "2026-02-24T14:34:42Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12656v2",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12636v1",
-          "title": "Dual-Granularity Contrastive Reward via Generated Episodic Guidance for Efficient Embodied RL",
-          "summary": "Designing suitable rewards poses a significant challenge in reinforcement learning (RL), especially for embodied manipulation. Trajectory success rewards are suitable for human judges or model fitting, but the sparsity severely limits RL sample efficiency. While recent methods have effectively improved RL via dense rewards, they rely heavily on high-quality human-annotated data or abundant expert supervision. To tackle these issues, this paper proposes Dual-granularity contrastive reward via generated Episodic Guidance (DEG), a novel framework to seek sample-efficient dense rewards without requiring human annotations or extensive supervision. Leveraging the prior knowledge of large video generation models, DEG only needs a small number of expert videos for domain adaptation to generate dedicated task guidance for each RL episode. Then, the proposed dual-granularity reward that balances coarse-grained exploration and fine-grained matching, will guide the agent to efficiently approximate the generated guidance video sequentially in the contrastive self-supervised latent space, and finally complete the target task. Extensive experiments on 18 diverse tasks across both simulation and real-world settings show that DEG can not only serve as an efficient exploration stimulus to help the agent quickly discover sparse success rewards, but also guide effective RL and stable policy convergence independently.",
-          "authors": [
-            "Xin Liu",
-            "Yixuan Li",
-            "Yuhui Chen",
-            "Yuxing Qin",
-            "Haoran Li",
-            "Dongbin Zhao"
-          ],
-          "published": "2026-02-13T05:41:55Z",
-          "updated": "2026-02-13T05:41:55Z",
-          "primary_category": "cs.LG",
-          "categories": [
-            "cs.LG",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12636v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12633v1",
-          "title": "Real-to-Sim for Highly Cluttered Environments via Physics-Consistent Inter-Object Reasoning",
-          "summary": "Reconstructing physically valid 3D scenes from single-view observations is a prerequisite for bridging the gap between visual perception and robotic control. However, in scenarios requiring precise contact reasoning, such as robotic manipulation in highly cluttered environments, geometric fidelity alone is insufficient. Standard perception pipelines often neglect physical constraints, resulting in invalid states, e.g., floating objects or severe inter-penetration, rendering downstream simulation unreliable. To address these limitations, we propose a novel physics-constrained Real-to-Sim pipeline that reconstructs physically consistent 3D scenes from single-view RGB-D data. Central to our approach is a differentiable optimization pipeline that explicitly models spatial dependencies via a contact graph, jointly refining object poses and physical properties through differentiable rigid-body simulation. Extensive evaluations in both simulation and real-world settings demonstrate that our reconstructed scenes achieve high physical fidelity and faithfully replicate real-world contact dynamics, enabling stable and reliable contact-rich manipulation.",
-          "authors": [
-            "Tianyi Xiang",
-            "Jiahang Cao",
-            "Sikai Guo",
-            "Guoyang Zhao",
-            "Andrew F. Luo",
-            "Jun Ma"
-          ],
-          "published": "2026-02-13T05:24:58Z",
-          "updated": "2026-02-13T05:24:58Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12633v1",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12628v2",
-          "title": "Beyond Imitation: Reinforcement Learning-Based Sim-Real Co-Training for VLA Models",
-          "summary": "Simulation offers a scalable and low-cost way to enrich vision-language-action (VLA) training, reducing reliance on expensive real-robot demonstrations. However, most sim-real co-training methods rely on supervised fine-tuning (SFT), which treats simulation as a static source of demonstrations and does not exploit large-scale closed-loop interaction. Consequently, real-world gains and generalization are often limited. In this paper, we propose an \\underline{\\textit{RL}}-based sim-real \\underline{\\textit{Co}}-training \\modify{(RL-Co)} framework that leverages interactive simulation while preserving real-world capabilities. Our method follows a generic two-stage design: we first warm-start the policy with SFT on a mixture of real and simulated demonstrations, then fine-tune it with reinforcement learning in simulation while adding an auxiliary supervised loss on real-world data to anchor the policy and mitigate catastrophic forgetting. We evaluate our framework on four real-world tabletop manipulation tasks using two representative VLA architectures, OpenVLA and $π_{0.5}$, and observe consistent improvements over real-only fine-tuning and SFT-based co-training, including +24% real-world success on OpenVLA and +20% on $π_{0.5}$. Beyond higher success rates, RL co-training yields stronger generalization to unseen task variations and substantially improved real-world data efficiency, providing a practical and scalable pathway for leveraging simulation to enhance real-robot deployment.",
-          "authors": [
-            "Liangzhi Shi",
-            "Shuaihang Chen",
-            "Feng Gao",
-            "Yinuo Chen",
-            "Kang Chen",
-            "Tonghe Zhang",
-            "Hongzhi Zang",
-            "Weinan Zhang",
-            "Chao Yu",
-            "Yu Wang"
-          ],
-          "published": "2026-02-13T05:15:50Z",
-          "updated": "2026-02-16T05:44:32Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12628v2",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12628v3",
-          "title": "Beyond Imitation: Reinforcement Learning-Based Sim-Real Co-Training for VLA Models",
-          "summary": "Simulation offers a scalable and low-cost way to enrich vision-language-action (VLA) training, reducing reliance on expensive real-robot demonstrations. However, most sim-real co-training methods rely on supervised fine-tuning (SFT), which treats simulation as a static source of demonstrations and does not exploit large-scale closed-loop interaction. Consequently, real-world gains and generalization are often limited. In this paper, we propose an \\underline{\\textit{RL}}-based sim-real \\underline{\\textit{Co}}-training \\modify{(RL-Co)} framework that leverages interactive simulation while preserving real-world capabilities. Our method follows a generic two-stage design: we first warm-start the policy with SFT on a mixture of real and simulated demonstrations, then fine-tune it with reinforcement learning in simulation while adding an auxiliary supervised loss on real-world data to anchor the policy and mitigate catastrophic forgetting. We evaluate our framework on four real-world tabletop manipulation tasks using two representative VLA architectures, OpenVLA and $π_{0.5}$, and observe consistent improvements over real-only fine-tuning and SFT-based co-training, including +24% real-world success on OpenVLA and +20% on $π_{0.5}$. Beyond higher success rates, RL co-training yields stronger generalization to unseen task variations and substantially improved real-world data efficiency, providing a practical and scalable pathway for leveraging simulation to enhance real-robot deployment.",
-          "authors": [
-            "Liangzhi Shi",
-            "Shuaihang Chen",
-            "Feng Gao",
-            "Yinuo Chen",
-            "Kang Chen",
-            "Tonghe Zhang",
-            "Hongzhi Zang",
-            "Weinan Zhang",
-            "Chao Yu",
-            "Yu Wang"
-          ],
-          "published": "2026-02-13T05:15:50Z",
-          "updated": "2026-03-06T08:46:11Z",
-          "primary_category": "cs.RO",
-          "categories": [
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12628v3",
-          "field": "cs.RO"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12616v1",
-          "title": "When Environments Shift: Safe Planning with Generative Priors and Robust Conformal Prediction",
-          "summary": "Autonomous systems operate in environments that may change over time. An example is the control of a self-driving vehicle among pedestrians and human-controlled vehicles whose behavior may change based on factors such as traffic density, road visibility, and social norms. Therefore, the environment encountered during deployment rarely mirrors the environment and data encountered during training -- a phenomenon known as distribution shift -- which can undermine the safety of autonomous systems. Conformal prediction (CP) has recently been used along with data from the training environment to provide prediction regions that capture the behavior of the environment with a desired probability. When embedded within a model predictive controller (MPC), one can provide probabilistic safety guarantees, but only when the deployment and training environments coincide. Once a distribution shift occurs, these guarantees collapse. We propose a planning framework that is robust under distribution shifts by: (i) assuming that the underlying data distribution of the environment is parameterized by a nuisance parameter, i.e., an observable, interpretable quantity such as traffic density, (ii) training a conditional diffusion model that captures distribution shifts as a function of the nuisance parameter, (iii) observing the nuisance parameter online and generating cheap, synthetic data from the diffusion model for the observed nuisance parameter, and (iv) designing an MPC that embeds CP regions constructed from such synthetic data. Importantly, we account for discrepancies between the underlying data distribution and the diffusion model by using robust CP. Thus, the plans computed using robust CP enjoy probabilistic safety guarantees, in contrast with plans obtained from a single, static set of training data. We empirically demonstrate safety under diverse distribution shifts in the ORCA simulator.",
-          "authors": [
-            "Kaizer Rahaman",
-            "Jyotirmoy V. Deshmukh",
-            "Ashish R. Hota",
-            "Lars Lindemann"
-          ],
-          "published": "2026-02-13T04:48:03Z",
-          "updated": "2026-02-13T04:48:03Z",
-          "primary_category": "eess.SY",
-          "categories": [
-            "eess.SY",
-            "cs.RO"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12616v1",
-          "field": "cs.RO"
         }
       ]
     },
@@ -27536,7 +27377,7 @@
       "name": "Computer Vision",
       "query": "cat:cs.CV",
       "feed_title": "arXiv Query: search_query=cat:cs.CV&id_list=&start=0&max_results=200",
-      "count": 3109,
+      "count": 3102,
       "new_count": 0,
       "request_pages": 1,
       "papers": [
@@ -94577,146 +94418,6 @@
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.12675v1",
           "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12659v1",
-          "title": "IndicFairFace: Balanced Indian Face Dataset for Auditing and Mitigating Geographical Bias in Vision-Language Models",
-          "summary": "Vision-Language Models (VLMs) are known to inherit and amplify societal biases from their web-scale training data with Indian being particularly misrepresented. Existing fairness-aware datasets have significantly improved demographic balance across global race and gender groups, yet they continue to treat Indian as a single monolithic category. The oversimplification ignores the vast intra-national diversity across 28 states and 8 Union Territories of India and leads to representational and geographical bias. To address the limitation, we present IndicFairFace, a novel and balanced face dataset comprising 14,400 images representing geographical diversity of India. Images were sourced ethically from Wikimedia Commons and open-license web repositories and uniformly balanced across states and gender. Using IndicFairFace, we quantify intra-national geographical bias in prominent CLIP-based VLMs and reduce it using post-hoc Iterative Nullspace Projection debiasing approach. We also show that the adopted debiasing approach does not adversely impact the existing embedding space as the average drop in retrieval accuracy on benchmark datasets is less than 1.5 percent. Our work establishes IndicFairFace as the first benchmark to study geographical bias in VLMs for the Indian context.",
-          "authors": [
-            "Aarish Shah Mohsin",
-            "Mohammed Tayyab Ilyas Khan",
-            "Mohammad Nadeem",
-            "Shahab Saquib Sohail",
-            "Erik Cambria",
-            "Jiechao Gao"
-          ],
-          "published": "2026-02-13T06:41:03Z",
-          "updated": "2026-02-13T06:41:03Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12659v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12652v1",
-          "title": "CBEN -- A Multimodal Machine Learning Dataset for Cloud Robust Remote Sensing Image Understanding",
-          "summary": "Clouds are a common phenomenon that distorts optical satellite imagery, which poses a challenge for remote sensing. However, in the literature cloudless analysis is often performed where cloudy images are excluded from machine learning datasets and methods. Such an approach cannot be applied to time sensitive applications, e.g., during natural disasters. A possible solution is to apply cloud removal as a preprocessing step to ensure that cloudfree solutions are not failing under such conditions. But cloud removal methods are still actively researched and suffer from drawbacks, such as generated visual artifacts. Therefore, it is desirable to develop cloud robust methods that are less affected by cloudy weather. Cloud robust methods can be achieved by combining optical data with radar, a modality unaffected by clouds. While many datasets for machine learning combine optical and radar data, most researchers exclude cloudy images. We identify this exclusion from machine learning training and evaluation as a limitation that reduces applicability to cloudy scenarios. To investigate this, we assembled a dataset, named CloudyBigEarthNet (CBEN), of paired optical and radar images with cloud occlusion for training and evaluation. Using average precision (AP) as the evaluation metric, we show that state-of-the-art methods trained on combined clear-sky optical and radar imagery suffer performance drops of 23-33 percentage points when evaluated on cloudy images. We then adapt these methods to cloudy optical data during training, achieving relative improvement of 17.2-28.7 percentage points on cloudy test cases compared with the original approaches. Code and dataset are publicly available at: https://github.com/mstricker13/CBEN",
-          "authors": [
-            "Marco Stricker",
-            "Masakazu Iwamura",
-            "Koichi Kise"
-          ],
-          "published": "2026-02-13T06:24:55Z",
-          "updated": "2026-02-13T06:24:55Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12652v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12649v1",
-          "title": "Multi-Task Learning with Additive U-Net for Image Denoising and Classification",
-          "summary": "We investigate additive skip fusion in U-Net architectures for image denoising and denoising-centric multi-task learning (MTL). By replacing concatenative skips with gated additive fusion, the proposed Additive U-Net (AddUNet) constrains shortcut capacity while preserving fixed feature dimensionality across depth. This structural regularization induces controlled encoder-decoder information flow and stabilizes joint optimization. Across single-task denoising and joint denoising-classification settings, AddUNet achieves competitive reconstruction performance with improved training stability. In MTL, learned skip weights exhibit systematic task-aware redistribution: shallow skips favor reconstruction, while deeper features support discrimination. Notably, reconstruction remains robust even under limited classification capacity, indicating implicit task decoupling through additive fusion. These findings show that simple constraints on skip connections act as an effective architectural regularizer for stable and scalable multi-task learning without increasing model complexity.",
-          "authors": [
-            "Vikram Lakkavalli",
-            "Neelam Sinha"
-          ],
-          "published": "2026-02-13T06:15:32Z",
-          "updated": "2026-02-13T06:15:32Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.LG"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12649v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12640v1",
-          "title": "ImageRAGTurbo: Towards One-step Text-to-Image Generation with Retrieval-Augmented Diffusion Models",
-          "summary": "Diffusion models have emerged as the leading approach for text-to-image generation. However, their iterative sampling process, which gradually morphs random noise into coherent images, introduces significant latency that limits their applicability. While recent few-step diffusion models reduce the number of sampling steps to as few as one to four steps, they often compromise image quality and prompt alignment, especially in one-step generation. Additionally, these models require computationally expensive training procedures. To address these limitations, we propose ImageRAGTurbo, a novel approach to efficiently finetune few-step diffusion models via retrieval augmentation. Given a text prompt, we retrieve relevant text-image pairs from a database and use them to condition the generation process. We argue that such retrieved examples provide rich contextual information to the UNet denoiser that helps reduce the number of denoising steps without compromising image quality. Indeed, our initial investigations show that using the retrieved content to edit the denoiser's latent space ($\\mathcal{H}$-space) without additional finetuning already improves prompt fidelity. To further improve the quality of the generated images, we augment the UNet denoiser with a trainable adapter in the $\\mathcal{H}$-space, which efficiently blends the retrieved content with the target prompt using a cross-attention mechanism. Experimental results on fast text-to-image generation demonstrate that our approach produces high-fidelity images without compromising latency compared to existing methods.",
-          "authors": [
-            "Peijie Qiu",
-            "Hariharan Ramshankar",
-            "Arnau Ramisa",
-            "René Vidal",
-            "Amit Kumar K C",
-            "Vamsi Salaka",
-            "Rahul Bhagat"
-          ],
-          "published": "2026-02-13T05:59:57Z",
-          "updated": "2026-02-13T05:59:57Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12640v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.13352v1",
-          "title": "Using Deep Learning to Generate Semantically Correct Hindi Captions",
-          "summary": "Automated image captioning using the content from the image is very appealing when done by harnessing the capability of computer vision and natural language processing. Extensive research has been done in the field with a major focus on the English language which gives the scope for further developments in the same with consideration of popular foreign languages. This research utilizes distinct models for translating the image caption into Hindi, the fourth most popular language across the world. Exploring the multi-modal architectures this research comprises local visual features, global visual features, attention mechanisms, and pre-trained models. Using google cloud translator on the image dataset from Flickr8k, Hindi image descriptions have been generated. Pre-trained CNNs like VGG16, ResNet50, and Inception V3 helped in retrieving image characteristics, while the uni-directional and bi-directional techniques of text encoding are used for the text encoding process. An additional Attention layer helps to generate a weight vector and, by multiplying it, combine image characteristics from each time step into a sentence-level feature vector. Bilingual evaluation understudy scores are used to compare the research outcome. Many experiments that serve as a baseline are done for the comparative analysis of the research. An image with a score of BLEU-1 is considered sufficient, whereas one with a score of BLEU-4 is considered to have fluid image captioning. For both BLEU scores, the attention-based bidirectional LSTM with VGG16 produced the best results of 0.59 and 0.19 respectively. The experiments conclude that researchs ability to produce relevant, semantically accurate image captions in Hindi. The research accomplishes the goals and future research can be guided by this research model.",
-          "authors": [
-            "Wasim Akram Khan",
-            "Anil Kumar Vuppala"
-          ],
-          "published": "2026-02-13T05:06:30Z",
-          "updated": "2026-02-13T05:06:30Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.13352v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12624v1",
-          "title": "Formalizing the Sampling Design Space of Diffusion-Based Generative Models via Adaptive Solvers and Wasserstein-Bounded Timesteps",
-          "summary": "Diffusion-based generative models have achieved remarkable performance across various domains, yet their practical deployment is often limited by high sampling costs. While prior work focuses on training objectives or individual solvers, the holistic design of sampling, specifically solver selection and scheduling, remains dominated by static heuristics. In this work, we revisit this challenge through a geometric lens, proposing SDM, a principled framework that aligns the numerical solver with the intrinsic properties of the diffusion trajectory. By analyzing the ODE dynamics, we show that efficient low-order solvers suffice in early high-noise stages while higher-order solvers can be progressively deployed to handle the increasing non-linearity of later stages. Furthermore, we formalize the scheduling by introducing a Wasserstein-bounded optimization framework. This method systematically derives adaptive timesteps that explicitly bound the local discretization error, ensuring the sampling process remains faithful to the underlying continuous dynamics. Without requiring additional training or architectural modifications, SDM achieves state-of-the-art performance across standard benchmarks, including an FID of 1.93 on CIFAR-10, 2.41 on FFHQ, and 1.98 on AFHQv2, with a reduced number of function evaluations compared to existing samplers. Our code is available at https://github.com/aiimaginglab/sdm.",
-          "authors": [
-            "Sangwoo Jo",
-            "Sungjoon Choi"
-          ],
-          "published": "2026-02-13T05:02:07Z",
-          "updated": "2026-02-13T05:02:07Z",
-          "primary_category": "cs.LG",
-          "categories": [
-            "cs.LG",
-            "cs.CV"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12624v1",
-          "field": "cs.CV"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12618v1",
-          "title": "Vision Token Reduction via Attention-Driven Self-Compression for Efficient Multimodal Large Language Models",
-          "summary": "Multimodal Large Language Models (MLLMs) incur significant computational cost from processing numerous vision tokens through all LLM layers. Prior pruning methods operate either before the LLM, limiting generality due to diverse encoder-projector designs or within the LLM using heuristics that are incompatible with FlashAttention. We take a different approach: rather than identifying unimportant tokens, we treat the LLM itself as the optimal guide for compression. Observing that deeper layers naturally transmit vision-to-text information, we introduce Attention-Driven Self-Compression (ADSC), a simple, broadly applicable method that progressively reduces vision tokens using only the LLM's attention mechanism. Our method applies uniform token downsampling at selected layers, forming bottlenecks that encourage the model to reorganize and compress information into the remaining tokens. It requires no score computation, auxiliary modules, or attention modification, and remains fully compatible with FlashAttention. Applied to LLaVA-1.5, ADSC reduces FLOPs by 53.7% and peak KV-cache memory by 56.7%, while preserving 98.2% of the original model performance. Across multiple benchmarks, it outperforms prior pruning approaches in both efficiency and accuracy. Crucially, under high compression ratios, our method remains robust while heuristic-based techniques degrade sharply.",
-          "authors": [
-            "Omer Faruk Deniz",
-            "Ruiyu Mao",
-            "Ruochen Li",
-            "Yapeng Tian",
-            "Latifur Khan"
-          ],
-          "published": "2026-02-13T04:49:27Z",
-          "updated": "2026-02-13T04:49:27Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12618v1",
-          "field": "cs.CV"
         }
       ]
     },
@@ -94725,7 +94426,7 @@
       "name": "Computation and Language",
       "query": "cat:cs.CL",
       "feed_title": "arXiv Query: search_query=cat:cs.CL&id_list=&start=0&max_results=200",
-      "count": 1593,
+      "count": 1583,
       "new_count": 0,
       "request_pages": 1,
       "papers": [
@@ -129194,242 +128895,6 @@
             "cs.CL"
           ],
           "pdf_url": "https://arxiv.org/pdf/2602.12674v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.15902v1",
-          "title": "Doc-to-LoRA: Learning to Instantly Internalize Contexts",
-          "summary": "Long input sequences are central to in-context learning, document understanding, and multi-step reasoning of Large Language Models (LLMs). However, the quadratic attention cost of Transformers makes inference memory-intensive and slow. While context distillation (CD) can transfer information into model parameters, per-prompt distillation is impractical due to training costs and latency. To address these limitations, we propose Doc-to-LoRA (D2L), a lightweight hypernetwork that meta-learns to perform approximate CD within a single forward pass. Given an unseen prompt, D2L generates a LoRA adapter for a target LLM, enabling subsequent queries to be answered without re-consuming the original context, reducing latency and KV-cache memory consumption during inference of the target LLM. On a long-context needle-in-a-haystack task, D2L successfully learns to map contexts into adapters that store the needle information, achieving near-perfect zero-shot accuracy at sequence lengths exceeding the target LLM's native context window by more than 4x. On real-world QA datasets with limited compute, D2L outperforms standard CD while significantly reducing peak memory consumption and update latency. We envision that D2L can facilitate rapid adaptation of LLMs, opening up the possibility of frequent knowledge updates and personalized chat behavior.",
-          "authors": [
-            "Rujikorn Charakorn",
-            "Edoardo Cetin",
-            "Shinnosuke Uesaka",
-            "Robert Tjarko Lange"
-          ],
-          "published": "2026-02-13T06:54:20Z",
-          "updated": "2026-02-13T06:54:20Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.15902v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12662v1",
-          "title": "Think Fast and Slow: Step-Level Cognitive Depth Adaptation for LLM Agents",
-          "summary": "Large language models (LLMs) are increasingly deployed as autonomous agents for multi-turn decision-making tasks. However, current agents typically rely on fixed cognitive patterns: non-thinking models generate immediate responses, while thinking models engage in deep reasoning uniformly. This rigidity is inefficient for long-horizon tasks, where cognitive demands vary significantly from step to step, with some requiring strategic planning and others only routine execution. In this paper, we introduce CogRouter, a framework that trains agents to dynamically adapt cognitive depth at each step. Grounded in ACT-R theory, we design four hierarchical cognitive levels ranging from instinctive responses to strategic planning. Our two-stage training approach includes Cognition-aware Supervised Fine-tuning (CoSFT) to instill stable level-specific patterns, and Cognition-aware Policy Optimization (CoPO) for step-level credit assignment via confidence-aware advantage reweighting. The key insight is that appropriate cognitive depth should maximize the confidence of the resulting action. Experiments on ALFWorld and ScienceWorld demonstrate that CogRouter achieves state-of-the-art performance with superior efficiency. With Qwen2.5-7B, it reaches an 82.3% success rate, outperforming GPT-4o (+40.3%), OpenAI-o3 (+18.3%), and GRPO (+14.0%), while using 62% fewer tokens.",
-          "authors": [
-            "Ruihan Yang",
-            "Fanghua Ye",
-            "Xiang We",
-            "Ruoqing Zhao",
-            "Kang Luo",
-            "Xinbo Xu",
-            "Bo Zhao",
-            "Ruotian Ma",
-            "Shanyi Wang",
-            "Zhaopeng Tu",
-            "Xiaolong Li",
-            "Deqing Yang",
-            "Linus"
-          ],
-          "published": "2026-02-13T06:52:09Z",
-          "updated": "2026-02-13T06:52:09Z",
-          "primary_category": "cs.AI",
-          "categories": [
-            "cs.AI",
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12662v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12660v1",
-          "title": "Learning Ordinal Probabilistic Reward from Preferences",
-          "summary": "Reward models are crucial for aligning large language models (LLMs) with human values and intentions. Existing approaches follow either Generative (GRMs) or Discriminative (DRMs) paradigms, yet both suffer from limitations: GRMs typically demand costly point-wise supervision, while DRMs produce uncalibrated relative scores that lack probabilistic interpretation. To address these challenges, we introduce a novel reward modeling paradigm: Probabilistic Reward Model (PRM). Instead of modeling reward as a deterministic scalar, our approach treats it as a random variable, learning a full probability distribution for the quality of each response. To make this paradigm practical, we present its closed-form, discrete realization: the Ordinal Probabilistic Reward Model (OPRM), which discretizes the quality score into a finite set of ordinal ratings. Building on OPRM, we propose a data-efficient training strategy called Region Flooding Tuning (RgFT). It enables rewards to better reflect absolute text quality by incorporating quality-level annotations, which guide the model to concentrate the probability mass within corresponding rating sub-regions. Experiments on various reward model benchmarks show that our method improves accuracy by $\\textbf{2.9%}\\sim\\textbf{7.4%}$ compared to prior reward models, demonstrating strong performance and data efficiency. Analysis of the score distribution provides evidence that our method captures not only relative rankings but also absolute quality.",
-          "authors": [
-            "Longze Chen",
-            "Lu Wang",
-            "Renke Shan",
-            "Ze Gong",
-            "Run Luo",
-            "Jiaming Li",
-            "Jing Luo",
-            "Qiyao Wang",
-            "Min Yang"
-          ],
-          "published": "2026-02-13T06:43:02Z",
-          "updated": "2026-02-13T06:43:02Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12660v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12660v2",
-          "title": "Learning Ordinal Probabilistic Reward from Preferences",
-          "summary": "Reward models are crucial for aligning large language models (LLMs) with human values and intentions. Existing approaches follow either Generative (GRMs) or Discriminative (DRMs) paradigms, yet both suffer from limitations: GRMs typically demand costly point-wise supervision, while DRMs produce uncalibrated relative scores that lack probabilistic interpretation. To address these challenges, we introduce a novel reward modeling paradigm: Probabilistic Reward Model (PRM). Instead of modeling reward as a deterministic scalar, our approach treats it as a random variable, learning a full probability distribution for the quality of each response. To make this paradigm practical, we present its closed-form, discrete realization: the Ordinal Probabilistic Reward Model (OPRM), which discretizes the quality score into a finite set of ordinal ratings. Building on OPRM, we propose a data-efficient training strategy called Region Flooding Tuning (RgFT). It enables rewards to better reflect absolute text quality by incorporating quality-level annotations, which guide the model to concentrate the probability mass within corresponding rating sub-regions. Experiments on various reward model benchmarks show that our method improves accuracy by $\\textbf{2.9%}\\sim\\textbf{7.4%}$ compared to prior reward models, demonstrating strong performance and data efficiency. Analysis of the score distribution provides evidence that our method captures not only relative rankings but also absolute quality.",
-          "authors": [
-            "Longze Chen",
-            "Lu Wang",
-            "Renke Shan",
-            "Ze Gong",
-            "Run Luo",
-            "Jiaming Li",
-            "Jing Luo",
-            "Qiyao Wang",
-            "Min Yang"
-          ],
-          "published": "2026-02-13T06:43:02Z",
-          "updated": "2026-03-02T07:49:30Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12660v2",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12642v1",
-          "title": "Beyond Normalization: Rethinking the Partition Function as a Difficulty Scheduler for RLVR",
-          "summary": "Reward-maximizing RL methods enhance the reasoning performance of LLMs, but often reduce the diversity among outputs. Recent works address this issue by adopting GFlowNets, training LLMs to match a target distribution while jointly learning its partition function. In contrast to prior works that treat this partition function solely as a normalizer, we reinterpret it as a per-prompt expected-reward (i.e., online accuracy) signal, leveraging this unused information to improve sample efficiency. Specifically, we first establish a theoretical relationship between the partition function and per-prompt accuracy estimates. Building on this key insight, we propose Partition Function-Guided RL (PACED-RL), a post-training framework that leverages accuracy estimates to prioritize informative question prompts during training, and further improves sample efficiency through an accuracy estimate error-prioritized replay. Crucially, both components reuse information already produced during GFlowNet training, effectively amortizing the compute overhead into the existing optimization process. Extensive experiments across diverse benchmarks demonstrate strong performance improvements over GRPO and prior GFlowNet approaches, highlighting PACED-RL as a promising direction for a more sample efficient distribution-matching training for LLMs.",
-          "authors": [
-            "Dohyung Kim",
-            "Minbeom Kim",
-            "Jeonghye Kim",
-            "Sangmook Lee",
-            "Sojeong Rhee",
-            "Kyomin Jung"
-          ],
-          "published": "2026-02-13T06:04:14Z",
-          "updated": "2026-02-13T06:04:14Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12642v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12639v1",
-          "title": "CLASE: A Hybrid Method for Chinese Legalese Stylistic Evaluation",
-          "summary": "Legal text generated by large language models (LLMs) can usually achieve reasonable factual accuracy, but it frequently fails to adhere to the specialised stylistic norms and linguistic conventions of legal writing. In order to improve stylistic quality, a crucial first step is to establish a reliable evaluation method. However, having legal experts manually develop such a metric is impractical, as the implicit stylistic requirements in legal writing practice are difficult to formalise into explicit rubrics. Meanwhile, existing automatic evaluation methods also fall short: reference-based metrics conflate semantic accuracy with stylistic fidelity, and LLM-as-a-judge evaluations suffer from opacity and inconsistency. To address these challenges, we introduce CLASE (Chinese LegAlese Stylistic Evaluation), a hybrid evaluation method that focuses on the stylistic performance of legal text. The method incorporates a hybrid scoring mechanism that combines 1) linguistic feature-based scores and 2) experience-guided LLM-as-a-judge scores. Both the feature coefficients and the LLM scoring experiences are learned from contrastive pairs of authentic legal documents and their LLM-restored counterparts. This hybrid design captures both surface-level features and implicit stylistic norms in a transparent, reference-free manner. Experiments on 200 Chinese legal documents show that CLASE achieves substantially higher alignment with human judgments than traditional metrics and pure LLM-as-a-judge methods. Beyond improved alignment, CLASE provides interpretable score breakdowns and suggestions for improvements, offering a scalable and practical solution for professional stylistic evaluation in legal text generation (Code and data for CLASE is available at: https://github.com/rexera/CLASE).",
-          "authors": [
-            "Yiran Rex Ma",
-            "Yuxiao Ye",
-            "Huiyuan Xie"
-          ],
-          "published": "2026-02-13T05:51:56Z",
-          "updated": "2026-02-13T05:51:56Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12639v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12635v2",
-          "title": "Unleashing Low-Bit Inference on Ascend NPUs: A Comprehensive Evaluation of HiFloat Formats",
-          "summary": "As LLMs scale, low-bit floating-point formats like MXFP and NVFP4 offer new opportunities for precision and efficiency. In this work, we evaluate HiFloat (HiF8 and HiF4), a family of formats tailored for Ascend NPUs. Through rigorous comparison across weight-activation and KV-cache tasks, we provide three key insights: (1) INT8 suits narrow-range data, while floating-point formats excel with high-variance data; (2) in 4-bit regimes, HiF4's hierarchical scaling prevents the accuracy collapse seen in integer formats; and (3) HiFloat is fully compatible with state-of-the-art post-training quantization frameworks. Overall, HiFloat provides a solution for high-efficiency LLM inference on NPUs.",
-          "authors": [
-            "Pengxiang Zhao",
-            "Hui-Ling Zhen",
-            "Xing Li",
-            "Han Bao",
-            "Weizhe Lin",
-            "Zhiyuan Yang",
-            "Ziwei Yu",
-            "Xin Wang",
-            "Mingxuan Yuan",
-            "Xianzhi Yu",
-            "Zhenhua Dong"
-          ],
-          "published": "2026-02-13T05:41:31Z",
-          "updated": "2026-02-25T08:07:27Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI",
-            "cs.LG"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12635v2",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12635v3",
-          "title": "Unleashing Low-Bit Inference on Ascend NPUs: A Comprehensive Evaluation of HiFloat Formats",
-          "summary": "As LLMs scale, low-bit floating-point formats like MXFP and NVFP4 offer new opportunities for precision and efficiency. In this work, we evaluate HiFloat (HiF8 and HiF4), a family of formats tailored for Ascend NPUs. Through rigorous comparison across weight-activation and KV-cache tasks, we provide three key insights: (1) INT8 suits narrow-range data, while floating-point formats excel with high-variance data; (2) in 4-bit regimes, HiF4's hierarchical scaling prevents the accuracy collapse seen in integer formats; and (3) HiFloat is fully compatible with state-of-the-art post-training quantization frameworks. Overall, HiFloat provides a solution for high-efficiency LLM inference on NPUs.",
-          "authors": [
-            "Pengxiang Zhao",
-            "Hui-Ling Zhen",
-            "Xing Li",
-            "Han Bao",
-            "Weizhe Lin",
-            "Zhiyuan Yang",
-            "Manyi Zhang",
-            "Yuanyong Luo",
-            "Ziwei Yu",
-            "Xin Wang",
-            "Mingxuan Yuan",
-            "Xianzhi Yu",
-            "Zhenhua Dong"
-          ],
-          "published": "2026-02-13T05:41:31Z",
-          "updated": "2026-02-28T03:08:42Z",
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI",
-            "cs.LG"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12635v3",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.13352v1",
-          "title": "Using Deep Learning to Generate Semantically Correct Hindi Captions",
-          "summary": "Automated image captioning using the content from the image is very appealing when done by harnessing the capability of computer vision and natural language processing. Extensive research has been done in the field with a major focus on the English language which gives the scope for further developments in the same with consideration of popular foreign languages. This research utilizes distinct models for translating the image caption into Hindi, the fourth most popular language across the world. Exploring the multi-modal architectures this research comprises local visual features, global visual features, attention mechanisms, and pre-trained models. Using google cloud translator on the image dataset from Flickr8k, Hindi image descriptions have been generated. Pre-trained CNNs like VGG16, ResNet50, and Inception V3 helped in retrieving image characteristics, while the uni-directional and bi-directional techniques of text encoding are used for the text encoding process. An additional Attention layer helps to generate a weight vector and, by multiplying it, combine image characteristics from each time step into a sentence-level feature vector. Bilingual evaluation understudy scores are used to compare the research outcome. Many experiments that serve as a baseline are done for the comparative analysis of the research. An image with a score of BLEU-1 is considered sufficient, whereas one with a score of BLEU-4 is considered to have fluid image captioning. For both BLEU scores, the attention-based bidirectional LSTM with VGG16 produced the best results of 0.59 and 0.19 respectively. The experiments conclude that researchs ability to produce relevant, semantically accurate image captions in Hindi. The research accomplishes the goals and future research can be guided by this research model.",
-          "authors": [
-            "Wasim Akram Khan",
-            "Anil Kumar Vuppala"
-          ],
-          "published": "2026-02-13T05:06:30Z",
-          "updated": "2026-02-13T05:06:30Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.13352v1",
-          "field": "cs.CL"
-        },
-        {
-          "id": "http://arxiv.org/abs/2602.12618v1",
-          "title": "Vision Token Reduction via Attention-Driven Self-Compression for Efficient Multimodal Large Language Models",
-          "summary": "Multimodal Large Language Models (MLLMs) incur significant computational cost from processing numerous vision tokens through all LLM layers. Prior pruning methods operate either before the LLM, limiting generality due to diverse encoder-projector designs or within the LLM using heuristics that are incompatible with FlashAttention. We take a different approach: rather than identifying unimportant tokens, we treat the LLM itself as the optimal guide for compression. Observing that deeper layers naturally transmit vision-to-text information, we introduce Attention-Driven Self-Compression (ADSC), a simple, broadly applicable method that progressively reduces vision tokens using only the LLM's attention mechanism. Our method applies uniform token downsampling at selected layers, forming bottlenecks that encourage the model to reorganize and compress information into the remaining tokens. It requires no score computation, auxiliary modules, or attention modification, and remains fully compatible with FlashAttention. Applied to LLaVA-1.5, ADSC reduces FLOPs by 53.7% and peak KV-cache memory by 56.7%, while preserving 98.2% of the original model performance. Across multiple benchmarks, it outperforms prior pruning approaches in both efficiency and accuracy. Crucially, under high compression ratios, our method remains robust while heuristic-based techniques degrade sharply.",
-          "authors": [
-            "Omer Faruk Deniz",
-            "Ruiyu Mao",
-            "Ruochen Li",
-            "Yapeng Tian",
-            "Latifur Khan"
-          ],
-          "published": "2026-02-13T04:49:27Z",
-          "updated": "2026-02-13T04:49:27Z",
-          "primary_category": "cs.CV",
-          "categories": [
-            "cs.CV",
-            "cs.AI",
-            "cs.CL"
-          ],
-          "pdf_url": "https://arxiv.org/pdf/2602.12618v1",
           "field": "cs.CL"
         }
       ]
