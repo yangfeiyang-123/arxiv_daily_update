@@ -1,0 +1,106 @@
+name: Daily Robot RL Post-Training Watch
+
+on:
+  schedule:
+    # 09:00 America/Los_Angeles year-round: one slot for PDT and one for PST.
+    # The guard below lets only the local 09:xx run continue.
+    - cron: "0 16 * * *"
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: robot-rl-post-training-watch
+  cancel-in-progress: false
+
+env:
+  WATCH_ISSUE: "19"
+  WATCH_TIMEZONE: America/Los_Angeles
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check local run window
+        id: local_time
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$(TZ="$WATCH_TIMEZONE" date +%H)" = "09" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.local_time.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.local_time.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Migrate legacy deduplication state
+        if: steps.local_time.outputs.run == 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/robot_rl_watch_seen.json")
+          if path.exists():
+              state = json.loads(path.read_text(encoding="utf-8"))
+              legacy = state.pop("seen_arxiv_ids", {})
+              current = state.setdefault("seen", {})
+              for key, value in legacy.items():
+                  current.setdefault(key, value)
+              state.pop("seen_title_hashes", None)
+              path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Search and deduplicate papers
+        if: steps.local_time.outputs.run == 'true'
+        id: watch
+        run: |
+          python scripts/daily_robot_rl_watch.py \
+            --state data/robot_rl_watch_seen.json \
+            --output-dir outputs/robot_rl_watch \
+            --comment-file /tmp/robot_rl_watch_comment.md \
+            --lookback-days 21 \
+            --max-new 12 \
+            --github-repo "$GITHUB_REPOSITORY" \
+            --github-issue "$WATCH_ISSUE" \
+            --timezone "$WATCH_TIMEZONE"
+
+      - name: Publish only genuinely new papers
+        if: steps.local_time.outputs.run == 'true' && steps.watch.outputs.new_count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment "$WATCH_ISSUE" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body-file /tmp/robot_rl_watch_comment.md
+
+      - name: Persist deduplication state and reports
+        if: steps.local_time.outputs.run == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/robot_rl_watch_seen.json
+          if [ -d outputs/robot_rl_watch ]; then
+            git add outputs/robot_rl_watch
+          fi
+          if git diff --cached --quiet; then
+            echo "No repository changes."
+          else
+            git commit -m "chore: update robot RL post-training watch"
+            git push
+          fi
