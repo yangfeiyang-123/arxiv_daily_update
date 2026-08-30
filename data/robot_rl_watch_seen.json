@@ -166,6 +166,50 @@
     "2409.20568": {
       "title": "Continuously Improving Mobile Manipulation with Autonomous Real-World RL",
       "source": "initial_survey_seed"
+    },
+    "2608.21740": {
+      "title": "CounterAlign: Counterfactual Supervision for Vision-Language-Action Models",
+      "source": "initial_survey_seed"
+    },
+    "2608.19891": {
+      "title": "EXIMO: VLM Guided Exploration of VLA Policies",
+      "source": "initial_survey_seed"
+    },
+    "2608.19182": {
+      "title": "ADEPT: Accelerating Dexterity via Pre-Training and Post-Training using Reinforcement Learning",
+      "source": "initial_survey_seed"
+    },
+    "2608.17423": {
+      "title": "Prism-GRPO: Faster VLA Policy Optimization via Splitting Same-outcome Groups",
+      "source": "initial_survey_seed"
+    },
+    "2608.17163": {
+      "title": "Q-Learning With World Models",
+      "source": "initial_survey_seed"
+    },
+    "2608.16837": {
+      "title": "HAF: Adapting Generalist VLAs to Humanoid Whole-Body Loco-manipulation via Hierarchical Action Flow and Spectral Latent RL",
+      "source": "initial_survey_seed"
+    },
+    "2608.15707": {
+      "title": "GAINS: Leveraging Inconsistent Human Intervention Signals in Reinforcement Learning",
+      "source": "initial_survey_seed"
+    },
+    "2608.15680": {
+      "title": "Robo-Dopamine 2.0: History-Conditioned and OOD-Aware Process Reward Modeling for Robotic Manipulation",
+      "source": "initial_survey_seed"
+    },
+    "2608.13026": {
+      "title": "Temporal GRPO: Beyond Trajectory-Level Credit in Vision-Language-Action Reinforcement Learning",
+      "source": "initial_survey_seed"
+    },
+    "2608.09762": {
+      "title": "Efficient Real-World Online Reinforcement Learning for Robot Manipulation via Centralized Training and Critic Decomposition",
+      "source": "initial_survey_seed"
+    },
+    "2608.09138": {
+      "title": "SpeedTuning: Speeding Up Policy Execution with Lightweight Reinforcement Learning",
+      "source": "initial_survey_seed"
     }
   },
   "seen_title_hashes": {}
