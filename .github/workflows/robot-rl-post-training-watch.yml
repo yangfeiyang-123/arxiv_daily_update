@@ -1,0 +1,75 @@
+name: Robot RL Post-Training Daily Watch
+
+on:
+  schedule:
+    # 16:00 UTC = 09:00 PDT / 08:00 PST.
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: robot-rl-post-training-watch
+  cancel-in-progress: false
+
+env:
+  TZ: America/Los_Angeles
+  WATCH_ISSUE: "6"
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run deterministic self-test
+        run: python scripts/robot_rl_posttrain_watch.py --self-test
+
+      - name: Search and deduplicate papers
+        id: watch
+        run: |
+          python scripts/robot_rl_posttrain_watch.py \
+            --state data/robot_rl_posttrain_seen.json \
+            --output-dir outputs/robot_rl_posttrain \
+            --days 45 \
+            --per-query 100 \
+            --min-score 12 \
+            --max-items 20
+
+      # Persist the seen-paper state before publishing the issue comment. This
+      # makes the no-repeat guarantee stronger even if notification fails.
+      - name: Commit new state and report
+        if: steps.watch.outputs.has_new == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/robot_rl_posttrain_seen.json outputs/robot_rl_posttrain/
+          git commit -m "chore: update robot RL post-training watch"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Publish digest to tracking issue
+        if: steps.watch.outputs.has_new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_PATH: ${{ steps.watch.outputs.report_path }}
+        run: |
+          gh issue comment "${WATCH_ISSUE}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body-file "${REPORT_PATH}"
+
+      - name: No new papers
+        if: steps.watch.outputs.has_new != 'true'
+        run: echo "No unseen relevant papers; staying quiet."
