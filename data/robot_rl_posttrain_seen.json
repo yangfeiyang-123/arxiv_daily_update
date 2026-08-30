@@ -22,6 +22,18 @@
       "source": "initial-survey",
       "title": "HIL-SERL: Precise and Dexterous Robotic Manipulation via Human-in-the-Loop Reinforcement Learning"
     },
+    "arxiv:2412.13630": {
+      "arxiv_id": "2412.13630",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Policy Decorator: Model-Agnostic Online Refinement for Large Policy Model"
+    },
+    "arxiv:2502.02538": {
+      "arxiv_id": "2502.02538",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Flow Q-Learning"
+    },
     "arxiv:2505.17016": {
       "arxiv_id": "2505.17016",
       "first_seen": "2026-08-29",
@@ -34,11 +46,47 @@
       "source": "initial-survey",
       "title": "VLA-RL: Towards Masterful and General Robotic Manipulation with Scalable Reinforcement Learning"
     },
+    "arxiv:2505.18763": {
+      "arxiv_id": "2505.18763",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "GenPO: Generative Diffusion Models Meet On-Policy Reinforcement Learning"
+    },
     "arxiv:2505.22094": {
       "arxiv_id": "2505.22094",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning"
+    },
+    "arxiv:2506.15799": {
+      "arxiv_id": "2506.15799",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Steering Your Diffusion Policy with Latent Space Reinforcement Learning"
+    },
+    "arxiv:2507.07969": {
+      "arxiv_id": "2507.07969",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Reinforcement Learning with Action Chunking"
+    },
+    "arxiv:2507.07986": {
+      "arxiv_id": "2507.07986",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "EXPO: Stable Reinforcement Learning with Expressive Policies"
+    },
+    "arxiv:2507.15073": {
+      "arxiv_id": "2507.15073",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Reinforcement Learning for Flow-Matching Policies"
+    },
+    "arxiv:2507.21053": {
+      "arxiv_id": "2507.21053",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Flow Matching Policy Gradients"
     },
     "arxiv:2508.02644": {
       "arxiv_id": "2508.02644",
@@ -81,6 +129,12 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Z-1: Efficient Reinforcement Learning for Vision-Language-Action Models"
+    },
+    "arxiv:2607.08877": {
+      "arxiv_id": "2607.08877",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "FlowDAgger: Human-in-the-Loop Adaptation of Generative Robot Policies in Latent Space"
     },
     "arxiv:2607.15004": {
       "arxiv_id": "2607.15004",
@@ -774,6 +828,12 @@
       "source": "daily-watch",
       "title": "EXIMO: VLM Guided Exploration of VLA Policies"
     },
+    "arxiv:2608.20208": {
+      "arxiv_id": "2608.20208",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RoMAN-Flow: Taming Autoregressive Normalizing Flows for Offline Reinforcement Learning in Robotic Manipulation"
+    },
     "arxiv:2608.21204": {
       "arxiv_id": "2608.21204",
       "first_seen": "2026-08-29",
@@ -910,6 +970,12 @@
       "source": "daily-watch",
       "title": "MobilePA-Bench: Benchmarking Mobile Planner Agents on Complex Real-World Tasks"
     },
+    "title:08d7c2d7f621cc923ffcbb619737b685b83aef11": {
+      "arxiv_id": "2505.22094",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning"
+    },
     "title:0b066b198cb386cec49757c629d53b3c8f5355fe": {
       "arxiv_id": "2608.06994",
       "first_seen": "2026-08-29",
@@ -925,6 +991,12 @@
       "score": 14,
       "source": "daily-watch",
       "title": "MANIGUARD: A Benchmark and Data Suite for Specification-Grounded Safety Evaluation and Improvement of Robotic Manipulation"
+    },
+    "title:0ecd75fba970201dd6e5626c6aa8bea5b79df976": {
+      "arxiv_id": "2608.15139",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "StructRL: Structured Action-Space Exploration for Flow-Based VLAs"
     },
     "title:10cac1f7e7a1b75fdcbe876e3ed3a4128e458d7c": {
       "arxiv_id": "2608.17628",
@@ -990,6 +1062,12 @@
       "source": "daily-watch",
       "title": "StellaVLA: In-Context Structured Demonstration for Generalizable Vision-Language-Action Models"
     },
+    "title:1ed87c41ff2f3ac1355cccaaafb3c00553d3a040": {
+      "arxiv_id": "2608.21740",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "CounterAlign: Counterfactual Supervision for Vision-Language-Action Models"
+    },
     "title:1f8158aea3ae50de989a63ebfc0b8d592bf52700": {
       "arxiv_id": "2608.15026",
       "first_seen": "2026-08-29",
@@ -1030,6 +1108,12 @@
       "source": "daily-watch",
       "title": "LUCID: Latent-Skill Unified Control via Imagined Dynamics for Long-Horizon Humanoid Loco-Manipulation"
     },
+    "title:2a1882c5f1f395797c883733c35f1e2d5549ba26": {
+      "arxiv_id": "2409.00588",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Diffusion Policy Policy Optimization"
+    },
     "title:34d69ef3d04771935d02de6cd0fb3aba715ac4eb": {
       "arxiv_id": "2608.03483",
       "first_seen": "2026-08-29",
@@ -1045,6 +1129,12 @@
       "score": 15,
       "source": "daily-watch",
       "title": "Repetition as Reinforcement: Enhancing Sample Efficiency via Instant Episode Repetition in Reinforcement Learning"
+    },
+    "title:37a3703527951b5af8cc57f7d1f91d0de0c47085": {
+      "arxiv_id": "2507.21053",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Flow Matching Policy Gradients"
     },
     "title:37dc2f508bd379a57db582b7474068bc7232d97a": {
       "arxiv_id": "2608.04842",
@@ -1078,6 +1168,12 @@
       "source": "daily-watch",
       "title": "$R^3$: Training Robots to Reason in Natural Language via Reinforcement Learning"
     },
+    "title:44026e6a1157c4e662e5b53def6d90b108b50174": {
+      "arxiv_id": "2608.21204",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Beyond Imitation: Self-Improving Robot Policies via Off-Policy Q-Planning"
+    },
     "title:4767737c1a9c3befb6722d883f209df4c9bb5e9f": {
       "arxiv_id": "2607.28405",
       "first_seen": "2026-08-29",
@@ -1086,6 +1182,12 @@
       "source": "daily-watch",
       "title": "QuantWAMs: Calibrating at the Right Granularity for World Action Models"
     },
+    "title:49e2da2b3cf96d04e64f86abf21f87d738050aed": {
+      "arxiv_id": "2505.18719",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "VLA-RL: Towards Masterful and General Robotic Manipulation with Scalable Reinforcement Learning"
+    },
     "title:4a928a0109f6813534ec777a3f85527e4af54ded": {
       "arxiv_id": "2608.14822",
       "first_seen": "2026-08-29",
@@ -1093,6 +1195,12 @@
       "score": 30,
       "source": "daily-watch",
       "title": "Imagining Recovery: Inference-Time Counterfactual Realignment for Vision-Language-Action Models"
+    },
+    "title:4c733718d2dcd4f489b098b92916c83ca64146dc": {
+      "arxiv_id": "2608.19182",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "ADEPT: Accelerating Dexterity via Pre-Training and Post-Training using Reinforcement Learning"
     },
     "title:4d823064ee62117d60db9d6bcdb1090e98e84ec1": {
       "arxiv_id": "2608.02951",
@@ -1206,6 +1314,30 @@
       "source": "daily-watch",
       "title": "FutureRTC: Real-Time Robot Execution with Anticipatory-Conditioned Action Chunking"
     },
+    "title:7915a1ad1806116df285e73cc68bcfaf4a0dc1f4": {
+      "arxiv_id": "2605.25477",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "EXPO-FT: Sample-Efficient Reinforcement Learning Finetuning for Vision-Language-Action Models"
+    },
+    "title:79c13e15178d273f1856a19f4356325076b86dcc": {
+      "arxiv_id": "2412.13630",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Policy Decorator: Model-Agnostic Online Refinement for Large Policy Model"
+    },
+    "title:7a743cc053e19c11e6f6e322911fa09628aa93b7": {
+      "arxiv_id": "2608.23831",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Learning to Act While Waiting: RL Finetuning of Generalist Robot Policies Under Inference Latency"
+    },
+    "title:7f45084f4b50a8ffe14a93712a1c226b0fab3b77": {
+      "arxiv_id": "2510.14830",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RL-100: Performant Robotic Manipulation with Real-World Reinforcement Learning"
+    },
     "title:8002d850af5675773926d2fe01740cd5b75358c1": {
       "arxiv_id": "2608.01573",
       "first_seen": "2026-08-29",
@@ -1221,6 +1353,18 @@
       "score": 12,
       "source": "daily-watch",
       "title": "Pre-training Visual Dexterity in Simulation"
+    },
+    "title:8516c07ae4dff9b93c0d99c0425acb3e64b46825": {
+      "arxiv_id": "2506.15799",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Steering Your Diffusion Policy with Latent Space Reinforcement Learning"
+    },
+    "title:85bdafa368661d88c9248636243d3c0afff312a2": {
+      "arxiv_id": "2608.20208",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RoMAN-Flow: Taming Autoregressive Normalizing Flows for Offline Reinforcement Learning in Robotic Manipulation"
     },
     "title:87b42bf85d587cf891a6b6f8f869214afc1ae2fe": {
       "arxiv_id": "2607.29172",
@@ -1269,6 +1413,18 @@
       "score": 18,
       "source": "daily-watch",
       "title": "PRISM: Polynomial Representations for Interaction-Structured Motor Control"
+    },
+    "title:91de305a5c728894e557986aed113ebc1108b58e": {
+      "arxiv_id": "2505.18763",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "GenPO: Generative Diffusion Models Meet On-Policy Reinforcement Learning"
+    },
+    "title:92b41cba8e2ef8b57abdb1ef293f154d6d432cb7": {
+      "arxiv_id": "2606.31846",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Z-1: Efficient Reinforcement Learning for Vision-Language-Action Models"
     },
     "title:92d1212f0c8ede83df43b0facf956b1069803456": {
       "arxiv_id": "2608.04765",
@@ -1350,6 +1506,12 @@
       "source": "daily-watch",
       "title": "WAM-OPD: On-Policy Distillation for World Action Models"
     },
+    "title:9fe2e6b759aa38389686625a6f69615d4b9374cd": {
+      "arxiv_id": "2502.02538",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Flow Q-Learning"
+    },
     "title:a539519885b803a4ed3267c9a6da3deef919053b": {
       "arxiv_id": "2608.16978",
       "first_seen": "2026-08-29",
@@ -1357,6 +1519,30 @@
       "score": 12,
       "source": "daily-watch",
       "title": "VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation"
+    },
+    "title:a5b047df247923e3488b77348a27b05018efabc3": {
+      "arxiv_id": "2603.10263",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "From Prior to Pro: Efficient Skill Mastery via Distribution Contractive RL Finetuning"
+    },
+    "title:a670c3b4e415a51813ee16eb41acae2a5524f46d": {
+      "arxiv_id": "2507.15073",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Reinforcement Learning for Flow-Matching Policies"
+    },
+    "title:a7e9abd48382b1dc88959c8fbd0f069bff55197a": {
+      "arxiv_id": "2607.08877",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "FlowDAgger: Human-in-the-Loop Adaptation of Generative Robot Policies in Latent Space"
+    },
+    "title:a867d50a15f1cbca25b02a5261babda048753356": {
+      "arxiv_id": "2507.07986",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "EXPO: Stable Reinforcement Learning with Expressive Policies"
     },
     "title:a9094cf1269eefa6d7029c035fd2234185d41487": {
       "arxiv_id": "2608.05999",
@@ -1373,6 +1559,12 @@
       "score": 23,
       "source": "daily-watch",
       "title": "$N_0$-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens"
+    },
+    "title:adcd0f394cc6c992769c7f5ba8d58d2614c522aa": {
+      "arxiv_id": "2507.07969",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Reinforcement Learning with Action Chunking"
     },
     "title:aef239ab7c5c012aafd549ed0a8776a425c66ab6": {
       "arxiv_id": "2608.13026",
@@ -1397,6 +1589,12 @@
       "score": 30,
       "source": "daily-watch",
       "title": "Closing the Lab-to-Store Gap: A Data-Efficient Post-Training and Experience-Driven Learning VLA Framework for Retail Humanoids"
+    },
+    "title:bc51b9481d9d4a223604a119ea341b9b9a3ca549": {
+      "arxiv_id": "2608.07314",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "TEMPO: Semantic-Action Decoupled RL Post-Training for Vision-Language-Action Models"
     },
     "title:bc91ae41bf904773bb974269bf3d010ed521dc9d": {
       "arxiv_id": "2608.17163",
@@ -1437,6 +1635,12 @@
       "score": 20,
       "source": "daily-watch",
       "title": "SpeedTuning: Speeding Up Policy Execution with Lightweight Reinforcement Learning"
+    },
+    "title:c4f1155e2d1b7113bbac83b3028f2c7a4504a031": {
+      "arxiv_id": "2505.17016",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Interactive Post-Training for Vision-Language-Action Models"
     },
     "title:c8cb5e80097c7d2e11284f580bebb9315ae41743": {
       "arxiv_id": "2607.15330",
@@ -1501,6 +1705,12 @@
       "score": 19,
       "source": "daily-watch",
       "title": "WCM: World-Cognition Model for Generalizable Human-Robot Interaction"
+    },
+    "title:e216e092f81e341c78aff4cfa8d8ddd908d615a2": {
+      "arxiv_id": "2608.27079",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "GRAFT: Grounded and Efficient Online Reinforcement Adaptation for Fine-Grained Robot Manipulation"
     },
     "title:e47be543dd81768f010f6859880a9a3b681b4d79": {
       "arxiv_id": "2608.16195",
@@ -1631,7 +1841,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 116,
+  "total_unique_papers": 126,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
