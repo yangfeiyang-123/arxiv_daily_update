@@ -2,11 +2,13 @@ name: Daily Robot RL Post-Training Watch
 
 on:
   schedule:
-    # 09:30 during Pacific daylight time, 08:30 during Pacific standard time.
+    # Two UTC slots plus a local-time gate keep the run at 08:30 Pacific
+    # through daylight-saving-time changes.
+    - cron: "30 15 * * *"
     - cron: "30 16 * * *"
   workflow_dispatch:
-  # Updating this workflow triggers one validation run. Report/state commits do
-  # not retrigger it because they do not match this path filter.
+  # Updating this workflow triggers one end-to-end validation run. Report/state
+  # commits do not retrigger it because they do not match this path filter.
   push:
     branches:
       - main
@@ -24,45 +26,82 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
+      - name: Select the 08:30 Pacific run
+        id: slot
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$GITHUB_EVENT_NAME" == "push" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Manual or validation event: running immediately."
+            exit 0
+          fi
+          local_hour="$(TZ=America/Los_Angeles date +%H)"
+          local_minute="$(TZ=America/Los_Angeles date +%M)"
+          if [[ "$local_hour" == "08" && "$local_minute" == "30" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Selected 08:30 America/Los_Angeles slot."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping duplicate DST slot: local time is ${local_hour}:${local_minute}."
+          fi
+
       - name: Checkout
+        if: steps.slot.outputs.run == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Python
+        if: steps.slot.outputs.run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      - name: Run watcher tests
+        if: steps.slot.outputs.run == 'true'
+        run: |
+          python -m py_compile \
+            scripts/watch_robot_rl_posttraining.py \
+            scripts/watch_robot_rl_posttraining_strict.py
+          python -m unittest discover -s tests -p 'test_robot_rl_watch.py' -v
+
       - name: Find unseen papers
+        if: steps.slot.outputs.run == 'true'
         id: watch
         run: |
           python scripts/watch_robot_rl_posttraining_strict.py \
             --state data/robot_rl_watch_state.json \
             --output-dir outputs/robot_rl_watch \
-            --lookback-days 21 \
+            --lookback-days 45 \
             --threshold 10 \
-            --max-new 20 \
+            --max-new 30 \
             --timezone America/Los_Angeles
 
-      # Notify before persisting the de-duplication state. If notification
-      # fails, the run fails here and the same papers remain eligible for a
-      # retry instead of being silently lost.
+      # Notify before persisting the deduplication state. The hidden report
+      # marker makes this step idempotent if a retry occurs after notification.
       - name: Post the daily digest to tracking issue
-        if: steps.watch.outputs.new_count != '0'
+        if: steps.slot.outputs.run == 'true' && steps.watch.outputs.new_count != '0'
         env:
           GH_TOKEN: ${{ github.token }}
           REPORT_PATH: ${{ steps.watch.outputs.report_path }}
         run: |
-          gh issue comment 7 \
-            --repo "$GITHUB_REPOSITORY" \
-            --body-file "$REPORT_PATH"
+          marker="$(head -n 1 "$REPORT_PATH")"
+          if gh api \
+              "repos/$GITHUB_REPOSITORY/issues/7/comments" \
+              --paginate \
+              --jq '.[].body' | grep -Fq -- "$marker"; then
+            echo "This report is already present in issue #7; skipping duplicate comment."
+          else
+            gh issue comment 7 \
+              --repo "$GITHUB_REPOSITORY" \
+              --body-file "$REPORT_PATH"
+          fi
 
       - name: Commit report and permanent deduplication state
-        if: steps.watch.outputs.new_count != '0'
+        if: steps.slot.outputs.run == 'true' && steps.watch.outputs.new_count != '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -76,10 +115,15 @@ jobs:
           fi
 
       - name: Write run summary
+        if: always()
         run: |
-          echo "New papers: ${{ steps.watch.outputs.new_count }}" >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "${{ steps.watch.outputs.report_path }}" ]; then
-            echo "Report: ${{ steps.watch.outputs.report_path }}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.slot.outputs.run }}" != "true" ]]; then
+            echo "Skipped the duplicate daylight-saving-time slot." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "No unseen high-relevance papers; no issue notification was sent." >> "$GITHUB_STEP_SUMMARY"
+            echo "New papers: ${{ steps.watch.outputs.new_count }}" >> "$GITHUB_STEP_SUMMARY"
+            if [[ -n "${{ steps.watch.outputs.report_path }}" ]]; then
+              echo "Report: ${{ steps.watch.outputs.report_path }}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "No unseen high-relevance papers; no issue notification was sent." >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
