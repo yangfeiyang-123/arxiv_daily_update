@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """High-precision entry point for the robot RL post-training watcher.
 
-This module reuses the main watcher's retrieval, reporting, and permanent
-arXiv-ID/title-hash deduplication, while tightening relevance matching.  In
-particular, short acronyms such as PPO, RL, and VLA are matched as tokens rather
-than arbitrary substrings (for example, ``ppo`` must not match ``support``).
+This module reuses the main watcher's arXiv retrieval, reporting, and permanent
+ID/title-hash deduplication, while tightening the semantic gate. Explicit RL
+papers are retained, and a small adjacent set is allowed when a robot policy is
+clearly being post-trained through preferences, world models, residuals, or
+human correction.
 """
 
 from __future__ import annotations
@@ -28,22 +29,19 @@ STRONG_RL_TERMS = (
     "actor-critic",
     "proximal policy optimization",
     "group relative policy optimization",
-    "latent rl",
+    "reinforced fine-tuning",
+    "reinforced finetuning",
     "grpo",
     "ppo",
 )
 
-POSTTRAIN_CONTEXT_TERMS = (
+POLICY_PRIOR_TERMS = (
     "vision-language-action",
     "vla",
     "diffusion policy",
     "flow policy",
     "flow-matching",
     "flow matching",
-    "post-training",
-    "post training",
-    "fine-tuning",
-    "finetuning",
     "behavior cloning",
     "behaviour cloning",
     "imitation learning",
@@ -52,14 +50,45 @@ POSTTRAIN_CONTEXT_TERMS = (
     "policy prior",
     "large policy model",
     "foundation model",
-    "offline rl",
-    "offline reinforcement learning",
-    "world model",
-    "residual policy",
-    "latent rl",
     "action chunk",
+    "robot policy",
+    "robotic manipulation",
+    "robot manipulation",
     "dexterity",
-    "grpo",
+)
+
+POSTTRAIN_SIGNALS = (
+    "post-training",
+    "post training",
+    "fine-tuning",
+    "fine tuning",
+    "finetuning",
+    "policy refinement",
+    "policy improvement",
+    "policy adaptation",
+    "self-improving",
+    "self improving",
+    "continual learning",
+)
+
+ADJACENT_MECHANISMS = (
+    "preference optimization",
+    "preference learning",
+    "world model",
+    "digital twin",
+    "human-in-the-loop",
+    "human in the loop",
+    "human intervention",
+    "intervention",
+    "rollback",
+    "corrective supervision",
+    "counterfactual supervision",
+    "reward model",
+    "critic model",
+    "residual policy",
+    "latent steering",
+    "policy distillation",
+    "consistency distillation",
 )
 
 TITLE_EXCLUSIONS = (
@@ -70,6 +99,8 @@ TITLE_EXCLUSIONS = (
     "poisoning attack",
 )
 
+SHORT_TERMS = {"rl", "ppo", "grpo", "vla", "sac"}
+
 
 def contains_term(text: str, term: str) -> bool:
     """Match phrases normally and short acronyms at token boundaries."""
@@ -78,8 +109,10 @@ def contains_term(text: str, term: str) -> bool:
     term = term.casefold().strip()
     if not term:
         return False
-    if " " not in term and len(term) <= 5:
-        return re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text) is not None
+    if term in SHORT_TERMS:
+        return re.search(
+            rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text
+        ) is not None
     return term in text
 
 
@@ -88,49 +121,106 @@ def strict_contains_any(text: str, terms) -> bool:
 
 
 def evidence_count(text: str, terms) -> int:
-    """Count explicit RL evidence, including repeated full phrases."""
+    """Count explicit evidence while keeping acronym matches token-bounded."""
 
     text = text.casefold()
     total = 0
     for term in terms:
         term = term.casefold().strip()
-        if " " not in term and len(term) <= 5:
+        if term in SHORT_TERMS:
             total += len(
-                re.findall(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text)
+                re.findall(
+                    rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text
+                )
             )
         else:
             total += text.count(term)
     return total
 
 
-# The base implementation calls this global helper at run time, so replacing it
-# fixes short-token false positives throughout its semantic gate.
+# The base implementation calls this helper at run time. Replacing it prevents
+# false positives such as matching "ppo" inside "support".
 watcher.contains_any = strict_contains_any
 _base_relevance_score = watcher.relevance_score
 
 
-def strict_relevance_score(paper):
-    score, tags = _base_relevance_score(paper)
-    if score <= 0:
-        return 0, ()
+def adjacent_score(paper, title: str, summary: str) -> tuple[int, tuple[str, ...]]:
+    """Score a clearly post-trained policy that does not use the phrase RL."""
 
+    combined = f"{title} {summary}"
+    score = 10
+    if strict_contains_any(title, POSTTRAIN_SIGNALS):
+        score += 4
+    if strict_contains_any(combined, ("world model", "digital twin")):
+        score += 3
+    if strict_contains_any(
+        combined,
+        (
+            "preference optimization",
+            "human-in-the-loop",
+            "human in the loop",
+            "human intervention",
+            "corrective supervision",
+            "counterfactual supervision",
+        ),
+    ):
+        score += 3
+    if strict_contains_any(
+        combined,
+        (
+            "vision-language-action",
+            "vla",
+            "diffusion policy",
+            "flow policy",
+            "flow-matching",
+            "flow matching",
+        ),
+    ):
+        score += 3
+    if strict_contains_any(
+        combined, ("real-world", "real world", "real robot", "physical robot")
+    ):
+        score += 2
+    return score, watcher.infer_tags(title, summary)
+
+
+def strict_relevance_score(paper):
     title = paper.title.casefold()
     summary = paper.summary.casefold()
     combined = f"{title} {summary}"
 
-    # The work must make RL central: either the title says so, or the abstract
-    # supplies at least two explicit RL signals.  A single related-work mention
-    # is not enough.
-    title_has_rl = strict_contains_any(title, STRONG_RL_TERMS)
-    if not title_has_rl and evidence_count(summary, STRONG_RL_TERMS) < 2:
-        return 0, ()
-
-    # Keep the watch focused on post-training a prior/generative/VLA robot policy,
-    # rather than generic robot RL, control, perception, or learning from demo.
-    if not strict_contains_any(combined, POSTTRAIN_CONTEXT_TERMS):
-        return 0, ()
-
     if strict_contains_any(title, TITLE_EXCLUSIONS):
+        return 0, ()
+
+    # Always require a robot-manipulation policy context.
+    if not strict_contains_any(combined, watcher.ROBOT_TERMS):
+        return 0, ()
+    if not strict_contains_any(combined, watcher.MANIPULATION_TERMS):
+        return 0, ()
+    if not strict_contains_any(combined, POLICY_PRIOR_TERMS):
+        return 0, ()
+
+    title_has_rl = strict_contains_any(title, STRONG_RL_TERMS)
+    explicit_rl = title_has_rl or evidence_count(summary, STRONG_RL_TERMS) >= 2
+    adjacent_posttraining = (
+        strict_contains_any(combined, POSTTRAIN_SIGNALS)
+        and strict_contains_any(combined, ADJACENT_MECHANISMS)
+    )
+    if not explicit_rl and not adjacent_posttraining:
+        return 0, ()
+
+    score, tags = _base_relevance_score(paper)
+    if score <= 0 and adjacent_posttraining:
+        score, tags = adjacent_score(paper, title, summary)
+    elif score <= 0:
+        return 0, ()
+
+    # A generic LfD/control paper mentioning RL only in passing should not pass.
+    if (
+        "learning from demonstration" in title
+        and not title_has_rl
+        and not adjacent_posttraining
+    ):
         return 0, ()
 
     return score, tags
