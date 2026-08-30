@@ -4,11 +4,15 @@
 This wrapper keeps the mature querying, reporting, and permanent deduplication
 logic in ``robot_rl_posttrain_watch.py`` while rejecting papers that only
 mention RL incidentally or are outside manipulation / robot-policy adaptation.
+It also injects the papers from the current survey into the seen set, so the
+first scheduled run cannot resend work already delivered to the user.
 """
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
 import robot_rl_posttrain_watch as base
 
@@ -51,8 +55,10 @@ EXCLUDED_TOPICS = (
     r"\b(?:protein|molecule|financial trading)\b",
 )
 
+SEED_PATH = Path(__file__).resolve().parents[1] / "data" / "robot_rl_initial_survey.json"
 _ORIGINAL_SCORE = base.score_paper
 _ORIGINAL_SELF_TEST = base.run_self_test
+_ORIGINAL_LOAD_STATE = base.load_state
 
 
 def _matches_any(text: str, patterns: tuple[str, ...]) -> bool:
@@ -84,6 +90,32 @@ def strict_score_paper(paper: base.Paper) -> base.RankedPaper | None:
         return None
 
     return _ORIGINAL_SCORE(paper)
+
+
+def load_state_with_survey_seed(path: Path) -> dict:
+    state = _ORIGINAL_LOAD_STATE(path)
+    seen = state.setdefault("seen", {})
+
+    if SEED_PATH.exists():
+        seed = json.loads(SEED_PATH.read_text(encoding="utf-8"))
+        survey_date = str(seed.get("survey_date", "2026-08-29"))
+        for item in seed.get("papers", []):
+            paper_id = base.canonical_arxiv_id(str(item["arxiv_id"]))
+            title = str(item["title"])
+            metadata = {
+                "arxiv_id": paper_id,
+                "first_seen": survey_date,
+                "source": "initial-survey",
+                "title": title,
+            }
+            seen.setdefault(base.arxiv_key(paper_id), metadata)
+            seen.setdefault(base.title_key(title), metadata)
+
+    state["issue_number"] = 7
+    state["total_unique_papers"] = sum(
+        key.startswith("arxiv:") for key in seen
+    )
+    return state
 
 
 def run_strict_self_test() -> int:
@@ -120,11 +152,17 @@ def run_strict_self_test() -> int:
     )
     assert strict_score_paper(adjacent) is None
 
-    print("Strict relevance tests passed.")
+    seeded = load_state_with_survey_seed(Path("/tmp/nonexistent-watch-state.json"))
+    assert "arxiv:2603.10263" in seeded["seen"]
+    assert "arxiv:2510.14830" in seeded["seen"]
+    assert "arxiv:2608.27079" in seeded["seen"]
+
+    print("Strict relevance and survey-seed tests passed.")
     return result
 
 
 base.score_paper = strict_score_paper
+base.load_state = load_state_with_survey_seed
 base.run_self_test = run_strict_self_test
 
 
