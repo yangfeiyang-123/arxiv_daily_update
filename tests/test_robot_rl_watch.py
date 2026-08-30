@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import importlib.util
 import sys
 import textwrap
 import unittest
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "watch_robot_rl_posttraining.py"
-SPEC = importlib.util.spec_from_file_location("robot_rl_watch", MODULE_PATH)
-assert SPEC and SPEC.loader
-watch = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = watch
-SPEC.loader.exec_module(watch)
+SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import watch_robot_rl_posttraining as watch  # noqa: E402
+import watch_robot_rl_posttraining_strict as strict_watch  # noqa: E402,F401
 
 
 class RobotRLWatchTests(unittest.TestCase):
@@ -59,6 +57,30 @@ class RobotRLWatchTests(unittest.TestCase):
             (
                 "An embodied robot navigation policy uses PPO for aerial "
                 "navigation without object manipulation."
+            ),
+        )
+        score, tags = watch.relevance_score(paper)
+        self.assertEqual(score, 0)
+        self.assertEqual(tags, ())
+
+    def test_security_attack_is_excluded_by_strict_filter(self) -> None:
+        paper = self.make_paper(
+            "TrapVLA: Trapping Vision-Language-Action Models in Configured Failure Modes",
+            (
+                "A backdoor attack induces configured failures in a real robot VLA. "
+                "Reinforcement learning is discussed only as related work."
+            ),
+        )
+        score, tags = watch.relevance_score(paper)
+        self.assertEqual(score, 0)
+        self.assertEqual(tags, ())
+
+    def test_single_related_work_rl_mention_is_excluded(self) -> None:
+        paper = self.make_paper(
+            "Multi-Arm Vision-Language-Action Model for Collaboration",
+            (
+                "We train a behavior cloning policy for robot manipulation. "
+                "Reinforcement learning is a possible future direction."
             ),
         )
         score, tags = watch.relevance_score(paper)
