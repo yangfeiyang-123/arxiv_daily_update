@@ -2,8 +2,10 @@ name: Daily Robot RL Post-Training Watch
 
 on:
   schedule:
-    # Two UTC slots plus a local-time gate keep the run at 08:30 Pacific
-    # through daylight-saving-time changes.
+    # 08:30 America/Los_Angeles year-round. GitHub cron is UTC, so both
+    # daylight-time and standard-time slots are declared; the UTC-offset gate
+    # below selects exactly one of them without depending on the runner starting
+    # at the exact scheduled minute.
     - cron: "30 15 * * *"
     - cron: "30 16 * * *"
   workflow_dispatch:
@@ -35,20 +37,25 @@ jobs:
       - name: Select the 08:30 Pacific run
         id: slot
         shell: bash
+        env:
+          TRIGGER_SCHEDULE: ${{ github.event.schedule }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$GITHUB_EVENT_NAME" == "push" ]]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "Manual or validation event: running immediately."
             exit 0
           fi
-          local_hour="$(TZ=America/Los_Angeles date +%H)"
-          local_minute="$(TZ=America/Los_Angeles date +%M)"
-          if [[ "$local_hour" == "08" && "$local_minute" == "30" ]]; then
+
+          pacific_offset="$(TZ=America/Los_Angeles date +%z)"
+          if [[ "$TRIGGER_SCHEDULE" == "30 15 * * *" && "$pacific_offset" == "-0700" ]]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "Selected 08:30 America/Los_Angeles slot."
+            echo "Selected the daylight-time 08:30 Pacific slot."
+          elif [[ "$TRIGGER_SCHEDULE" == "30 16 * * *" && "$pacific_offset" == "-0800" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Selected the standard-time 08:30 Pacific slot."
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping duplicate DST slot: local time is ${local_hour}:${local_minute}."
+            echo "Skipping the inactive DST slot: schedule=$TRIGGER_SCHEDULE offset=$pacific_offset."
           fi
 
       - name: Checkout
@@ -121,7 +128,7 @@ jobs:
         if: always()
         run: |
           if [[ "${{ steps.slot.outputs.run }}" != "true" ]]; then
-            echo "Skipped the duplicate daylight-saving-time slot." >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipped the inactive daylight-saving-time slot." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "New papers: ${{ steps.watch.outputs.new_count }}" >> "$GITHUB_STEP_SUMMARY"
             if [[ -n "${{ steps.watch.outputs.report_path }}" ]]; then
