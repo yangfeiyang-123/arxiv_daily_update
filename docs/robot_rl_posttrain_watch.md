@@ -4,7 +4,7 @@ This monitor tracks new work related to DICE-RL, RL-100, robot-policy reinforcem
 
 ## Schedule and delivery
 
-- Runs every day at `16:00 UTC`, corresponding to approximately `08:00–09:00` in `America/Los_Angeles` depending on daylight saving time.
+- Runs every day at `16:00 UTC`, corresponding to `09:00 PDT` or `08:00 PST` in `America/Los_Angeles`.
 - When unseen relevant papers are found, the workflow writes a dated report under `outputs/robot_rl_posttrain/` and comments on tracking issue `#6`.
 - When no new paper passes the relevance threshold, the workflow remains quiet.
 
@@ -32,7 +32,7 @@ All papers covered in the initial survey are pre-seeded, so the first scheduled 
 
 ## Files
 
-- Workflow: `.github/workflows/robot-rl-posttrain-watch.yml`
+- Workflow: `.github/workflows/robot-rl-post-training-watch.yml`
 - Monitor: `scripts/robot_rl_posttrain_watch.py`
 - Seen state: `data/robot_rl_posttrain_seen.json`
 - Reports: `outputs/robot_rl_posttrain/YYYY-MM-DD.md`
