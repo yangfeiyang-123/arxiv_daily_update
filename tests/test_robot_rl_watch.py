@@ -1,116 +1,123 @@
 from __future__ import annotations
 
 import sys
-import textwrap
 import unittest
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-import watch_robot_rl_posttraining as watch  # noqa: E402
-import watch_robot_rl_posttraining_strict as strict_watch  # noqa: E402,F401
+import robot_rl_post_training_watch as watch  # noqa: E402
 
 
 class RobotRLWatchTests(unittest.TestCase):
-    def make_paper(self, title: str, summary: str) -> object:
-        return watch.Paper(
-            arxiv_id="2608.99999",
-            title=title,
-            summary=summary,
-            authors=("A. Researcher",),
-            published="2026-08-29T00:00:00Z",
-            updated="2026-08-29T00:00:00Z",
-            categories=("cs.RO",),
-            abs_url="https://arxiv.org/abs/2608.99999",
-            pdf_url="https://arxiv.org/pdf/2608.99999",
-        )
-
     def test_canonical_arxiv_id_removes_version(self) -> None:
+        raw = {
+            "id": "https://arxiv.org/abs/2603.10263v4",
+            "title": "From Prior to Pro",
+        }
+        self.assertEqual(watch.canonical_id(raw), "2603.10263")
+
+    def test_title_hash_normalizes_case_spacing_and_punctuation(self) -> None:
         self.assertEqual(
-            watch.canonical_arxiv_id("https://arxiv.org/abs/2603.10263v2"),
-            "2603.10263",
+            watch.title_hash("  Residual RL: Post-Training!  "),
+            watch.title_hash("residual rl post training"),
         )
 
-    def test_acronym_matching_uses_boundaries(self) -> None:
-        self.assertTrue(watch.matches_term("PPO fine-tuning", "ppo"))
-        self.assertFalse(watch.matches_term("support estimation", "ppo"))
-        self.assertTrue(watch.matches_term("VLA-RL", "vla"))
-        self.assertFalse(watch.matches_term("evaluation", "vla"))
-
-    def test_relevant_manipulation_paper_scores_high(self) -> None:
-        paper = self.make_paper(
-            "Structured Exploration for Flow-Based VLA Policies",
-            (
-                "We use online reinforcement learning to post-train a "
-                "vision-language-action robot manipulation policy on real robots."
+    def test_dice_like_paper_is_relevant(self) -> None:
+        raw = {
+            "title": "Distribution-Contractive RL Fine-Tuning for Robot Manipulation",
+            "summary": (
+                "We use reinforcement learning to fine-tune a pretrained diffusion "
+                "policy for real-world robot manipulation. A residual policy and "
+                "critic preserve the behavior-cloning prior while improving success."
             ),
-        )
-        score, tags = watch.relevance_score(paper)
-        self.assertGreaterEqual(score, 10)
-        self.assertIn("VLA-RL", tags)
-        self.assertIn("Real Robot", tags)
+        }
+        scored = watch.score_paper(raw, minimum=13.0)
+        self.assertIsNotNone(scored)
+        assert scored is not None
+        score, tags, relation = scored
+        self.assertGreaterEqual(score, 13.0)
+        self.assertIn("Diffusion", tags)
+        self.assertIn("Residual", tags)
+        self.assertIn("DICE", relation)
+
+    def test_vla_grpo_paper_is_relevant(self) -> None:
+        raw = {
+            "title": "Temporal GRPO for Vision-Language-Action Reinforcement Learning",
+            "summary": (
+                "We optimize a flow-matching VLA with group relative policy "
+                "optimization on robotic manipulation tasks and real-robot rollouts."
+            ),
+        }
+        scored = watch.score_paper(raw, minimum=13.0)
+        self.assertIsNotNone(scored)
+        assert scored is not None
+        _, tags, _ = scored
+        self.assertIn("VLA", tags)
+        self.assertIn("GRPO", tags)
+        self.assertIn("Flow", tags)
+
+    def test_related_work_only_rl_mention_is_excluded(self) -> None:
+        raw = {
+            "title": "Multi-Arm Vision-Language-Action Behavior Cloning",
+            "summary": (
+                "We train a behavior-cloning policy for robotic manipulation. "
+                "Reinforcement learning is discussed only as possible future work."
+            ),
+        }
+        self.assertIsNone(watch.score_paper(raw, minimum=13.0))
 
     def test_navigation_only_paper_is_excluded(self) -> None:
-        paper = self.make_paper(
-            "Reinforcement Learning for Vision-Language Navigation",
-            (
-                "An embodied robot navigation policy uses PPO for aerial "
-                "navigation without object manipulation."
+        raw = {
+            "title": "PPO for Autonomous Drone Navigation",
+            "summary": (
+                "We use reinforcement learning to train a robot navigation policy "
+                "for aerial path planning without manipulation."
             ),
-        )
-        score, tags = watch.relevance_score(paper)
-        self.assertEqual(score, 0)
-        self.assertEqual(tags, ())
+        }
+        self.assertIsNone(watch.score_paper(raw, minimum=13.0))
 
-    def test_security_attack_is_excluded_by_strict_filter(self) -> None:
-        paper = self.make_paper(
-            "TrapVLA: Trapping Vision-Language-Action Models in Configured Failure Modes",
-            (
-                "A backdoor attack induces configured failures in a real robot VLA. "
-                "Reinforcement learning is discussed only as related work."
-            ),
+    def test_feed_parser_accepts_repository_field_layout(self) -> None:
+        payload = {
+            "fields": [
+                {
+                    "category": "cs.RO",
+                    "papers": [
+                        {"title": "Paper A"},
+                        {"title": "Paper B"},
+                    ],
+                }
+            ]
+        }
+        self.assertEqual(
+            [paper["title"] for paper in watch.papers_in(payload)],
+            ["Paper A", "Paper B"],
         )
-        score, tags = watch.relevance_score(paper)
-        self.assertEqual(score, 0)
-        self.assertEqual(tags, ())
 
-    def test_single_related_work_rl_mention_is_excluded(self) -> None:
-        paper = self.make_paper(
-            "Multi-Arm Vision-Language-Action Model for Collaboration",
-            (
-                "We train a behavior cloning policy for robot manipulation. "
-                "Reinforcement learning is a possible future direction."
-            ),
+    def test_report_contains_idempotency_marker(self) -> None:
+        raw = {
+            "id": "https://arxiv.org/abs/2608.99999v2",
+            "title": "Robot RL Post-Training",
+            "summary": "We use online reinforcement learning for robot manipulation.",
+            "authors": ["A. Researcher"],
+            "published": "2026-08-29T00:00:00+00:00",
+        }
+        scored = watch.score_paper(raw, minimum=0.0)
+        self.assertIsNotNone(scored)
+        assert scored is not None
+        score, tags, relation = scored
+        paper = watch.Paper(
+            raw=raw,
+            arxiv_id="2608.99999",
+            title_hash=watch.title_hash(raw["title"]),
+            score=score,
+            tags=tags,
+            relation=relation,
+            published=watch.parse_time(raw["published"]),
         )
-        score, tags = watch.relevance_score(paper)
-        self.assertEqual(score, 0)
-        self.assertEqual(tags, ())
-
-    def test_parse_feed_and_deduplicate_version(self) -> None:
-        xml = textwrap.dedent(
-            """\
-            <?xml version="1.0" encoding="utf-8"?>
-            <feed xmlns="http://www.w3.org/2005/Atom">
-              <entry>
-                <id>http://arxiv.org/abs/2608.99999v3</id>
-                <updated>2026-08-29T01:00:00Z</updated>
-                <published>2026-08-28T01:00:00Z</published>
-                <title>Robot RL Post-Training</title>
-                <summary>Reinforcement learning for a robot manipulation policy.</summary>
-                <author><name>Alice</name></author>
-                <category term="cs.RO"/>
-                <link href="https://arxiv.org/abs/2608.99999v3" rel="alternate"/>
-                <link title="pdf" href="https://arxiv.org/pdf/2608.99999v3"/>
-              </entry>
-            </feed>
-            """
-        ).encode("utf-8")
-        papers = watch.parse_feed(xml)
-        self.assertEqual(len(papers), 1)
-        self.assertEqual(papers[0].arxiv_id, "2608.99999")
-        self.assertEqual(papers[0].authors, ("Alice",))
-        self.assertEqual(papers[0].categories, ("cs.RO",))
+        report = watch.make_report([paper], watch.parse_time("2026-08-30T00:00:00Z"))
+        self.assertTrue(report.startswith("<!-- robot-rl-watch:2608.99999 -->"))
 
 
 if __name__ == "__main__":
