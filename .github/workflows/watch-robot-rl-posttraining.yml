@@ -40,7 +40,7 @@ jobs:
       - name: Find unseen papers
         id: watch
         run: |
-          python scripts/watch_robot_rl_posttraining.py \
+          python scripts/watch_robot_rl_posttraining_strict.py \
             --state data/robot_rl_watch_state.json \
             --output-dir outputs/robot_rl_watch \
             --lookback-days 21 \
