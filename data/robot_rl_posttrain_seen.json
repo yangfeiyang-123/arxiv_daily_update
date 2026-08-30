@@ -1,9 +1,8 @@
 {
-  "version": 1,
-  "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100",
-  "issue_number": 6,
+  "issue_number": 7,
+  "last_new_paper_at": "2026-08-30T05:26:06.374112+00:00",
+  "last_report": "2026-08-29",
   "seeded_at": "2026-08-29T22:00:00-07:00",
-  "total_unique_papers": 23,
   "seen": {
     "arxiv:2302.02948": {
       "arxiv_id": "2302.02948",
@@ -83,11 +82,299 @@
       "source": "initial-survey",
       "title": "Z-1: Efficient Reinforcement Learning for Vision-Language-Action Models"
     },
+    "arxiv:2607.15004": {
+      "arxiv_id": "2607.15004",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-16",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "CosFly-VLA: A Spatially Aware Vision-Language-Action Model for UAV Tracking"
+    },
+    "arxiv:2607.15330": {
+      "arxiv_id": "2607.15330",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-16",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Xiaomi-Robotics-1: Scaling Vision-Language-Action Models with over 100K Hours of Real-World Trajectories"
+    },
+    "arxiv:2607.15880": {
+      "arxiv_id": "2607.15880",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Dynamics-Aware Meta-Imitation for Generalization to Unseen Robotic Manipulation"
+    },
+    "arxiv:2607.16074": {
+      "arxiv_id": "2607.16074",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 28,
+      "source": "daily-watch",
+      "title": "JoyNexus: Service-Oriented Multi-Tenant Post-Training for VLA Models"
+    },
+    "arxiv:2607.16506": {
+      "arxiv_id": "2607.16506",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Foresight Residual RL for Long-Horizon Robot Manipulation with Vision-Language-Action Models"
+    },
+    "arxiv:2607.19633": {
+      "arxiv_id": "2607.19633",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "LENS: LLM-guided Environment Simplification for Planning and Control in Clutter"
+    },
+    "arxiv:2607.20345": {
+      "arxiv_id": "2607.20345",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Closing the Lab-to-Store Gap: A Data-Efficient Post-Training and Experience-Driven Learning VLA Framework for Retail Humanoids"
+    },
+    "arxiv:2607.20399": {
+      "arxiv_id": "2607.20399",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Towards Miniature Humanoid Tele-Loco-Manipulation Using Virtual Reality and Reinforcement Learning"
+    },
+    "arxiv:2607.21725": {
+      "arxiv_id": "2607.21725",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-23",
+      "score": 33,
+      "source": "daily-watch",
+      "title": "Addressing the Orchestration Gap in Generalist Robots via Physical Agency"
+    },
+    "arxiv:2607.22997": {
+      "arxiv_id": "2607.22997",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-25",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Real2Sim2Real for Vision-Language-Action Manipulation: An AMD ROCm-Based Pipeline"
+    },
+    "arxiv:2607.22999": {
+      "arxiv_id": "2607.22999",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-25",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "WCM: World-Cognition Model for Generalizable Human-Robot Interaction"
+    },
+    "arxiv:2607.23473": {
+      "arxiv_id": "2607.23473",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PRISM: Polynomial Representations for Interaction-Structured Motor Control"
+    },
+    "arxiv:2607.23782": {
+      "arxiv_id": "2607.23782",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "$N_0$-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens"
+    },
+    "arxiv:2607.24008": {
+      "arxiv_id": "2607.24008",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "FutureRTC: Real-Time Robot Execution with Anticipatory-Conditioned Action Chunking"
+    },
+    "arxiv:2607.24320": {
+      "arxiv_id": "2607.24320",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Continual-RL for Generalization in Autonomous Racing on the RoboRacer Platform"
+    },
+    "arxiv:2607.24672": {
+      "arxiv_id": "2607.24672",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Explainable Reinforcement Learning via Physics-Aware Policy Distillation"
+    },
+    "arxiv:2607.24860": {
+      "arxiv_id": "2607.24860",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Egocentric Station Holding of Robotic Fish in Unknown Turbulent Background Flow"
+    },
+    "arxiv:2607.25895": {
+      "arxiv_id": "2607.25895",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-28",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "HiFi-UMI: Learning Deployable Manipulation Policies from High-Fidelity UMI Data Alone"
+    },
+    "arxiv:2607.26460": {
+      "arxiv_id": "2607.26460",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "RLMM-Flow: A Flow-based Mobile Manipulation Framework with Latent-Space Reinforcement Learning"
+    },
+    "arxiv:2607.26513": {
+      "arxiv_id": "2607.26513",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "Explicit Kinematic Guidance from Analytic Concepts for Vision-Language-Action Models"
+    },
+    "arxiv:2607.26991": {
+      "arxiv_id": "2607.26991",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "RL$^2$-VLA: Adaptive RL Latent Compositional Steering with Test-Time Scaling for Vision-Language-Action Models"
+    },
+    "arxiv:2607.27782": {
+      "arxiv_id": "2607.27782",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "RedFlow: Redirect Failure into Action-Level Corrections for Flow-matching VLA Policy"
+    },
+    "arxiv:2607.27881": {
+      "arxiv_id": "2607.27881",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "RoboBRIDGE: A Modular Framework for Bridging Policies to Robust Real-World Robotic Agents"
+    },
+    "arxiv:2607.28405": {
+      "arxiv_id": "2607.28405",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "QuantWAMs: Calibrating at the Right Granularity for World Action Models"
+    },
+    "arxiv:2607.28560": {
+      "arxiv_id": "2607.28560",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
+    },
+    "arxiv:2607.29172": {
+      "arxiv_id": "2607.29172",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-31",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "CLIFT: Turning Gemini Robotics On-Device into Humanoid Specialists via Non-Invasive Closed-Loop Iterative Fine-Tuning"
+    },
+    "arxiv:2607.29613": {
+      "arxiv_id": "2607.29613",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-31",
+      "score": 45,
+      "source": "daily-watch",
+      "title": "WCM: A World Critic Model for Vision-Language-Action Reinforcement Learning"
+    },
     "arxiv:2608.01013": {
       "arxiv_id": "2608.01013",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "RL Bootstrapping of OpenVLA-OFT for a Novel Robot Embodiment"
+    },
+    "arxiv:2608.01028": {
+      "arxiv_id": "2608.01028",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-02",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "VLAGuard: A Framework for Evaluating and Mitigating Physical Attention Hijacking in Vision-Language-Action Robots within Wireless Sensor Networks"
+    },
+    "arxiv:2608.01573": {
+      "arxiv_id": "2608.01573",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "Uncovering and Mitigating Positional Blind Spots in Vision-Language-Action Models"
+    },
+    "arxiv:2608.02034": {
+      "arxiv_id": "2608.02034",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Upper-Expectile Multi-Step Q-Learning for Off-Policy Reinforcement Learning"
+    },
+    "arxiv:2608.02197": {
+      "arxiv_id": "2608.02197",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Look Where It Matters: Adaptive Visual Refinement for Vision-Language-Action Models"
+    },
+    "arxiv:2608.02951": {
+      "arxiv_id": "2608.02951",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "SP3O: Reinforcement Learning from Segment Preferences without Reward Modeling"
+    },
+    "arxiv:2608.02958": {
+      "arxiv_id": "2608.02958",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "ValueFormer: A Causal Transformer Value Function with Stage-Aware Labels for Semi-Autonomous Vision-Language-Action Policies"
+    },
+    "arxiv:2608.03231": {
+      "arxiv_id": "2608.03231",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "Structure-Aware Robust Fine-Tuning: Defending Vision-Language-Action Robots Against Physical Attention Hijacking"
+    },
+    "arxiv:2608.03483": {
+      "arxiv_id": "2608.03483",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Continue or Replan? Bernoulli-Continuation Policy Learning for Adaptive Horizon Execution"
+    },
+    "arxiv:2608.03682": {
+      "arxiv_id": "2608.03682",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PhyAI: Real-Time Physical AI at the Edge, Scalable Rollouts in the Cloud"
     },
     "arxiv:2608.03872": {
       "arxiv_id": "2608.03872",
@@ -95,11 +382,123 @@
       "source": "initial-survey",
       "title": "EvoHIL: Self-Evolving Reward and Flow-Matched Policy Optimization for Robust Human-in-the-Loop Reinforcement Learning"
     },
+    "arxiv:2608.04196": {
+      "arxiv_id": "2608.04196",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation"
+    },
+    "arxiv:2608.04765": {
+      "arxiv_id": "2608.04765",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "Explicit Language Memory for Long-Horizon Planning in Vision-Language-Action Models"
+    },
+    "arxiv:2608.04842": {
+      "arxiv_id": "2608.04842",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "RORA: Realistic Object Reconstruction with Articulation"
+    },
+    "arxiv:2608.04905": {
+      "arxiv_id": "2608.04905",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "PRIMAL3: Pathfinding via Reinforcement and Imitation Multi-Agent Learning - Leveraging LaCAM3"
+    },
+    "arxiv:2608.05588": {
+      "arxiv_id": "2608.05588",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Search-Aided Joint Agent-Environment Reinforcement Learning for Robust Lifelong Multi-Agent Path Finding with Rotations"
+    },
+    "arxiv:2608.05738": {
+      "arxiv_id": "2608.05738",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 41,
+      "source": "daily-watch",
+      "title": "In-Context VLA: Endowing Vision-Language-Action Models with Language via In-Context Post-Training and Agentic Tool Use"
+    },
+    "arxiv:2608.05999": {
+      "arxiv_id": "2608.05999",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 38,
+      "source": "daily-watch",
+      "title": "Beyond Flat Policies: Hierarchical Post-Training for Embodied Agents in Robotic Manipulation"
+    },
+    "arxiv:2608.06994": {
+      "arxiv_id": "2608.06994",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Decoupling Intention from Trajectory: A Representational Deduction Framework for World Action Models"
+    },
+    "arxiv:2608.07045": {
+      "arxiv_id": "2608.07045",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "C2Dex: Contact-Consistent Reconstruction and Retargeting for Dexterous Manipulation from Monocular Video"
+    },
     "arxiv:2608.07314": {
       "arxiv_id": "2608.07314",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "TEMPO: Semantic-Action Decoupled RL Post-Training for Vision-Language-Action Models"
+    },
+    "arxiv:2608.07746": {
+      "arxiv_id": "2608.07746",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "LUCID: Latent-Skill Unified Control via Imagined Dynamics for Long-Horizon Humanoid Loco-Manipulation"
+    },
+    "arxiv:2608.07870": {
+      "arxiv_id": "2608.07870",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-08",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "V-Simba: Unleashing the Architectural Potential of RL in Visual Continuous Control"
+    },
+    "arxiv:2608.08491": {
+      "arxiv_id": "2608.08491",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-09",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "TrustRoboReward: Preference-Ordered Isotonic Score Editing for Multi-Paradigm Robot Reward Models"
+    },
+    "arxiv:2608.09138": {
+      "arxiv_id": "2608.09138",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "SpeedTuning: Speeding Up Policy Execution with Lightweight Reinforcement Learning"
+    },
+    "arxiv:2608.09467": {
+      "arxiv_id": "2608.09467",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     },
     "arxiv:2608.09762": {
       "arxiv_id": "2608.09762",
@@ -107,11 +506,235 @@
       "source": "initial-survey",
       "title": "Efficient Real-World Online Reinforcement Learning for Robot Manipulation via Centralized Training and Critic Decomposition"
     },
+    "arxiv:2608.10056": {
+      "arxiv_id": "2608.10056",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Navigating the Proximity-Safety Balance: Constraint Decomposition for Human Following in Pedestrian Crowds"
+    },
+    "arxiv:2608.10718": {
+      "arxiv_id": "2608.10718",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-11",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "TCAM for Autonomous Deformable Manipulation: The RMC2 Champion System for WBCD 2026 Track 4"
+    },
+    "arxiv:2608.11363": {
+      "arxiv_id": "2608.11363",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-11",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Adaptation of Generalist Robot Policies with Minimal Data"
+    },
+    "arxiv:2608.11671": {
+      "arxiv_id": "2608.11671",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "StellaVLA: In-Context Structured Demonstration for Generalizable Vision-Language-Action Models"
+    },
+    "arxiv:2608.11739": {
+      "arxiv_id": "2608.11739",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "G0.5: One Autoregressive Stream for Robot Reasoning and Action"
+    },
+    "arxiv:2608.12063": {
+      "arxiv_id": "2608.12063",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Learning Loco-Manipulation From SMPC Demonstrations With Sparse Offline-to-Online RL"
+    },
+    "arxiv:2608.13026": {
+      "arxiv_id": "2608.13026",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-13",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Temporal GRPO: Beyond Trajectory-Level Credit in Vision-Language-Action Reinforcement Learning"
+    },
+    "arxiv:2608.13395": {
+      "arxiv_id": "2608.13395",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-13",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "FIRE-VLA: Failure-Informed Self-Evolution for Vision-Language-Action Models in Autonomous Driving"
+    },
+    "arxiv:2608.14822": {
+      "arxiv_id": "2608.14822",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-14",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Imagining Recovery: Inference-Time Counterfactual Realignment for Vision-Language-Action Models"
+    },
+    "arxiv:2608.15026": {
+      "arxiv_id": "2608.15026",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "PACE: Phase-Progress-Aware Credit for Long-Horizon Embodied Manipulation"
+    },
+    "arxiv:2608.15088": {
+      "arxiv_id": "2608.15088",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Max-Q Selective Imitation for Human-in-the-Loop Online Robot Learning"
+    },
     "arxiv:2608.15139": {
       "arxiv_id": "2608.15139",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "StructRL: Structured Action-Space Exploration for Flow-Based VLAs"
+    },
+    "arxiv:2608.15285": {
+      "arxiv_id": "2608.15285",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "PhaseLoRA: Control-Regime-Conditioned Low-Rank Adaptation for Continuous-Action Vision-Language-Action Policies"
+    },
+    "arxiv:2608.15509": {
+      "arxiv_id": "2608.15509",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Temporal Logic Guided Universal Task Representations for Reinforcement Learning"
+    },
+    "arxiv:2608.15680": {
+      "arxiv_id": "2608.15680",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Robo-Dopamine 2.0: History-Conditioned and OOD-Aware Process Reward Modeling for Robotic Manipulation"
+    },
+    "arxiv:2608.15707": {
+      "arxiv_id": "2608.15707",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "GAINS: Leveraging Inconsistent Human Intervention Signals in Reinforcement Learning"
+    },
+    "arxiv:2608.15875": {
+      "arxiv_id": "2608.15875",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "GigaBrain-0.7: Scaling Embodied Foundation Models to Emergent Capabilities with a Three-System Architecture"
+    },
+    "arxiv:2608.15917": {
+      "arxiv_id": "2608.15917",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Pre-training Visual Dexterity in Simulation"
+    },
+    "arxiv:2608.16074": {
+      "arxiv_id": "2608.16074",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "US-VLA: An Ultrasound Vision-Language-Action Model for Embodied Abdomina"
+    },
+    "arxiv:2608.16195": {
+      "arxiv_id": "2608.16195",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "RoboStriker: Latent-Space Strategic Games for Autonomous Humanoid Boxing"
+    },
+    "arxiv:2608.16837": {
+      "arxiv_id": "2608.16837",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "HAF: Adapting Generalist VLAs to Humanoid Whole-Body Loco-manipulation via Hierarchical Action Flow and Spectral Latent RL"
+    },
+    "arxiv:2608.16978": {
+      "arxiv_id": "2608.16978",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation"
+    },
+    "arxiv:2608.17027": {
+      "arxiv_id": "2608.17027",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "FetchMan: Learning Visual Humanoid Loco-Manipulation Policies from Simulated Experiences"
+    },
+    "arxiv:2608.17146": {
+      "arxiv_id": "2608.17146",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "PDDL-ART: Autonomous Symbolic Abstraction From Demonstration For Long-Horizon Robotic Manipulation Using Vision-Language Models"
+    },
+    "arxiv:2608.17163": {
+      "arxiv_id": "2608.17163",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "Q-Learning With World Models"
+    },
+    "arxiv:2608.17347": {
+      "arxiv_id": "2608.17347",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Repetition as Reinforcement: Enhancing Sample Efficiency via Instant Episode Repetition in Reinforcement Learning"
+    },
+    "arxiv:2608.17386": {
+      "arxiv_id": "2608.17386",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "MANIGUARD: A Benchmark and Data Suite for Specification-Grounded Safety Evaluation and Improvement of Robotic Manipulation"
+    },
+    "arxiv:2608.17423": {
+      "arxiv_id": "2608.17423",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Prism-GRPO: Faster VLA Policy Optimization via Splitting Same-outcome Groups"
+    },
+    "arxiv:2608.17628": {
+      "arxiv_id": "2608.17628",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Iterative Grasp Pose Refinement: A Deep Reinforcement Learning Approach for 2D Vision"
     },
     "arxiv:2608.19182": {
       "arxiv_id": "2608.19182",
@@ -119,11 +742,51 @@
       "source": "initial-survey",
       "title": "ADEPT: Accelerating Dexterity via Pre-Training and Post-Training using Reinforcement Learning"
     },
+    "arxiv:2608.19490": {
+      "arxiv_id": "2608.19490",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-19",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Fine-Tuning VLAs with Self-Demonstrated Generative Control for Multi-Task Manipulation"
+    },
+    "arxiv:2608.19613": {
+      "arxiv_id": "2608.19613",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "What Matters for Latent Actions in Robot Learning"
+    },
+    "arxiv:2608.19684": {
+      "arxiv_id": "2608.19684",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "Learning Hierarchical Skill Policies with Offline Quality-Diversity Reinforcement Learning"
+    },
+    "arxiv:2608.19891": {
+      "arxiv_id": "2608.19891",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "EXIMO: VLM Guided Exploration of VLA Policies"
+    },
     "arxiv:2608.21204": {
       "arxiv_id": "2608.21204",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Beyond Imitation: Self-Improving Robot Policies via Off-Policy Q-Planning"
+    },
+    "arxiv:2608.21592": {
+      "arxiv_id": "2608.21592",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-21",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Force/Torque-Based Kinematic Adaptation for Robotic Manipulation Tasks"
     },
     "arxiv:2608.21740": {
       "arxiv_id": "2608.21740",
@@ -131,17 +794,844 @@
       "source": "initial-survey",
       "title": "CounterAlign: Counterfactual Supervision for Vision-Language-Action Models"
     },
+    "arxiv:2608.21899": {
+      "arxiv_id": "2608.21899",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-22",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "CIDER: Continual Interactive Distillation for Embodied Reinforcement Learning"
+    },
+    "arxiv:2608.22364": {
+      "arxiv_id": "2608.22364",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-23",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "WAM-OPD: On-Policy Distillation for World Action Models"
+    },
+    "arxiv:2608.22629": {
+      "arxiv_id": "2608.22629",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-23",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Enhancing Sim2Real Transfer for Torque-Controlled Robots through Real2Sim Dynamics Estimation and Reinforcement Learning"
+    },
+    "arxiv:2608.23035": {
+      "arxiv_id": "2608.23035",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-24",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "MobilePA-Bench: Benchmarking Mobile Planner Agents on Complex Real-World Tasks"
+    },
+    "arxiv:2608.23138": {
+      "arxiv_id": "2608.23138",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-24",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Pointing-VLA: Typed Spatial Grounding Interfaces for Vision-Language-Action Manipulation"
+    },
     "arxiv:2608.23831": {
       "arxiv_id": "2608.23831",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Learning to Act While Waiting: RL Finetuning of Generalist Robot Policies Under Inference Latency"
     },
+    "arxiv:2608.24042": {
+      "arxiv_id": "2608.24042",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-25",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Hierarchical Skill Retrieval for Data-Efficient Adaptation of Vision-Language-Action Models"
+    },
+    "arxiv:2608.25350": {
+      "arxiv_id": "2608.25350",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Beyond Pairwise Feedback: Listwise Vision-Language Supervision for Preference-Based Reward Learning"
+    },
+    "arxiv:2608.25405": {
+      "arxiv_id": "2608.25405",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "LAC: Linear and Angular Compliance for Humanoid Whole-body Control"
+    },
+    "arxiv:2608.26053": {
+      "arxiv_id": "2608.26053",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "$R^3$: Training Robots to Reason in Natural Language via Reinforcement Learning"
+    },
+    "arxiv:2608.26058": {
+      "arxiv_id": "2608.26058",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "One Policy, Many Embodiments: Unified Camera-Centric Action Geometry Pre-training for Heterogeneous Embodied Manipulation"
+    },
     "arxiv:2608.27079": {
       "arxiv_id": "2608.27079",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "GRAFT: Grounded and Efficient Online Reinforcement Adaptation for Fine-Grained Robot Manipulation"
+    },
+    "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
+      "arxiv_id": "2608.23138",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-24",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Pointing-VLA: Typed Spatial Grounding Interfaces for Vision-Language-Action Manipulation"
+    },
+    "title:04c5f455974a6c838900427bcd8c64ec9d3b7059": {
+      "arxiv_id": "2608.22629",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-23",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Enhancing Sim2Real Transfer for Torque-Controlled Robots through Real2Sim Dynamics Estimation and Reinforcement Learning"
+    },
+    "title:05f0316705468dcb22721174ec7f3213a13ccb75": {
+      "arxiv_id": "2608.23035",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-24",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "MobilePA-Bench: Benchmarking Mobile Planner Agents on Complex Real-World Tasks"
+    },
+    "title:0b066b198cb386cec49757c629d53b3c8f5355fe": {
+      "arxiv_id": "2608.06994",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Decoupling Intention from Trajectory: A Representational Deduction Framework for World Action Models"
+    },
+    "title:0b618315041bf7769a4d36e68773efd184c3f3bb": {
+      "arxiv_id": "2608.17386",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "MANIGUARD: A Benchmark and Data Suite for Specification-Grounded Safety Evaluation and Improvement of Robotic Manipulation"
+    },
+    "title:10cac1f7e7a1b75fdcbe876e3ed3a4128e458d7c": {
+      "arxiv_id": "2608.17628",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Iterative Grasp Pose Refinement: A Deep Reinforcement Learning Approach for 2D Vision"
+    },
+    "title:10f0a9aa25abb11d059a7da7fdbce9c47f68d393": {
+      "arxiv_id": "2607.24860",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Egocentric Station Holding of Robotic Fish in Unknown Turbulent Background Flow"
+    },
+    "title:12999715a543a251b5a80988c7a42ab1ab498c93": {
+      "arxiv_id": "2607.20399",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Towards Miniature Humanoid Tele-Loco-Manipulation Using Virtual Reality and Reinforcement Learning"
+    },
+    "title:1434ba6b745ca5dc7b7896e317639955123e752e": {
+      "arxiv_id": "2607.16074",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 28,
+      "source": "daily-watch",
+      "title": "JoyNexus: Service-Oriented Multi-Tenant Post-Training for VLA Models"
+    },
+    "title:15f59d9f56fdd97c86a242cd80489566b5d0d646": {
+      "arxiv_id": "2608.11739",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "G0.5: One Autoregressive Stream for Robot Reasoning and Action"
+    },
+    "title:172354fabe25ab7d53bfd14b1a013646e5db8b6b": {
+      "arxiv_id": "2607.25895",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-28",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "HiFi-UMI: Learning Deployable Manipulation Policies from High-Fidelity UMI Data Alone"
+    },
+    "title:189c4383b170e46bc015aae44ee6fc0df0521be5": {
+      "arxiv_id": "2607.27881",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "RoboBRIDGE: A Modular Framework for Bridging Policies to Robust Real-World Robotic Agents"
+    },
+    "title:1df1e2122e17841e3e5ed2466dc1af82223ae13c": {
+      "arxiv_id": "2608.11671",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "StellaVLA: In-Context Structured Demonstration for Generalizable Vision-Language-Action Models"
+    },
+    "title:1f8158aea3ae50de989a63ebfc0b8d592bf52700": {
+      "arxiv_id": "2608.15026",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "PACE: Phase-Progress-Aware Credit for Long-Horizon Embodied Manipulation"
+    },
+    "title:2059ee29e7abc014e03ef04faa26927a0b144645": {
+      "arxiv_id": "2608.10718",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-11",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "TCAM for Autonomous Deformable Manipulation: The RMC2 Champion System for WBCD 2026 Track 4"
+    },
+    "title:241aac036845ee3c732bb30ec78ea7d77f2cf59f": {
+      "arxiv_id": "2607.29613",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-31",
+      "score": 45,
+      "source": "daily-watch",
+      "title": "WCM: A World Critic Model for Vision-Language-Action Reinforcement Learning"
+    },
+    "title:284798d51553f925a476c574f7a590f18c51ca05": {
+      "arxiv_id": "2608.17146",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "PDDL-ART: Autonomous Symbolic Abstraction From Demonstration For Long-Horizon Robotic Manipulation Using Vision-Language Models"
+    },
+    "title:29194c1fabe86faa491c0df7ffcb8b399007f945": {
+      "arxiv_id": "2608.07746",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "LUCID: Latent-Skill Unified Control via Imagined Dynamics for Long-Horizon Humanoid Loco-Manipulation"
+    },
+    "title:34d69ef3d04771935d02de6cd0fb3aba715ac4eb": {
+      "arxiv_id": "2608.03483",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Continue or Replan? Bernoulli-Continuation Policy Learning for Adaptive Horizon Execution"
+    },
+    "title:35d0ebc2449d37b538dfd280f2810626df527ed6": {
+      "arxiv_id": "2608.17347",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Repetition as Reinforcement: Enhancing Sample Efficiency via Instant Episode Repetition in Reinforcement Learning"
+    },
+    "title:37dc2f508bd379a57db582b7474068bc7232d97a": {
+      "arxiv_id": "2608.04842",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "RORA: Realistic Object Reconstruction with Articulation"
+    },
+    "title:3da0d2e2120bce3f2dfde8bd3bbbaebec5bc58cd": {
+      "arxiv_id": "2608.21592",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-21",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Force/Torque-Based Kinematic Adaptation for Robotic Manipulation Tasks"
+    },
+    "title:409a7e5d16afe0b1d87a32540892ca63654688af": {
+      "arxiv_id": "2608.26058",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "One Policy, Many Embodiments: Unified Camera-Centric Action Geometry Pre-training for Heterogeneous Embodied Manipulation"
+    },
+    "title:422aa7f3be0cc34706f385881ecde81ee67240dc": {
+      "arxiv_id": "2608.26053",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "$R^3$: Training Robots to Reason in Natural Language via Reinforcement Learning"
+    },
+    "title:4767737c1a9c3befb6722d883f209df4c9bb5e9f": {
+      "arxiv_id": "2607.28405",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "QuantWAMs: Calibrating at the Right Granularity for World Action Models"
+    },
+    "title:4a928a0109f6813534ec777a3f85527e4af54ded": {
+      "arxiv_id": "2608.14822",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-14",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Imagining Recovery: Inference-Time Counterfactual Realignment for Vision-Language-Action Models"
+    },
+    "title:4d823064ee62117d60db9d6bcdb1090e98e84ec1": {
+      "arxiv_id": "2608.02951",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "SP3O: Reinforcement Learning from Segment Preferences without Reward Modeling"
+    },
+    "title:504122e4c6ba124fbf130666391d79df75e30dc8": {
+      "arxiv_id": "2607.16506",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Foresight Residual RL for Long-Horizon Robot Manipulation with Vision-Language-Action Models"
+    },
+    "title:50eb297a21df0b37e74a9e69cf5ef55a4775dcf9": {
+      "arxiv_id": "2608.19891",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "EXIMO: VLM Guided Exploration of VLA Policies"
+    },
+    "title:51209bc0be75941f947c4fe60ba1de2803a07b4e": {
+      "arxiv_id": "2608.16074",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "US-VLA: An Ultrasound Vision-Language-Action Model for Embodied Abdomina"
+    },
+    "title:52ef33b0e42b8c35cd41fb17b291b3b06a72212c": {
+      "arxiv_id": "2608.04196",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation"
+    },
+    "title:58739aaa54cf24cad8060712d59cc8b91088fe5b": {
+      "arxiv_id": "2607.28560",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
+    },
+    "title:62c0a4faa31f5d3f08496d035f201068180afed5": {
+      "arxiv_id": "2607.15004",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-16",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "CosFly-VLA: A Spatially Aware Vision-Language-Action Model for UAV Tracking"
+    },
+    "title:667bf7864d19dcaeaba4b052a374df00b84f9091": {
+      "arxiv_id": "2608.17027",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "FetchMan: Learning Visual Humanoid Loco-Manipulation Policies from Simulated Experiences"
+    },
+    "title:6882dd5abbda22fd82a88ecfbae8b9296994b1de": {
+      "arxiv_id": "2607.24672",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Explainable Reinforcement Learning via Physics-Aware Policy Distillation"
+    },
+    "title:6a0c59c8ababa93e5f5b7c3efa0657818c7d1ce5": {
+      "arxiv_id": "2608.13395",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-13",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "FIRE-VLA: Failure-Informed Self-Evolution for Vision-Language-Action Models in Autonomous Driving"
+    },
+    "title:6f526523dabdf66f6ba819c0bececf489feb2a36": {
+      "arxiv_id": "2608.19613",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "What Matters for Latent Actions in Robot Learning"
+    },
+    "title:70bc4898650afac66ff7323a39f1932cad031df2": {
+      "arxiv_id": "2607.15880",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-17",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Dynamics-Aware Meta-Imitation for Generalization to Unseen Robotic Manipulation"
+    },
+    "title:718a0cd6c310f26f53d9646d8d4c4afeeceef75e": {
+      "arxiv_id": "2608.07045",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-07",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "C2Dex: Contact-Consistent Reconstruction and Retargeting for Dexterous Manipulation from Monocular Video"
+    },
+    "title:75bbf9800aa8bf0d7bba5e88a504df10f53b2b37": {
+      "arxiv_id": "2607.24008",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "FutureRTC: Real-Time Robot Execution with Anticipatory-Conditioned Action Chunking"
+    },
+    "title:8002d850af5675773926d2fe01740cd5b75358c1": {
+      "arxiv_id": "2608.01573",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "Uncovering and Mitigating Positional Blind Spots in Vision-Language-Action Models"
+    },
+    "title:808d71b2010917e643e91d8d265fabb63159c5b9": {
+      "arxiv_id": "2608.15917",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Pre-training Visual Dexterity in Simulation"
+    },
+    "title:87b42bf85d587cf891a6b6f8f869214afc1ae2fe": {
+      "arxiv_id": "2607.29172",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-31",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "CLIFT: Turning Gemini Robotics On-Device into Humanoid Specialists via Non-Invasive Closed-Loop Iterative Fine-Tuning"
+    },
+    "title:89f0aa6454af56c0eab771a17d5372a4869f63bd": {
+      "arxiv_id": "2608.11363",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-11",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Adaptation of Generalist Robot Policies with Minimal Data"
+    },
+    "title:8c3d7e172b75fbeb5029732bc220a1367af14fdc": {
+      "arxiv_id": "2608.25350",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Beyond Pairwise Feedback: Listwise Vision-Language Supervision for Preference-Based Reward Learning"
+    },
+    "title:8e878a43db77d97021affc14f07b3c74e0c1fad3": {
+      "arxiv_id": "2607.21725",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-23",
+      "score": 33,
+      "source": "daily-watch",
+      "title": "Addressing the Orchestration Gap in Generalist Robots via Physical Agency"
+    },
+    "title:8f04e5170e7c82f0a616e9e073a3f539f0f9c113": {
+      "arxiv_id": "2608.15707",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "GAINS: Leveraging Inconsistent Human Intervention Signals in Reinforcement Learning"
+    },
+    "title:91bd8ebcaeb462419b6d86830ec53310d58f390b": {
+      "arxiv_id": "2607.23473",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PRISM: Polynomial Representations for Interaction-Structured Motor Control"
+    },
+    "title:92d1212f0c8ede83df43b0facf956b1069803456": {
+      "arxiv_id": "2608.04765",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "Explicit Language Memory for Long-Horizon Planning in Vision-Language-Action Models"
+    },
+    "title:93127bc62031c7016bf11d290f0a6953352c1654": {
+      "arxiv_id": "2607.24320",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-27",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Continual-RL for Generalization in Autonomous Racing on the RoboRacer Platform"
+    },
+    "title:93a42f792349030134d9d1cd28a63fed66130386": {
+      "arxiv_id": "2607.26460",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "RLMM-Flow: A Flow-based Mobile Manipulation Framework with Latent-Space Reinforcement Learning"
+    },
+    "title:94eb91cdf906f2dd805196e10b24ccc427928f00": {
+      "arxiv_id": "2608.17423",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-18",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Prism-GRPO: Faster VLA Policy Optimization via Splitting Same-outcome Groups"
+    },
+    "title:97a21a4d9e1a893ae94e80ee891347469c4fdc91": {
+      "arxiv_id": "2607.22997",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-25",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Real2Sim2Real for Vision-Language-Action Manipulation: An AMD ROCm-Based Pipeline"
+    },
+    "title:981cfc49f534e7ca1d8a77b585a37aa6555674ba": {
+      "arxiv_id": "2608.05738",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 41,
+      "source": "daily-watch",
+      "title": "In-Context VLA: Endowing Vision-Language-Action Models with Language via In-Context Post-Training and Agentic Tool Use"
+    },
+    "title:9a60157e03434ae716f71fbe6e735b0be68a343b": {
+      "arxiv_id": "2607.26513",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "Explicit Kinematic Guidance from Analytic Concepts for Vision-Language-Action Models"
+    },
+    "title:9bb7b75b95314b596a83083d9a8c923a9616940a": {
+      "arxiv_id": "2608.15680",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Robo-Dopamine 2.0: History-Conditioned and OOD-Aware Process Reward Modeling for Robotic Manipulation"
+    },
+    "title:9ceadcb6f48e946a84d406aa21494749bdc49106": {
+      "arxiv_id": "2608.10056",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "Navigating the Proximity-Safety Balance: Constraint Decomposition for Human Following in Pedestrian Crowds"
+    },
+    "title:9e3a3fab5e4f55efe5d41fbb5d5c568551405c72": {
+      "arxiv_id": "2608.22364",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-23",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "WAM-OPD: On-Policy Distillation for World Action Models"
+    },
+    "title:a539519885b803a4ed3267c9a6da3deef919053b": {
+      "arxiv_id": "2608.16978",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation"
+    },
+    "title:a9094cf1269eefa6d7029c035fd2234185d41487": {
+      "arxiv_id": "2608.05999",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 38,
+      "source": "daily-watch",
+      "title": "Beyond Flat Policies: Hierarchical Post-Training for Embodied Agents in Robotic Manipulation"
+    },
+    "title:ac9d3a131f5cf283c4a0a96b164232195e630663": {
+      "arxiv_id": "2607.23782",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-26",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "$N_0$-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens"
+    },
+    "title:aef239ab7c5c012aafd549ed0a8776a425c66ab6": {
+      "arxiv_id": "2608.13026",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-13",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Temporal GRPO: Beyond Trajectory-Level Credit in Vision-Language-Action Reinforcement Learning"
+    },
+    "title:afe1abbe143ee699fe0eeedbdb3adb8946ec1dd0": {
+      "arxiv_id": "2608.15285",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "PhaseLoRA: Control-Regime-Conditioned Low-Rank Adaptation for Continuous-Action Vision-Language-Action Policies"
+    },
+    "title:b9a4f55adfb7503af55f86b8a05e836490caf867": {
+      "arxiv_id": "2607.20345",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Closing the Lab-to-Store Gap: A Data-Efficient Post-Training and Experience-Driven Learning VLA Framework for Retail Humanoids"
+    },
+    "title:bc91ae41bf904773bb974269bf3d010ed521dc9d": {
+      "arxiv_id": "2608.17163",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "Q-Learning With World Models"
+    },
+    "title:be3b29b1e5a47c06074af9b368afa767d1b5b378": {
+      "arxiv_id": "2608.03231",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "Structure-Aware Robust Fine-Tuning: Defending Vision-Language-Action Robots Against Physical Attention Hijacking"
+    },
+    "title:c1e5af0aebac0f9804a55623897a49feb8d2b4dd": {
+      "arxiv_id": "2608.25405",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-26",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "LAC: Linear and Angular Compliance for Humanoid Whole-body Control"
+    },
+    "title:c41a6875c6358a520c3e221003269590ef50f6c6": {
+      "arxiv_id": "2608.05588",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-06",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Search-Aided Joint Agent-Environment Reinforcement Learning for Robust Lifelong Multi-Agent Path Finding with Rotations"
+    },
+    "title:c44c7c484c2d13d6edb18ab156b28ce4568b876a": {
+      "arxiv_id": "2608.09138",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "SpeedTuning: Speeding Up Policy Execution with Lightweight Reinforcement Learning"
+    },
+    "title:c8cb5e80097c7d2e11284f580bebb9315ae41743": {
+      "arxiv_id": "2607.15330",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-16",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "Xiaomi-Robotics-1: Scaling Vision-Language-Action Models with over 100K Hours of Real-World Trajectories"
+    },
+    "title:d01860b20d1e4412387f6ca18c6ed85be72bacc1": {
+      "arxiv_id": "2608.04905",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-05",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "PRIMAL3: Pathfinding via Reinforcement and Imitation Multi-Agent Learning - Leveraging LaCAM3"
+    },
+    "title:d4dcd9fa0e82054705af7cd3a17c1b3bee3c6b1d": {
+      "arxiv_id": "2608.07870",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-08",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "V-Simba: Unleashing the Architectural Potential of RL in Visual Continuous Control"
+    },
+    "title:d6fc787d008566bb6f7170e4625bfb6fc0a667c9": {
+      "arxiv_id": "2608.02958",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "ValueFormer: A Causal Transformer Value Function with Stage-Aware Labels for Semi-Autonomous Vision-Language-Action Policies"
+    },
+    "title:d817cc39b71bd343c9e34ae0778c2bd9d7c63030": {
+      "arxiv_id": "2608.16837",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "HAF: Adapting Generalist VLAs to Humanoid Whole-Body Loco-manipulation via Hierarchical Action Flow and Spectral Latent RL"
+    },
+    "title:d95b0daaf3fe8bf8789e8baed0dde50b7b13af02": {
+      "arxiv_id": "2608.21899",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-22",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "CIDER: Continual Interactive Distillation for Embodied Reinforcement Learning"
+    },
+    "title:de5ceabcb2382cfe20b8c7063fd4eb92fc24f0cf": {
+      "arxiv_id": "2608.15088",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-15",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Max-Q Selective Imitation for Human-in-the-Loop Online Robot Learning"
+    },
+    "title:dfe32c1fbcc819f1c18aacaa77d08a4eda095ad9": {
+      "arxiv_id": "2607.22999",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-25",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "WCM: World-Cognition Model for Generalizable Human-Robot Interaction"
+    },
+    "title:e47be543dd81768f010f6859880a9a3b681b4d79": {
+      "arxiv_id": "2608.16195",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-17",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "RoboStriker: Latent-Space Strategic Games for Autonomous Humanoid Boxing"
+    },
+    "title:e5911021bbc4185efc79c3d143a272d0ecfe4dec": {
+      "arxiv_id": "2607.26991",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-29",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "RL$^2$-VLA: Adaptive RL Latent Compositional Steering with Test-Time Scaling for Vision-Language-Action Models"
+    },
+    "title:e5b07529369015bca02f3dc75a9528d8e42278e3": {
+      "arxiv_id": "2608.19684",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-20",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "Learning Hierarchical Skill Policies with Offline Quality-Diversity Reinforcement Learning"
+    },
+    "title:ec4656d74e72a94d98cc9e7d8c049480a765b085": {
+      "arxiv_id": "2608.19490",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-19",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "Fine-Tuning VLAs with Self-Demonstrated Generative Control for Multi-Task Manipulation"
+    },
+    "title:edd7a7abedcb8adb133d82ad491ede698ee043f2": {
+      "arxiv_id": "2607.27782",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-30",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "RedFlow: Redirect Failure into Action-Level Corrections for Flow-matching VLA Policy"
+    },
+    "title:ef9a5aa16dd14980fe82f51028cf6cd0052a3309": {
+      "arxiv_id": "2608.02034",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Upper-Expectile Multi-Step Q-Learning for Off-Policy Reinforcement Learning"
+    },
+    "title:f0d2f064e192076dd6a6d93d407c9fd7b2f688c6": {
+      "arxiv_id": "2608.01028",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-02",
+      "score": 13,
+      "source": "daily-watch",
+      "title": "VLAGuard: A Framework for Evaluating and Mitigating Physical Attention Hijacking in Vision-Language-Action Robots within Wireless Sensor Networks"
+    },
+    "title:f292a238267abd0b7f6d35213ea84c71306abe05": {
+      "arxiv_id": "2608.03682",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-04",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PhyAI: Real-Time Physical AI at the Edge, Scalable Rollouts in the Cloud"
+    },
+    "title:f765fe06de97848c30c7c307a4b845fe4cb67e91": {
+      "arxiv_id": "2608.02197",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-03",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Look Where It Matters: Adaptive Visual Refinement for Vision-Language-Action Models"
+    },
+    "title:f7c95cbff4afc32287a84c678910052eba2d8688": {
+      "arxiv_id": "2608.08491",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-09",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "TrustRoboReward: Preference-Ordered Isotonic Score Editing for Multi-Paradigm Robot Reward Models"
+    },
+    "title:f7e9b8d25a51cdc9ea95ee1f3f1ccb628d50eb19": {
+      "arxiv_id": "2608.15875",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "GigaBrain-0.7: Scaling Embodied Foundation Models to Emergent Capabilities with a Three-System Architecture"
+    },
+    "title:fa879503e4ec8f52744d50c94b57a2f8d1b019f9": {
+      "arxiv_id": "2608.24042",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-25",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Hierarchical Skill Retrieval for Data-Efficient Adaptation of Vision-Language-Action Models"
+    },
+    "title:fb6dfc6e49b1b6d8f6a9db06b12eea361671dd81": {
+      "arxiv_id": "2607.19633",
+      "first_seen": "2026-08-29",
+      "published": "2026-07-22",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "LENS: LLM-guided Environment Simplification for Planning and Control in Clutter"
+    },
+    "title:fba31f28f335975074b8e6de68fb9623d93770e5": {
+      "arxiv_id": "2608.12063",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-12",
+      "score": 20,
+      "source": "daily-watch",
+      "title": "Learning Loco-Manipulation From SMPC Demonstrations With Sparse Offline-to-Online RL"
+    },
+    "title:fd6223edc89d6c7dd1916423c421fac3a1b7d1fc": {
+      "arxiv_id": "2608.15509",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-16",
+      "score": 12,
+      "source": "daily-watch",
+      "title": "Temporal Logic Guided Universal Task Representations for Reinforcement Learning"
+    },
+    "title:ffd9d71882ab58c229167efd374df4da51ff3588": {
+      "arxiv_id": "2608.09467",
+      "first_seen": "2026-08-29",
+      "published": "2026-08-10",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
-  }
+  },
+  "total_unique_papers": 116,
+  "version": 1,
+  "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
