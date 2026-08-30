@@ -5,6 +5,13 @@ on:
     # 09:30 during Pacific daylight time, 08:30 during Pacific standard time.
     - cron: "30 16 * * *"
   workflow_dispatch:
+  # Updating this workflow triggers one validation run. Report/state commits do
+  # not retrigger it because they do not match this path filter.
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/watch-robot-rl-posttraining.yml"
 
 permissions:
   contents: write
@@ -22,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,19 +48,9 @@ jobs:
             --max-new 20 \
             --timezone America/Los_Angeles
 
-      - name: Commit report and deduplication state
-        if: steps.watch.outputs.new_count != '0'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/robot_rl_watch_state.json outputs/robot_rl_watch
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "chore: add daily robot RL post-training watch"
-            git push
-          fi
-
+      # Notify before persisting the de-duplication state. If notification
+      # fails, the run fails here and the same papers remain eligible for a
+      # retry instead of being silently lost.
       - name: Post the daily digest to tracking issue
         if: steps.watch.outputs.new_count != '0'
         env:
@@ -61,6 +60,20 @@ jobs:
           gh issue comment 7 \
             --repo "$GITHUB_REPOSITORY" \
             --body-file "$REPORT_PATH"
+
+      - name: Commit report and permanent deduplication state
+        if: steps.watch.outputs.new_count != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/robot_rl_watch_state.json outputs/robot_rl_watch
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: add daily robot RL post-training watch"
+            git pull --rebase
+            git push
+          fi
 
       - name: Write run summary
         run: |
