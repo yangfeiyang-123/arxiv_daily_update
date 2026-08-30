@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-"""Find newly published robot-manipulation RL post-training papers.
-
-The script is intentionally dependency-free. It consumes the JSON feed produced by
-``scripts/fetch_cs_ro.py`` in this repository, ranks papers for relevance, permanently
-suppresses previously reported items, and writes a Markdown digest when new papers exist.
-
-Deduplication uses both the canonical arXiv identifier (version suffix removed) and a
-SHA-1 hash of the normalized title. This prevents revised arXiv versions or metadata
-variants from being reported twice.
-"""
+"""Daily, permanently deduplicated watch for robot manipulation RL post-training."""
 
 from __future__ import annotations
 
@@ -24,11 +15,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-ARXIV_ID_RE = re.compile(r"(?<!\d)(\d{4}\.\d{4,5})(?:v\d+)?(?!\d)", re.IGNORECASE)
+ARXIV_RE = re.compile(r"(?<!\d)(\d{4}\.\d{4,5})(?:v\d+)?(?!\d)", re.I)
 SPACE_RE = re.compile(r"\s+")
+TITLE_RL_RE = re.compile(
+    r"(?:\breinforcement learning\b|\boffline rl\b|\bonline rl\b|\brl\b|"
+    r"q-learning|policy optimization|post-training|fine-tun)",
+    re.I,
+)
+# Same-sentence claim avoids false positives such as "we propose a VLA. Existing RL...".
+METHOD_RL_RE = re.compile(
+    r"(?:\bwe\b|\bthis work\b|\bour (?:method|framework|approach|algorithm)\b)"
+    r"[^.!?]{0,180}(?:reinforcement learning|offline rl|online rl|policy gradient|"
+    r"actor-critic|q-learning|ppo|grpo)",
+    re.I,
+)
 
-# Weighted phrase groups. Title matches are multiplied by TITLE_MULTIPLIER.
-ROBOT_TERMS: dict[str, float] = {
+ROBOT = {
     "robot": 2.0,
     "robotic": 2.0,
     "manipulation": 2.0,
@@ -40,10 +42,8 @@ ROBOT_TERMS: dict[str, float] = {
     "loco-manipulation": 3.0,
     "loco manipulation": 3.0,
     "embodied agent": 2.0,
-    "action policy": 1.0,
 }
-
-RL_TERMS: dict[str, float] = {
+RL = {
     "reinforcement learning": 6.0,
     "offline rl": 5.0,
     "online rl": 5.0,
@@ -62,8 +62,22 @@ RL_TERMS: dict[str, float] = {
     "value function": 2.0,
     "critic model": 2.0,
 }
-
-POST_TERMS: dict[str, float] = {
+SPECIFIC_RL = {
+    "offline rl": 3.0,
+    "online rl": 3.0,
+    "real-world rl": 3.0,
+    "real world rl": 3.0,
+    "policy gradient": 3.0,
+    "actor-critic": 3.0,
+    "actor critic": 3.0,
+    "q-learning": 3.0,
+    "q learning": 3.0,
+    "ppo": 2.5,
+    "grpo": 2.5,
+    "advantage-weighted": 2.5,
+    "advantage weighted": 2.5,
+}
+POST = {
     "post-training": 5.0,
     "post training": 5.0,
     "fine-tuning": 4.0,
@@ -74,10 +88,8 @@ POST_TERMS: dict[str, float] = {
     "self-improving": 3.0,
     "self improving": 3.0,
     "policy improvement": 3.0,
-    "deployment adaptation": 3.0,
 }
-
-GENERATIVE_TERMS: dict[str, float] = {
+GENERATIVE = {
     "diffusion policy": 4.0,
     "flow policy": 4.0,
     "flow-based": 3.0,
@@ -91,8 +103,7 @@ GENERATIVE_TERMS: dict[str, float] = {
     "behaviour cloning": 1.5,
     "imitation learning": 1.5,
 }
-
-ADAPTATION_TERMS: dict[str, float] = {
+ADAPT = {
     "residual policy": 3.0,
     "residual rl": 3.0,
     "latent space": 2.5,
@@ -110,8 +121,7 @@ ADAPTATION_TERMS: dict[str, float] = {
     "prompt space": 2.0,
     "semantic action": 2.0,
 }
-
-DEPLOYMENT_TERMS: dict[str, float] = {
+DEPLOY = {
     "real-world": 2.5,
     "real world": 2.5,
     "real robot": 2.5,
@@ -122,35 +132,26 @@ DEPLOYMENT_TERMS: dict[str, float] = {
     "high-frequency": 1.0,
     "high frequency": 1.0,
     "deployment": 1.0,
-    "factory": 1.0,
 }
-
-# These do not automatically reject a paper; they subtract score unless strong robot
-# manipulation and RL evidence is present. This keeps humanoid loco-manipulation while
-# suppressing unrelated navigation, driving, LLM-only, and multi-agent work.
-NEGATIVE_TERMS: dict[str, float] = {
+NEGATIVE = {
     "autonomous driving": 8.0,
     "language model reasoning": 6.0,
-    "large language model": 2.5,
     "multi-agent": 4.0,
     "multi agent": 4.0,
     "wireless network": 6.0,
-    "portfolio": 6.0,
     "medical diagnosis": 6.0,
     "navigation": 2.5,
     "path planning": 2.0,
     "drone": 3.0,
     "uav": 3.0,
 }
-
 TITLE_MULTIPLIER = 2.2
-DEFAULT_MIN_SCORE = 13.0
 
 
 @dataclass(frozen=True)
-class ScoredPaper:
+class Paper:
     raw: dict[str, Any]
-    canonical_id: str
+    arxiv_id: str
     title_hash: str
     score: float
     tags: tuple[str, ...]
@@ -159,439 +160,216 @@ class ScoredPaper:
 
     @property
     def title(self) -> str:
-        return clean_text(str(self.raw.get("title", "")))
+        return clean(str(self.raw.get("title", "")))
 
 
-class WatchError(RuntimeError):
-    """Raised for user-actionable input/state errors."""
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--input",
-        type=Path,
-        default=Path("data/latest_cs_daily.json"),
-        help="JSON feed generated by scripts/fetch_cs_ro.py",
-    )
-    parser.add_argument(
-        "--state",
-        type=Path,
-        default=Path("data/robot_rl_watch_seen.json"),
-        help="Persistent deduplication state",
-    )
-    parser.add_argument(
-        "--report-dir",
-        type=Path,
-        default=Path("outputs/robot_rl_watch"),
-        help="Directory for dated Markdown digests",
-    )
-    parser.add_argument(
-        "--min-score",
-        type=float,
-        default=DEFAULT_MIN_SCORE,
-        help=f"Minimum relevance score (default: {DEFAULT_MIN_SCORE:g})",
-    )
-    parser.add_argument(
-        "--max-papers",
-        type=int,
-        default=20,
-        help="Maximum papers in one digest (default: 20)",
-    )
-    parser.add_argument(
-        "--include-backlog",
-        action="store_true",
-        help="Ignore watch_started_at and consider older unseen papers in the feed",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Write a report but do not mutate the persistent state",
-    )
-    return parser.parse_args()
-
-
-def clean_text(value: str) -> str:
+def clean(value: str) -> str:
     return SPACE_RE.sub(" ", value).strip()
 
 
 def normalize_title(title: str) -> str:
-    normalized = unicodedata.normalize("NFKC", clean_text(title)).casefold()
-    normalized = re.sub(r"[^\w]+", " ", normalized, flags=re.UNICODE)
-    return SPACE_RE.sub(" ", normalized).strip()
+    value = unicodedata.normalize("NFKC", clean(title)).casefold()
+    return SPACE_RE.sub(" ", re.sub(r"[^\w]+", " ", value)).strip()
 
 
-def title_sha1(title: str) -> str:
-    return hashlib.sha1(normalize_title(title).encode("utf-8")).hexdigest()
+def title_hash(title: str) -> str:
+    return hashlib.sha1(normalize_title(title).encode()).hexdigest()
 
 
-def canonical_arxiv_id(paper: dict[str, Any]) -> str:
+def canonical_id(raw: dict[str, Any]) -> str:
     for key in ("id", "arxiv_id", "pdf_url"):
-        value = str(paper.get(key, ""))
-        match = ARXIV_ID_RE.search(value)
+        match = ARXIV_RE.search(str(raw.get(key, "")))
         if match:
             return match.group(1)
-    # Stable fallback for non-arXiv entries.
-    return f"title:{title_sha1(str(paper.get('title', '')))}"
+    return "title:" + title_hash(str(raw.get("title", "")))
 
 
-def parse_datetime(value: Any) -> datetime:
-    raw = str(value or "").strip()
-    if not raw:
-        return datetime.min.replace(tzinfo=timezone.utc)
+def parse_time(value: Any) -> datetime:
     try:
-        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        result = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
     except ValueError:
         return datetime.min.replace(tzinfo=timezone.utc)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+    if result.tzinfo is None:
+        result = result.replace(tzinfo=timezone.utc)
+    return result.astimezone(timezone.utc)
 
 
 def phrase_score(text: str, terms: dict[str, float]) -> float:
     return sum(weight for phrase, weight in terms.items() if phrase in text)
 
 
-def combined_score(title: str, summary: str, terms: dict[str, float]) -> float:
-    return TITLE_MULTIPLIER * phrase_score(title, terms) + phrase_score(summary, terms)
+def weighted(title: str, abstract: str, terms: dict[str, float]) -> float:
+    return TITLE_MULTIPLIER * phrase_score(title, terms) + phrase_score(abstract, terms)
 
 
-def detect_tags(text: str) -> tuple[str, ...]:
+def tags_for(text: str) -> tuple[str, ...]:
     tags: list[str] = []
 
-    def add(label: str) -> None:
-        if label not in tags:
-            tags.append(label)
+    def add(name: str, condition: bool) -> None:
+        if condition and name not in tags:
+            tags.append(name)
 
-    if "vision-language-action" in text or "vision language action" in text or re.search(r"\bvla\b", text):
-        add("VLA")
-    if "diffusion" in text:
-        add("Diffusion")
-    if "flow-matching" in text or "flow matching" in text or "flow-based" in text or "flow based" in text:
-        add("Flow")
-    if "normalizing flow" in text:
-        add("Normalizing Flow")
-    if "offline rl" in text or "offline reinforcement learning" in text:
-        add("Offline RL")
-    if "online rl" in text or "online reinforcement learning" in text or "on-policy" in text or "on policy" in text:
-        add("Online RL")
-    if "real-world" in text or "real world" in text or "real robot" in text:
-        add("Real Robot")
-    if "world model" in text or "digital twin" in text:
-        add("World Model")
-    if "human-in-the-loop" in text or "human in the loop" in text or "human intervention" in text:
-        add("Human-in-the-loop")
-    if "residual" in text:
-        add("Residual")
-    if "latent space" in text or "noise space" in text:
-        add("Latent Steering")
-    if "distillation" in text or "one-step" in text or "one step" in text:
-        add("Distillation")
-    if "reward model" in text or "success detector" in text or "dense reward" in text:
-        add("Reward/Value")
-    if "action chunk" in text:
-        add("Action Chunking")
-    if "grpo" in text:
-        add("GRPO")
-    elif "ppo" in text:
-        add("PPO")
-    if "hierarchical" in text or "subgoal" in text:
-        add("Hierarchy")
-    if "semantic" in text or "prompt space" in text:
-        add("Semantic Control")
-
+    add("VLA", "vision-language-action" in text or "vision language action" in text or bool(re.search(r"\bvla\b", text)))
+    add("Diffusion", "diffusion" in text)
+    add("Flow", any(x in text for x in ("flow-matching", "flow matching", "flow-based", "flow based")))
+    add("Normalizing Flow", "normalizing flow" in text)
+    add("Offline RL", "offline rl" in text or "offline reinforcement learning" in text)
+    add("Online RL", any(x in text for x in ("online rl", "online reinforcement learning", "on-policy", "on policy")))
+    add("Real Robot", any(x in text for x in ("real-world", "real world", "real robot")))
+    add("World Model", "world model" in text or "digital twin" in text)
+    add("Human-in-the-loop", any(x in text for x in ("human-in-the-loop", "human in the loop", "human intervention")))
+    add("Residual", "residual" in text)
+    add("Latent Steering", "latent space" in text or "noise space" in text)
+    add("Distillation", any(x in text for x in ("distillation", "one-step", "one step")))
+    add("Reward/Value", any(x in text for x in ("reward model", "process reward", "success detector", "dense reward")))
+    add("Action Chunking", "action chunk" in text)
+    add("GRPO", "grpo" in text)
+    add("PPO", "ppo" in text and "grpo" not in text)
+    add("Hierarchy", "hierarchical" in text or "subgoal" in text)
+    add("Semantic Control", "semantic" in text or "prompt space" in text)
     return tuple(tags[:8])
 
 
-def relation_to_anchor(tags: Iterable[str], text: str) -> str:
+def relation(tags: Iterable[str], text: str) -> str:
     tag_set = set(tags)
-    dice_signals = bool(tag_set & {"Residual", "Latent Steering"}) or "frozen" in text
-    rl100_signals = (
-        {"Offline RL", "Online RL"}.issubset(tag_set)
-        or "iterative offline" in text
-        or "data flywheel" in text
-        or "consistency" in text and "distillation" in text
-    )
-    vla_pg = "VLA" in tag_set and bool(tag_set & {"GRPO", "PPO", "Online RL"})
-    world = "World Model" in tag_set
-    reward = "Reward/Value" in tag_set
-
-    if dice_signals and rl100_signals:
+    dice = bool(tag_set & {"Residual", "Latent Steering"}) or "frozen" in text
+    rl100 = {"Offline RL", "Online RL"}.issubset(tag_set) or "data flywheel" in text or "iterative offline" in text
+    if dice and rl100:
         return "同时贴近 DICE 的受约束轻量纠偏与 RL-100 的离线→在线部署链路。"
-    if world:
-        return "把真实 rollout 转移到世界模型/数字孪生中，直接缓解 DICE 与 RL-100 的真实交互成本。"
-    if reward:
+    if "World Model" in tag_set:
+        return "用世界模型/数字孪生减少真实 rollout，缓解 DICE 与 RL-100 的真实交互成本。"
+    if "Reward/Value" in tag_set:
         return "补齐真实机器人 RL 的奖励与价值评估层，可作为 DICE/RL-100 的上游反馈模块。"
-    if dice_signals:
-        return "更接近 DICE：冻结或锚定行为先验，只在残差/潜变量等小空间内做可控改进。"
-    if rl100_signals:
-        return "更接近 RL-100：强调离线到在线的数据闭环，以及最终可部署的策略提取或蒸馏。"
-    if vla_pg:
-        return "把 PPO/GRPO 式策略优化直接扩展到 flow/VLA，是 DICE/RL-100 向通用机器人模型扩展的主线。"
+    if dice:
+        return "更接近 DICE：冻结或锚定行为先验，只在残差/潜变量小空间内做可控改进。"
+    if rl100:
+        return "更接近 RL-100：强调离线到在线的数据闭环与最终可部署策略。"
+    if "VLA" in tag_set and tag_set & {"GRPO", "PPO", "Online RL"}:
+        return "把 PPO/GRPO 式优化扩展到 flow/VLA，是 DICE/RL-100 向通用机器人模型延伸的主线。"
     if "Offline RL" in tag_set:
         return "属于无额外真实交互的策略提升分支，可作为在线 RL 前的保守初始化。"
     return "属于机器人策略后训练的相邻方向，重点在更稳的探索、适配或部署。"
 
 
-def score_paper(paper: dict[str, Any]) -> tuple[float, tuple[str, ...], str] | None:
-    title = clean_text(str(paper.get("title", ""))).casefold()
-    summary = clean_text(str(paper.get("summary", paper.get("abstract", "")))).casefold()
-    text = f"{title} {summary}"
+def score_paper(raw: dict[str, Any], minimum: float) -> tuple[float, tuple[str, ...], str] | None:
+    title = clean(str(raw.get("title", ""))).casefold()
+    abstract = clean(str(raw.get("summary", raw.get("abstract", "")))).casefold()
+    text = title + " " + abstract
+    robot = weighted(title, abstract, ROBOT)
+    rl = weighted(title, abstract, RL)
+    post = weighted(title, abstract, POST)
+    generative = weighted(title, abstract, GENERATIVE)
+    adapt = weighted(title, abstract, ADAPT)
+    deploy = weighted(title, abstract, DEPLOY)
+    specific_rl = weighted(title, abstract, SPECIFIC_RL)
 
-    robot_score = combined_score(title, summary, ROBOT_TERMS)
-    rl_score = combined_score(title, summary, RL_TERMS)
-    post_score = combined_score(title, summary, POST_TERMS)
-    generative_score = combined_score(title, summary, GENERATIVE_TERMS)
-    adaptation_score = combined_score(title, summary, ADAPTATION_TERMS)
-    deployment_score = combined_score(title, summary, DEPLOYMENT_TERMS)
-    negative_score = phrase_score(text, NEGATIVE_TERMS)
-
-    # Hard topical gate: robot/manipulation evidence plus either explicit RL, or a
-    # clearly post-training/adaptation method for a generative robot policy.
-    direct_rl = robot_score >= 2.0 and rl_score >= 5.0
-    adjacent_post_training = (
-        robot_score >= 3.0
-        and post_score >= 4.0
-        and (generative_score >= 3.0 or adaptation_score >= 3.0)
+    claimed_rl = bool(TITLE_RL_RE.search(title) or METHOD_RL_RE.search(text))
+    direct = robot >= 2 and rl >= 5 and (claimed_rl or specific_rl >= 3)
+    adjacent = robot >= 3 and post >= 4 and (generative >= 3 or adapt >= 3)
+    feedback = (
+        robot >= 3
+        and any(x in text for x in ("reward model", "process reward", "world model", "digital twin", "human intervention", "human-in-the-loop"))
+        and any(x in text for x in ("reinforcement learning", "post-training", "fine-tuning", "finetuning"))
     )
-    if not (direct_rl or adjacent_post_training):
+    if not (direct or adjacent or feedback):
         return None
-
-    score = (
-        robot_score
-        + rl_score
-        + post_score
-        + 0.8 * generative_score
-        + 0.8 * adaptation_score
-        + 0.5 * deployment_score
-        - negative_score
-    )
-
-    # Navigation-only and locomotion-only papers should not pass unless manipulation
-    # is explicit. Humanoid loco-manipulation remains in scope.
     if "manipulation" not in text and "visuomotor" not in text and not re.search(r"\bvla\b", text):
-        if any(term in text for term in ("navigation", "path planning", "drone", "uav")):
+        if any(x in text for x in ("navigation", "path planning", "drone", "uav")):
             return None
 
-    tags = detect_tags(text)
-    relation = relation_to_anchor(tags, text)
-    return score, tags, relation
+    total = robot + rl + post + 0.8 * generative + 0.8 * adapt + 0.5 * deploy - phrase_score(text, NEGATIVE)
+    if total < minimum:
+        return None
+    labels = tags_for(text)
+    return total, labels, relation(labels, text)
 
 
-def load_json(path: Path) -> Any:
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise WatchError(f"Input file not found: {path}") from exc
-    except json.JSONDecodeError as exc:
-        raise WatchError(f"Invalid JSON in {path}: {exc}") from exc
-
-
-def load_state(path: Path) -> dict[str, Any]:
-    data = load_json(path)
-    if not isinstance(data, dict):
-        raise WatchError(f"State must be a JSON object: {path}")
-    data.setdefault("schema_version", 1)
-    data.setdefault("watch_started_at", datetime.now(timezone.utc).isoformat())
-    data.setdefault("seen_arxiv_ids", {})
-    data.setdefault("seen_title_hashes", {})
-    if not isinstance(data["seen_arxiv_ids"], dict) or not isinstance(data["seen_title_hashes"], dict):
-        raise WatchError("State fields seen_arxiv_ids/seen_title_hashes must be objects")
-    return data
-
-
-def iter_papers(payload: Any) -> Iterable[dict[str, Any]]:
+def papers_in(payload: Any) -> Iterable[dict[str, Any]]:
     if isinstance(payload, list):
-        for paper in payload:
-            if isinstance(paper, dict):
-                yield paper
+        yield from (x for x in payload if isinstance(x, dict))
         return
-
     if not isinstance(payload, dict):
-        raise WatchError("Feed JSON must be an object or a list")
-
-    fields = payload.get("fields")
-    if isinstance(fields, list):
-        for field in fields:
-            if not isinstance(field, dict):
-                continue
-            papers = field.get("papers", [])
-            if isinstance(papers, list):
-                for paper in papers:
-                    if isinstance(paper, dict):
-                        yield paper
+        raise ValueError("feed must be a JSON object or list")
+    if isinstance(payload.get("fields"), list):
+        for field in payload["fields"]:
+            if isinstance(field, dict) and isinstance(field.get("papers"), list):
+                yield from (x for x in field["papers"] if isinstance(x, dict))
         return
-
-    papers = payload.get("papers", [])
-    if isinstance(papers, list):
-        for paper in papers:
-            if isinstance(paper, dict):
-                yield paper
+    if isinstance(payload.get("papers"), list):
+        yield from (x for x in payload["papers"] if isinstance(x, dict))
         return
-
-    raise WatchError("Feed JSON contains neither fields[].papers nor papers")
-
-
-def collect_new_papers(
-    payload: Any,
-    state: dict[str, Any],
-    min_score: float,
-    include_backlog: bool,
-) -> list[ScoredPaper]:
-    seen_ids = set(state["seen_arxiv_ids"].keys())
-    seen_titles = set(state["seen_title_hashes"].keys())
-    started_at = parse_datetime(state.get("watch_started_at"))
-
-    best_by_id: dict[str, ScoredPaper] = {}
-    for paper in iter_papers(payload):
-        title = clean_text(str(paper.get("title", "")))
-        if not title:
-            continue
-        canonical_id = canonical_arxiv_id(paper)
-        digest = title_sha1(title)
-        if canonical_id in seen_ids or digest in seen_titles:
-            continue
-
-        published = parse_datetime(paper.get("published"))
-        if not include_backlog and published < started_at:
-            continue
-
-        scored = score_paper(paper)
-        if scored is None:
-            continue
-        score, tags, relation = scored
-        if score < min_score:
-            continue
-
-        candidate = ScoredPaper(
-            raw=paper,
-            canonical_id=canonical_id,
-            title_hash=digest,
-            score=score,
-            tags=tags,
-            relation=relation,
-            published=published,
-        )
-        previous = best_by_id.get(canonical_id)
-        if previous is None or candidate.score > previous.score:
-            best_by_id[canonical_id] = candidate
-
-    return sorted(
-        best_by_id.values(),
-        key=lambda item: (item.published, item.score),
-        reverse=True,
-    )
+    raise ValueError("feed contains neither fields[].papers nor papers")
 
 
-def markdown_escape(value: str) -> str:
-    return value.replace("|", "\\|")
+def compact(text: str, limit: int = 650) -> str:
+    value = clean(text)
+    if len(value) <= limit:
+        return value
+    return value[: limit - 1].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
 
 
-def compact_abstract(value: str, max_chars: int = 650) -> str:
-    text = clean_text(value)
-    if len(text) <= max_chars:
-        return text
-    shortened = text[: max_chars - 1].rsplit(" ", 1)[0]
-    return shortened.rstrip(".,;:") + "…"
+def paper_links(paper: Paper) -> str:
+    if ARXIV_RE.fullmatch(paper.arxiv_id):
+        return f"[arXiv](https://arxiv.org/abs/{paper.arxiv_id}) · [PDF](https://arxiv.org/pdf/{paper.arxiv_id})"
+    links = [str(paper.raw.get("id", "")).strip(), str(paper.raw.get("pdf_url", "")).strip()]
+    return " · ".join(x for x in links if x) or "未提供"
 
 
-def paper_urls(paper: ScoredPaper) -> tuple[str, str]:
-    arxiv_id = paper.canonical_id
-    if ARXIV_ID_RE.fullmatch(arxiv_id):
-        return f"https://arxiv.org/abs/{arxiv_id}", f"https://arxiv.org/pdf/{arxiv_id}"
-    raw_id = str(paper.raw.get("id", "")).strip()
-    return raw_id, str(paper.raw.get("pdf_url", "")).strip()
-
-
-def format_report(papers: list[ScoredPaper], generated_at: datetime) -> str:
-    day = generated_at.astimezone(timezone.utc).date().isoformat()
-    marker_ids = ",".join(sorted(paper.canonical_id for paper in papers))
+def make_report(papers: list[Paper], now: datetime) -> str:
+    marker = ",".join(sorted(p.arxiv_id for p in papers))
     lines = [
-        f"<!-- robot-rl-watch:{marker_ids} -->",
-        f"# Robot Manipulation RL Post-Training Daily Watch — {day}",
+        f"<!-- robot-rl-watch:{marker} -->",
+        f"# Robot Manipulation RL Post-Training Daily Watch — {now.date().isoformat()}",
         "",
         f"本次发现 **{len(papers)}** 篇此前未推送、且与 DICE / RL-100 主线高度相关的新论文。",
         "",
         "> 去重：canonical arXiv ID（忽略版本号）+ 规范化标题 SHA-1；无新论文时不发消息。",
         "",
     ]
-
-    for index, paper in enumerate(papers, start=1):
-        raw = paper.raw
-        authors = raw.get("authors", [])
+    for index, paper in enumerate(papers, 1):
+        authors = paper.raw.get("authors", [])
         if isinstance(authors, list):
-            author_text = ", ".join(clean_text(str(a)) for a in authors if clean_text(str(a)))
+            author_text = ", ".join(clean(str(x)) for x in authors if clean(str(x)))
         else:
-            author_text = clean_text(str(authors))
-        if not author_text:
-            author_text = "未提供"
-
-        abs_url, pdf_url = paper_urls(paper)
-        links: list[str] = []
-        if abs_url:
-            links.append(f"[arXiv]({abs_url})")
-        if pdf_url:
-            links.append(f"[PDF]({pdf_url})")
-        link_text = " · ".join(links) if links else "未提供"
-        tags = " / ".join(paper.tags) if paper.tags else "Robot RL Post-Training"
-        abstract = compact_abstract(str(raw.get("summary", raw.get("abstract", ""))))
-
-        lines.extend(
-            [
-                f"## {index}. {markdown_escape(paper.title)}",
-                "",
-                f"- **发布日期**：{paper.published.date().isoformat()}  ·  **相关性分数**：{paper.score:.1f}",
-                f"- **标签**：{tags}",
-                f"- **作者**：{markdown_escape(author_text)}",
-                f"- **链接**：{link_text}",
-                f"- **与 DICE / RL-100 的关系**：{paper.relation}",
-                f"- **摘要摘录**：{markdown_escape(abstract) if abstract else '未提供'}",
-                "",
-            ]
-        )
-
-    lines.extend(
-        [
-            "---",
-            "监控范围：机器人操作 RL post-training、diffusion/flow/VLA 的 offline-to-online RL、残差/潜变量纠偏、奖励/价值模型、世界模型、human-in-the-loop、策略蒸馏与真实机器人部署。",
+            author_text = clean(str(authors))
+        abstract = compact(str(paper.raw.get("summary", paper.raw.get("abstract", ""))))
+        lines += [
+            f"## {index}. {paper.title.replace('|', '\\|')}",
+            "",
+            f"- **发布日期**：{paper.published.date().isoformat()} · **相关性分数**：{paper.score:.1f}",
+            f"- **标签**：{' / '.join(paper.tags) or 'Robot RL Post-Training'}",
+            f"- **作者**：{author_text.replace('|', '\\|') or '未提供'}",
+            f"- **链接**：{paper_links(paper)}",
+            f"- **与 DICE / RL-100 的关系**：{paper.relation}",
+            f"- **摘要摘录**：{abstract.replace('|', '\\|') or '未提供'}",
             "",
         ]
-    )
+    lines += [
+        "---",
+        "监控范围：机器人操作 RL post-training、diffusion/flow/VLA offline-to-online RL、残差/潜变量纠偏、奖励/价值模型、世界模型、human-in-the-loop、策略蒸馏与真实机器人部署。",
+        "",
+    ]
     return "\n".join(lines)
 
 
-def remember_papers(state: dict[str, Any], papers: list[ScoredPaper], now: datetime) -> None:
-    timestamp = now.isoformat()
-    for paper in papers:
-        metadata = {
-            "title": paper.title,
-            "first_reported_at": timestamp,
-            "published": paper.published.isoformat(),
-        }
-        state["seen_arxiv_ids"][paper.canonical_id] = metadata
-        state["seen_title_hashes"][paper.title_hash] = {
-            "title": paper.title,
-            "arxiv_id": paper.canonical_id,
-        }
-    state["last_reported_at"] = timestamp
-    state["last_report_count"] = len(papers)
-
-
-def atomic_write_json(path: Path, data: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(path)
-
-
-def write_github_outputs(new_count: int, report_path: str, state_changed: bool) -> None:
-    output_path = os.environ.get("GITHUB_OUTPUT")
-    if not output_path:
+def github_outputs(count: int, report: str, changed: bool) -> None:
+    path = os.environ.get("GITHUB_OUTPUT")
+    if not path:
         return
-    with open(output_path, "a", encoding="utf-8") as stream:
-        stream.write(f"new_count={new_count}\n")
-        stream.write(f"report_path={report_path}\n")
-        stream.write(f"state_changed={'true' if state_changed else 'false'}\n")
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(f"new_count={count}\nreport_path={report}\nstate_changed={'true' if changed else 'false'}\n")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path, default=Path("data/latest_cs_daily.json"))
+    parser.add_argument("--state", type=Path, default=Path("data/robot_rl_watch_seen.json"))
+    parser.add_argument("--report-dir", type=Path, default=Path("outputs/robot_rl_watch"))
+    parser.add_argument("--min-score", type=float, default=13.0)
+    parser.add_argument("--max-papers", type=int, default=20)
+    parser.add_argument("--include-backlog", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    return parser.parse_args()
 
 
 def main() -> int:
@@ -599,46 +377,66 @@ def main() -> int:
     if args.max_papers < 1:
         print("--max-papers must be >= 1", file=sys.stderr)
         return 2
-
     try:
-        payload = load_json(args.input)
-        state = load_state(args.state)
-        candidates = collect_new_papers(
-            payload=payload,
-            state=state,
-            min_score=args.min_score,
-            include_backlog=args.include_backlog,
-        )
-    except WatchError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        payload = json.loads(args.input.read_text(encoding="utf-8"))
+        state = json.loads(args.state.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"watch input/state error: {exc}", file=sys.stderr)
         return 1
 
-    selected = candidates[: args.max_papers]
-    now = datetime.now(timezone.utc)
+    state.setdefault("watch_started_at", datetime.now(timezone.utc).isoformat())
+    state.setdefault("seen_arxiv_ids", {})
+    state.setdefault("seen_title_hashes", {})
+    started = parse_time(state["watch_started_at"])
+    candidates: dict[str, Paper] = {}
+    for raw in papers_in(payload):
+        title = clean(str(raw.get("title", "")))
+        if not title:
+            continue
+        aid, digest = canonical_id(raw), title_hash(title)
+        if aid in state["seen_arxiv_ids"] or digest in state["seen_title_hashes"]:
+            continue
+        published = parse_time(raw.get("published"))
+        if not args.include_backlog and published < started:
+            continue
+        scored = score_paper(raw, args.min_score)
+        if scored is None:
+            continue
+        score, labels, why = scored
+        candidate = Paper(raw, aid, digest, score, labels, why, published)
+        if aid not in candidates or score > candidates[aid].score:
+            candidates[aid] = candidate
+
+    selected = sorted(candidates.values(), key=lambda x: (x.published, x.score), reverse=True)[: args.max_papers]
     if not selected:
         print("No new relevant papers.")
-        write_github_outputs(0, "", False)
+        github_outputs(0, "", False)
         return 0
 
-    report_dir: Path = args.report_dir
-    report_dir.mkdir(parents=True, exist_ok=True)
-    dated_path = report_dir / f"{now.date().isoformat()}.md"
-    report = format_report(selected, now)
-    dated_path.write_text(report, encoding="utf-8")
-    (report_dir / "latest.md").write_text(report, encoding="utf-8")
+    now = datetime.now(timezone.utc)
+    args.report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = args.report_dir / f"{now.date().isoformat()}.md"
+    report = make_report(selected, now)
+    report_path.write_text(report, encoding="utf-8")
+    (args.report_dir / "latest.md").write_text(report, encoding="utf-8")
 
     if not args.dry_run:
-        remember_papers(state, selected, now)
-        atomic_write_json(args.state, state)
+        stamp = now.isoformat()
+        for paper in selected:
+            state["seen_arxiv_ids"][paper.arxiv_id] = {
+                "title": paper.title,
+                "first_reported_at": stamp,
+                "published": paper.published.isoformat(),
+            }
+            state["seen_title_hashes"][paper.title_hash] = {"title": paper.title, "arxiv_id": paper.arxiv_id}
+        state["last_reported_at"] = stamp
+        state["last_report_count"] = len(selected)
+        temporary = args.state.with_suffix(args.state.suffix + ".tmp")
+        temporary.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(args.state)
 
-    print(f"Found {len(selected)} new relevant paper(s); report: {dated_path}")
-    if len(candidates) > len(selected):
-        print(
-            f"Warning: {len(candidates) - len(selected)} additional relevant paper(s) "
-            "were left unseen for a later run because of --max-papers.",
-            file=sys.stderr,
-        )
-    write_github_outputs(len(selected), str(dated_path), not args.dry_run)
+    print(f"Found {len(selected)} new relevant paper(s); report: {report_path}")
+    github_outputs(len(selected), str(report_path), not args.dry_run)
     return 0
 
 
