@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Daily arXiv watcher for robot-manipulation RL post-training.
 
-The watcher is intentionally dependency-free. It fetches recent arXiv entries,
-filters them with a high-precision relevance score, permanently deduplicates by
-canonical arXiv ID (version suffix removed) and normalized-title hash, and
-writes a Markdown report only when unseen papers are found.
+The watcher is dependency-free. It fetches recent arXiv entries, filters them
+with a high-precision relevance score, permanently deduplicates by canonical
+arXiv ID (version suffix removed) and normalized-title hash, and writes a
+Markdown report only when unseen papers are found.
 """
 
 from __future__ import annotations
@@ -36,14 +36,15 @@ NAMESPACES = {
 # The broad cs.RO feed is the coverage backbone. Targeted queries recover
 # relevant cross-listed papers and improve recall for VLA/generative-policy work.
 QUERY_SPECS: tuple[tuple[str, str, int], ...] = (
-    ("cs.RO latest", "cat:cs.RO", 300),
-    ("VLA + RL", 'all:"vision-language-action" AND all:"reinforcement learning"', 80),
-    ("robot manipulation + RL", 'all:"robot manipulation" AND all:"reinforcement learning"', 80),
-    ("robotic manipulation + RL", 'all:"robotic manipulation" AND all:"reinforcement learning"', 80),
-    ("diffusion policy + RL", 'all:"diffusion policy" AND all:"reinforcement learning"', 80),
-    ("flow policy + RL", 'all:"flow policy" AND all:"reinforcement learning"', 80),
-    ("offline-to-online robot RL", 'all:"offline-to-online" AND all:robot AND all:"reinforcement learning"', 80),
-    ("RL post-training + robot", 'all:"RL post-training" AND all:robot', 80),
+    ("cs.RO latest", "cat:cs.RO", 500),
+    ("VLA + RL", 'all:"vision-language-action" AND all:"reinforcement learning"', 120),
+    ("robot manipulation + RL", 'all:"robot manipulation" AND all:"reinforcement learning"', 120),
+    ("robotic manipulation + RL", 'all:"robotic manipulation" AND all:"reinforcement learning"', 120),
+    ("diffusion policy + RL", 'all:"diffusion policy" AND all:"reinforcement learning"', 120),
+    ("flow policy + RL", 'all:"flow policy" AND all:"reinforcement learning"', 120),
+    ("offline-to-online robot RL", 'all:"offline-to-online" AND all:robot AND all:"reinforcement learning"', 120),
+    ("RL post-training + robot", 'all:"RL post-training" AND all:robot', 120),
+    ("self-improving robot policy", 'all:"self-improving" AND all:"robot policy"', 120),
 )
 
 ROBOT_TERMS = (
@@ -62,6 +63,7 @@ ROBOT_TERMS = (
 
 RL_TERMS = (
     "reinforcement learning",
+    "rl",
     "rl post-training",
     "rl post training",
     "rl fine-tuning",
@@ -77,6 +79,7 @@ RL_TERMS = (
     "group relative policy optimization",
     "grpo",
     "ppo",
+    "sac",
 )
 
 MANIPULATION_TERMS = (
@@ -121,6 +124,7 @@ TITLE_WEIGHTS: tuple[tuple[str, int], ...] = (
     ("policy steering", 3),
     ("policy fine-tuning", 3),
     ("policy finetuning", 3),
+    ("self-improving", 3),
     ("world model", 3),
     ("critic", 2),
     ("residual", 2),
@@ -145,6 +149,7 @@ ABSTRACT_WEIGHTS: tuple[tuple[str, int], ...] = (
     ("actor-critic", 2),
     ("q-learning", 2),
     ("world model", 2),
+    ("self-improving", 2),
     ("value", 1),
     ("critic", 1),
     ("residual", 1),
@@ -156,6 +161,10 @@ ABSTRACT_WEIGHTS: tuple[tuple[str, int], ...] = (
     ("force", 1),
     ("contact-rich", 1),
 )
+
+# Acronyms must be matched as tokens. Naive substring checks make "ppo" match
+# words such as "support", causing many false positives.
+TOKEN_TERMS = frozenset({"rl", "vla", "ppo", "grpo", "sac"})
 
 
 @dataclass(frozen=True)
@@ -190,7 +199,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--lookback-days",
         type=int,
-        default=21,
+        default=45,
         help="Only consider papers submitted within this many days.",
     )
     parser.add_argument(
@@ -202,7 +211,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-new",
         type=int,
-        default=20,
+        default=30,
         help="Maximum unseen papers reported per run; excess papers remain unseen.",
     )
     parser.add_argument(
@@ -269,7 +278,10 @@ def fetch_bytes(url: str, attempts: int = 3) -> bytes:
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "robot-rl-posttraining-watch/1.0 (github.com/yangfeiyang-123/arxiv_daily_update)",
+            "User-Agent": (
+                "robot-rl-posttraining-watch/1.1 "
+                "(github.com/yangfeiyang-123/arxiv_daily_update)"
+            ),
             "Accept": "application/atom+xml",
         },
     )
@@ -300,10 +312,10 @@ def parse_feed(xml_bytes: bytes) -> list[Paper]:
         for link in links:
             href = link.attrib.get("href", "")
             rel = link.attrib.get("rel", "")
-            title = link.attrib.get("title", "")
+            link_title = link.attrib.get("title", "")
             if rel == "alternate" and href:
                 abs_url = href
-            if title == "pdf" and href:
+            if link_title == "pdf" and href:
                 pdf_url = href
 
         authors = tuple(
@@ -333,8 +345,22 @@ def parse_feed(xml_bytes: bytes) -> list[Paper]:
     return papers
 
 
+def matches_term(text: str, term: str) -> bool:
+    """Match phrases by substring and short acronyms by token boundary."""
+    text_cf = text.casefold()
+    term_cf = term.casefold()
+    if term_cf in TOKEN_TERMS:
+        return bool(
+            re.search(
+                rf"(?<![a-z0-9]){re.escape(term_cf)}(?![a-z0-9])",
+                text_cf,
+            )
+        )
+    return term_cf in text_cf
+
+
 def contains_any(text: str, terms: Iterable[str]) -> bool:
-    return any(term in text for term in terms)
+    return any(matches_term(text, term) for term in terms)
 
 
 def infer_tags(title: str, summary: str) -> tuple[str, ...]:
@@ -342,23 +368,46 @@ def infer_tags(title: str, summary: str) -> tuple[str, ...]:
     tags: list[str] = []
 
     tag_rules: tuple[tuple[str, tuple[str, ...]], ...] = (
-        ("VLA-RL", ("vision-language-action", " vla ", "vla model")),
-        ("Diffusion/Flow", ("diffusion policy", "flow policy", "flow-matching", "flow matching")),
-        ("Offline-to-Online", ("offline-to-online", "offline to online", "offline rl", "online rl")),
-        ("Residual/Latent", ("residual", "latent steering", "latent reinforcement", "bottleneck latent")),
-        ("World Model", ("world model", "digital twin", "imagined rollout", "synthetic transition")),
+        ("VLA-RL", ("vision-language-action", "vla", "openvla", "pi0", "π0")),
+        (
+            "Diffusion/Flow",
+            ("diffusion policy", "flow policy", "flow-matching", "flow matching"),
+        ),
+        (
+            "Offline-to-Online",
+            ("offline-to-online", "offline to online", "offline rl", "online rl"),
+        ),
+        (
+            "Residual/Latent",
+            ("residual", "latent steering", "latent reinforcement", "bottleneck latent"),
+        ),
+        (
+            "World Model",
+            ("world model", "digital twin", "imagined rollout", "synthetic transition"),
+        ),
         ("Real Robot", ("real-world", "real robot", "physical robot", "on-robot")),
-        ("Human-in-the-Loop", ("human-in-the-loop", "human intervention", "teleoperation")),
+        (
+            "Human-in-the-Loop",
+            ("human-in-the-loop", "human intervention", "teleoperation"),
+        ),
         ("Value/Critic", ("critic", "q-learning", "value estimator", "value function")),
-        ("Safety/Recovery", ("safety", "failure-aware", "recovery policy", "intervention-requiring")),
-        ("Continual Learning", ("continual", "catastrophic forgetting", "stability and plasticity")),
-        ("Deployment/Distill", ("distillation", "one-step", "latency", "high-frequency control")),
+        (
+            "Safety/Recovery",
+            ("safety", "failure-aware", "recovery policy", "intervention-requiring"),
+        ),
+        (
+            "Continual Learning",
+            ("continual", "catastrophic forgetting", "stability and plasticity"),
+        ),
+        (
+            "Deployment/Distill",
+            ("distillation", "one-step", "latency", "high-frequency control"),
+        ),
         ("Contact-rich", ("contact-rich", "tactile", "force/torque", "dexterous")),
     )
 
-    padded = f" {text} "
     for tag, terms in tag_rules:
-        if any(term in padded for term in terms):
+        if any(matches_term(text, term) for term in terms):
             tags.append(tag)
     return tuple(tags)
 
@@ -368,7 +417,7 @@ def relevance_score(paper: Paper) -> tuple[int, tuple[str, ...]]:
     summary = paper.summary.casefold()
     text = f"{title} {summary}"
 
-    # High-precision semantic gate: robotics + RL + policy/manipulation context.
+    # High-precision semantic gate: robotics + RL + manipulation/policy context.
     if not contains_any(text, ROBOT_TERMS):
         return 0, ()
     if not contains_any(text, RL_TERMS):
@@ -377,23 +426,27 @@ def relevance_score(paper: Paper) -> tuple[int, tuple[str, ...]]:
         return 0, ()
 
     # Remove navigation-only work unless manipulation is explicitly central.
-    if contains_any(title, NAVIGATION_ONLY_TERMS) and "manipulation" not in text:
+    if contains_any(title, NAVIGATION_ONLY_TERMS) and not matches_term(title, "manipulation"):
         return 0, ()
 
     score = 0
     for term, weight in TITLE_WEIGHTS:
-        if term in title:
+        if matches_term(title, term):
             score += weight
     for term, weight in ABSTRACT_WEIGHTS:
-        if term in summary:
+        if matches_term(summary, term):
             score += weight
 
     # Extra confidence for the combinations that define this watch.
-    if "manipulation" in title and "reinforcement learning" in text:
+    if matches_term(title, "manipulation") and matches_term(text, "reinforcement learning"):
         score += 3
-    if "vision-language-action" in text and "reinforcement learning" in text:
+    if matches_term(text, "vision-language-action") and matches_term(
+        text, "reinforcement learning"
+    ):
         score += 3
-    if contains_any(text, ("diffusion policy", "flow policy", "flow-matching", "flow matching")) and contains_any(text, RL_TERMS):
+    if contains_any(
+        text, ("diffusion policy", "flow policy", "flow-matching", "flow matching")
+    ) and contains_any(text, RL_TERMS):
         score += 3
     if contains_any(text, ("real-world", "real robot", "physical robot", "on-robot")):
         score += 2
@@ -423,10 +476,13 @@ def load_state(path: Path) -> dict:
 
 def write_state(path: Path, state: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(state, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
-def truncate(text: str, limit: int = 900) -> str:
+def truncate(text: str, limit: int = 850) -> str:
     text = collapse_ws(text)
     if len(text) <= limit:
         return text
@@ -452,6 +508,12 @@ def why_relevant(tags: tuple[str, ...]) -> str:
     return "；".join(selected[:4]) or "与机器人操作策略的 RL 后训练直接相关"
 
 
+def report_marker(papers: list[Paper]) -> str:
+    payload = ",".join(sorted(paper.arxiv_id for paper in papers))
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return f"<!-- robot-rl-watch:{digest} -->"
+
+
 def render_report(
     papers: list[Paper],
     local_now: datetime,
@@ -461,23 +523,32 @@ def render_report(
 ) -> str:
     date_text = local_now.strftime("%Y-%m-%d")
     lines = [
+        report_marker(papers),
         f"# 机器人操作 RL Post-Training 每日新文 — {date_text}",
         "",
-        f"本次发现 **{len(papers)}** 篇从未推送过的高相关论文。检索最近 {lookback_days} 天的 arXiv，最低相关性阈值为 {threshold}；按 canonical arXiv ID（去掉版本号）与规范化标题永久去重。",
+        (
+            f"本次发现 **{len(papers)}** 篇从未推送过的高相关论文。"
+            f"检索最近 {lookback_days} 天的 arXiv，最低相关性阈值为 {threshold}；"
+            "按 canonical arXiv ID（去掉版本号）与规范化标题永久去重。"
+        ),
         "",
     ]
     if partial_failures:
         lines.extend(
             [
-                "> 部分补充检索暂时失败，但核心 `cs.RO latest` 检索成功："
-                + "；".join(partial_failures),
+                (
+                    "> 部分补充检索暂时失败，但核心 `cs.RO latest` 检索成功："
+                    + "；".join(partial_failures)
+                ),
                 "",
             ]
         )
 
     for index, paper in enumerate(papers, start=1):
         published = parse_dt(paper.published)
-        published_text = published.strftime("%Y-%m-%d") if published else paper.published
+        published_text = (
+            published.strftime("%Y-%m-%d") if published else paper.published
+        )
         author_text = ", ".join(paper.authors[:8])
         if len(paper.authors) > 8:
             author_text += f", et al.（共 {len(paper.authors)} 位）"
@@ -502,7 +573,10 @@ def render_report(
     lines.extend(
         [
             "---",
-            "该报告由 GitHub Actions 自动生成；已经出现过的论文不会再次推送。arXiv 修订版本默认视为同一篇论文。",
+            (
+                "该报告由 GitHub Actions 自动生成；已经出现过的论文不会再次推送。"
+                "arXiv 修订版本默认视为同一篇论文。"
+            ),
             "",
         ]
     )
@@ -520,7 +594,10 @@ def set_github_output(name: str, value: str) -> None:
 def main() -> int:
     args = parse_args()
     if args.lookback_days < 1 or args.threshold < 1 or args.max_new < 1:
-        print("lookback-days, threshold, and max-new must be positive", file=sys.stderr)
+        print(
+            "lookback-days, threshold, and max-new must be positive",
+            file=sys.stderr,
+        )
         return 2
     if args.request_interval < 0:
         print("request-interval must be non-negative", file=sys.stderr)
@@ -528,7 +605,7 @@ def main() -> int:
 
     try:
         local_tz = ZoneInfo(args.timezone)
-    except Exception as exc:  # pragma: no cover - defensive configuration check
+    except Exception as exc:  # pragma: no cover
         print(f"Invalid timezone {args.timezone}: {exc}", file=sys.stderr)
         return 2
 
@@ -550,7 +627,10 @@ def main() -> int:
                 if published is not None and published < cutoff:
                     continue
                 papers_by_id.setdefault(paper.arxiv_id, paper)
-            print(f"[{label}] fetched={len(fetched)} retained_total={len(papers_by_id)}")
+            print(
+                f"[{label}] fetched={len(fetched)} "
+                f"retained_total={len(papers_by_id)}"
+            )
         except (RuntimeError, ET.ParseError) as exc:
             message = f"{label}: {exc}"
             if index == 0:
@@ -562,7 +642,11 @@ def main() -> int:
             time.sleep(args.request_interval)
 
     if not core_query_succeeded:
-        print("The core cs.RO query failed; refusing to emit a possibly incomplete daily result.", file=sys.stderr)
+        print(
+            "The core cs.RO query failed; refusing to emit a possibly incomplete "
+            "daily result.",
+            file=sys.stderr,
+        )
         return 1
 
     state = load_state(args.state)
@@ -593,11 +677,13 @@ def main() -> int:
     unseen = [
         paper
         for paper in relevant
-        if paper.arxiv_id not in seen_ids and title_hash(paper.title) not in seen_hashes
+        if paper.arxiv_id not in seen_ids
+        and title_hash(paper.title) not in seen_hashes
     ]
     unseen.sort(
         key=lambda paper: (
-            parse_dt(paper.published) or datetime.min.replace(tzinfo=timezone.utc),
+            parse_dt(paper.published)
+            or datetime.min.replace(tzinfo=timezone.utc),
             paper.score,
         ),
         reverse=True,
@@ -608,12 +694,13 @@ def main() -> int:
     if not selected:
         set_github_output("report_path", "")
         print(
-            f"No unseen paper passed the threshold. candidates={len(papers_by_id)} relevant={len(relevant)}"
+            "No unseen paper passed the threshold. "
+            f"candidates={len(papers_by_id)} relevant={len(relevant)}"
         )
         return 0
 
     local_now = now_utc.astimezone(local_tz)
-    report_path = args.output_dir / f"{local_now.strftime('%Y-%m-%d_%H%M')}.md"
+    report_path = args.output_dir / f"{local_now.strftime('%Y-%m-%d_%H%M%S')}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
         render_report(
