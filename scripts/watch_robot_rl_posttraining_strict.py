@@ -60,6 +60,7 @@ POLICY_PRIOR_TERMS = (
 POSTTRAIN_SIGNALS = (
     "post-training",
     "post training",
+    "post-train",
     "fine-tuning",
     "fine tuning",
     "finetuning",
@@ -201,7 +202,13 @@ def strict_relevance_score(paper):
         return 0, ()
 
     title_has_rl = strict_contains_any(title, STRONG_RL_TERMS)
-    explicit_rl = title_has_rl or evidence_count(summary, STRONG_RL_TERMS) >= 2
+    summary_has_rl = strict_contains_any(summary, STRONG_RL_TERMS)
+    summary_has_posttrain = strict_contains_any(summary, POSTTRAIN_SIGNALS)
+    explicit_rl = (
+        title_has_rl
+        or evidence_count(summary, STRONG_RL_TERMS) >= 2
+        or (summary_has_rl and summary_has_posttrain)
+    )
     adjacent_posttraining = (
         strict_contains_any(combined, POSTTRAIN_SIGNALS)
         and strict_contains_any(combined, ADJACENT_MECHANISMS)
