@@ -1,0 +1,72 @@
+name: Daily Robot RL Post-Training Watch
+
+on:
+  schedule:
+    # 09:30 during Pacific daylight time, 08:30 during Pacific standard time.
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: robot-rl-posttraining-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Find unseen papers
+        id: watch
+        run: |
+          python scripts/watch_robot_rl_posttraining.py \
+            --state data/robot_rl_watch_state.json \
+            --output-dir outputs/robot_rl_watch \
+            --lookback-days 21 \
+            --threshold 10 \
+            --max-new 20 \
+            --timezone America/Los_Angeles
+
+      - name: Commit report and deduplication state
+        if: steps.watch.outputs.new_count != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/robot_rl_watch_state.json outputs/robot_rl_watch
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: add daily robot RL post-training watch"
+            git push
+          fi
+
+      - name: Post the daily digest to tracking issue
+        if: steps.watch.outputs.new_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_PATH: ${{ steps.watch.outputs.report_path }}
+        run: |
+          gh issue comment 7 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body-file "$REPORT_PATH"
+
+      - name: Write run summary
+        run: |
+          echo "New papers: ${{ steps.watch.outputs.new_count }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.watch.outputs.report_path }}" ]; then
+            echo "Report: ${{ steps.watch.outputs.report_path }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No unseen high-relevance papers; no issue notification was sent." >> "$GITHUB_STEP_SUMMARY"
+          fi
