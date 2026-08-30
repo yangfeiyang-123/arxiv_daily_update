@@ -7,13 +7,16 @@ on:
     - cron: "30 15 * * *"
     - cron: "30 16 * * *"
   workflow_dispatch:
-  # Updating this workflow triggers one end-to-end validation run. Report/state
-  # commits do not retrigger it because they do not match this path filter.
+  # Changes to the watcher or its tests trigger one end-to-end validation run.
+  # Report/state commits do not match these paths and therefore do not loop.
   push:
     branches:
       - main
     paths:
       - ".github/workflows/watch-robot-rl-posttraining.yml"
+      - "scripts/watch_robot_rl_posttraining.py"
+      - "scripts/watch_robot_rl_posttraining_strict.py"
+      - "tests/test_robot_rl_watch.py"
 
 permissions:
   contents: write
