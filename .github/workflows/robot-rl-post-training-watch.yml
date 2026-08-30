@@ -72,6 +72,72 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Seed papers already covered by the initial survey
+        if: steps.slot.outputs.run == 'true'
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import re
+          from pathlib import Path
+
+          path = Path("data/robot_rl_posttrain_seen.json")
+          state = json.loads(path.read_text(encoding="utf-8"))
+          seen = state.setdefault("seen", {})
+          seed = {
+              "2409.00588": "Diffusion Policy Policy Optimization",
+              "2412.13630": "Policy Decorator: Model-Agnostic Online Refinement for Large Policy Model",
+              "2502.02538": "Flow Q-Learning",
+              "2505.17016": "Interactive Post-Training for Vision-Language-Action Models",
+              "2505.18719": "VLA-RL: Towards Masterful and General Robotic Manipulation with Scalable Reinforcement Learning",
+              "2505.18763": "GenPO: Generative Diffusion Models Meet On-Policy Reinforcement Learning",
+              "2505.22094": "ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning",
+              "2506.15799": "Steering Your Diffusion Policy with Latent Space Reinforcement Learning",
+              "2507.07969": "Reinforcement Learning with Action Chunking",
+              "2507.07986": "EXPO: Stable Reinforcement Learning with Expressive Policies",
+              "2507.15073": "Reinforcement Learning for Flow-Matching Policies",
+              "2507.21053": "Flow Matching Policy Gradients",
+              "2510.14830": "RL-100: Performant Robotic Manipulation with Real-World Reinforcement Learning",
+              "2603.10263": "From Prior to Pro: Efficient Skill Mastery via Distribution Contractive RL Finetuning",
+              "2605.25477": "EXPO-FT: Sample-Efficient Reinforcement Learning Finetuning for Vision-Language-Action Models",
+              "2606.31846": "Z-1: Efficient Reinforcement Learning for Vision-Language-Action Models",
+              "2607.08877": "FlowDAgger: Human-in-the-Loop Adaptation of Generative Robot Policies in Latent Space",
+              "2608.05999": "Beyond Flat Policies: Hierarchical Post-Training for Embodied Agents in Robotic Manipulation",
+              "2608.07314": "TEMPO: Semantic-Action Decoupled RL Post-Training for Vision-Language-Action Models",
+              "2608.13026": "Temporal GRPO: Beyond Trajectory-Level Credit in Vision-Language-Action Reinforcement Learning",
+              "2608.15139": "StructRL: Structured Action-Space Exploration for Flow-Based VLAs",
+              "2608.15680": "Robo-Dopamine 2.0: History-Conditioned and OOD-Aware Process Reward Modeling for Robotic Manipulation",
+              "2608.15707": "GAINS: Leveraging Inconsistent Human Intervention Signals in Reinforcement Learning",
+              "2608.16837": "HAF: Adapting Generalist VLAs to Humanoid Whole-Body Loco-manipulation via Hierarchical Action Flow and Spectral Latent RL",
+              "2608.17163": "Q-Learning With World Models",
+              "2608.17423": "Prism-GRPO: Faster VLA Policy Optimization via Splitting Same-outcome Groups",
+              "2608.19182": "ADEPT: Accelerating Dexterity via Pre-Training and Post-Training using Reinforcement Learning",
+              "2608.19891": "EXIMO: VLM Guided Exploration of VLA Policies",
+              "2608.20208": "RoMAN-Flow: Taming Autoregressive Normalizing Flows for Offline Reinforcement Learning in Robotic Manipulation",
+              "2608.21204": "Beyond Imitation: Self-Improving Robot Policies via Off-Policy Q-Planning",
+              "2608.21740": "CounterAlign: Counterfactual Supervision for Vision-Language-Action Models",
+              "2608.23831": "Learning to Act While Waiting: RL Finetuning of Generalist Robot Policies Under Inference Latency",
+              "2608.27079": "GRAFT: Grounded and Efficient Online Reinforcement Adaptation for Fine-Grained Robot Manipulation",
+          }
+
+          for arxiv_id, title in seed.items():
+              metadata = {
+                  "arxiv_id": arxiv_id,
+                  "first_seen": "2026-08-29",
+                  "source": "initial-survey",
+                  "title": title,
+              }
+              seen.setdefault(f"arxiv:{arxiv_id}", metadata)
+              normalized = re.sub(r"[^\w]+", " ", " ".join(title.casefold().split()), flags=re.UNICODE).strip()
+              digest = hashlib.sha1(normalized.encode("utf-8")).hexdigest()
+              seen.setdefault(f"title:{digest}", metadata)
+
+          state["issue_number"] = 7
+          state["total_unique_papers"] = sum(1 for key in seen if key.startswith("arxiv:"))
+          path.write_text(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(f"Seeded {len(seed)} already-reviewed papers; {state['total_unique_papers']} unique arXiv IDs are now suppressed.")
+          PY
+
       - name: Validate strict watcher
         if: steps.slot.outputs.run == 'true'
         run: |
@@ -95,7 +161,8 @@ jobs:
 
       # Notify before committing state. If notification fails, the same papers
       # remain eligible for retry instead of being silently marked delivered.
-      # The content hash marker makes a retry idempotent after a successful post.
+      # The marker is derived from canonical arXiv IDs, so it remains stable even
+      # when a failed state push is retried on a later date.
       - name: Publish digest to canonical tracking issue
         if: steps.slot.outputs.run == 'true' && steps.watch.outputs.has_new == 'true'
         env:
@@ -103,8 +170,11 @@ jobs:
           REPORT_PATH: ${{ steps.watch.outputs.report_path }}
         shell: bash
         run: |
-          digest_hash="$(sha256sum "$REPORT_PATH" | awk '{print $1}')"
-          marker="<!-- robot-rl-watch:${digest_hash} -->"
+          paper_ids="$(grep -oE '[0-9]{4}\.[0-9]{4,5}' "$REPORT_PATH" | sort -u | paste -sd, -)"
+          if [[ -z "$paper_ids" ]]; then
+            paper_ids="sha256:$(sha256sum "$REPORT_PATH" | awk '{print $1}')"
+          fi
+          marker="<!-- robot-rl-watch:${paper_ids} -->"
           body_file="/tmp/robot_rl_watch_issue_body.md"
           {
             cat "$REPORT_PATH"
@@ -113,7 +183,7 @@ jobs:
 
           if gh api "repos/$GITHUB_REPOSITORY/issues/$WATCH_ISSUE/comments" \
               --paginate --jq '.[].body' | grep -Fq -- "$marker"; then
-            echo "This exact digest is already present; skipping duplicate comment."
+            echo "This paper set is already present; skipping duplicate comment."
           else
             gh issue comment "$WATCH_ISSUE" \
               --repo "$GITHUB_REPOSITORY" \
@@ -121,12 +191,12 @@ jobs:
           fi
 
       - name: Persist permanent no-repeat state and reports
-        if: steps.slot.outputs.run == 'true' && steps.watch.outputs.has_new == 'true'
+        if: steps.slot.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/robot_rl_posttrain_seen.json outputs/robot_rl_posttrain
+          git add data/robot_rl_posttrain_seen.json outputs/robot_rl_posttrain 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "No state/report changes to commit."
