@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-08-30T05:26:06.374112+00:00",
-  "last_report": "2026-08-29",
+  "last_new_paper_at": "2026-09-01T18:41:53.402180+00:00",
+  "last_report": "2026-09-01",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -111,6 +111,12 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "TwinRL: Digital Twin-Driven Reinforcement Learning for Real-World Robotic Manipulation"
+    },
+    "arxiv:2602.11075": {
+      "arxiv_id": "2602.11075",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RISE: Self-Improving Robot Policy with Compositional World Model"
     },
     "arxiv:2603.10263": {
       "arxiv_id": "2603.10263",
@@ -946,6 +952,38 @@
       "source": "initial-survey",
       "title": "GRAFT: Grounded and Efficient Online Reinforcement Adaptation for Fine-Grained Robot Manipulation"
     },
+    "arxiv:2608.29061": {
+      "arxiv_id": "2608.29061",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-29",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "PathBridger: Subgoal Bridges for Offline Goal-Conditioned Reinforcement Learning"
+    },
+    "arxiv:2608.29768": {
+      "arxiv_id": "2608.29768",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-30",
+      "score": 28,
+      "source": "daily-watch",
+      "title": "SmoothRL: Online Reinforcement Learning During Asynchronous Execution"
+    },
+    "arxiv:2608.29828": {
+      "arxiv_id": "2608.29828",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-30",
+      "score": 51,
+      "source": "daily-watch",
+      "title": "SymVD: Symmetric Vision Language Action Distillation for Robot Manipulation"
+    },
+    "arxiv:2608.30122": {
+      "arxiv_id": "2608.30122",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-31",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "Aligning Multi-Trajectory Supervision with Policy Optimization for VLA Driving"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -953,6 +991,12 @@
       "score": 20,
       "source": "daily-watch",
       "title": "Pointing-VLA: Typed Spatial Grounding Interfaces for Vision-Language-Action Manipulation"
+    },
+    "title:02eb518dfe5ba64291e859619f89682ca3e1f429": {
+      "arxiv_id": "2608.03872",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "EvoHIL: Self-Evolving Reward and Flow-Matched Policy Optimization for Robust Human-in-the-Loop Reinforcement Learning"
     },
     "title:04c5f455974a6c838900427bcd8c64ec9d3b7059": {
       "arxiv_id": "2608.22629",
@@ -1076,6 +1120,12 @@
       "source": "daily-watch",
       "title": "PACE: Phase-Progress-Aware Credit for Long-Horizon Embodied Manipulation"
     },
+    "title:20054d64118bf0faca757ef2e68308b89a6993f0": {
+      "arxiv_id": "2602.11075",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RISE: Self-Improving Robot Policy with Compositional World Model"
+    },
     "title:2059ee29e7abc014e03ef04faa26927a0b144645": {
       "arxiv_id": "2608.10718",
       "first_seen": "2026-08-29",
@@ -1083,6 +1133,14 @@
       "score": 20,
       "source": "daily-watch",
       "title": "TCAM for Autonomous Deformable Manipulation: The RMC2 Champion System for WBCD 2026 Track 4"
+    },
+    "title:222ec0957def579ca3b39763ba886fcbf54ca12b": {
+      "arxiv_id": "2608.29828",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-30",
+      "score": 51,
+      "source": "daily-watch",
+      "title": "SymVD: Symmetric Vision Language Action Distillation for Robot Manipulation"
     },
     "title:241aac036845ee3c732bb30ec78ea7d77f2cf59f": {
       "arxiv_id": "2607.29613",
@@ -1113,6 +1171,38 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Diffusion Policy Policy Optimization"
+    },
+    "title:2a9884a6bf2ba3169b612ed8c36fed1695bc410e": {
+      "arxiv_id": "2608.09762",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Efficient Real-World Online Reinforcement Learning for Robot Manipulation via Centralized Training and Critic Decomposition"
+    },
+    "title:2adcaf264777be4975fd1fd537b192d16fd19a2d": {
+      "arxiv_id": "2608.29061",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-29",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "PathBridger: Subgoal Bridges for Offline Goal-Conditioned Reinforcement Learning"
+    },
+    "title:2fe17e800ef5e9dbe396f3ea5651b8ada032ac08": {
+      "arxiv_id": "2512.01801",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "GR-RL: Going Dexterous and Precise for Long-Horizon Robotic Manipulation"
+    },
+    "title:3076b21ea4c5c62a87c106a477ca51b2e306ef81": {
+      "arxiv_id": "2608.01013",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "RL Bootstrapping of OpenVLA-OFT for a Novel Robot Embodiment"
+    },
+    "title:32f5ed10dbc3231f2a940152837cb626d5f10deb": {
+      "arxiv_id": "2602.09023",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "TwinRL: Digital Twin-Driven Reinforcement Learning for Real-World Robotic Manipulation"
     },
     "title:34d69ef3d04771935d02de6cd0fb3aba715ac4eb": {
       "arxiv_id": "2608.03483",
@@ -1210,6 +1300,14 @@
       "source": "daily-watch",
       "title": "SP3O: Reinforcement Learning from Segment Preferences without Reward Modeling"
     },
+    "title:4e402de8236a20586a6bab46c79bedfba50a5964": {
+      "arxiv_id": "2608.29768",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-30",
+      "score": 28,
+      "source": "daily-watch",
+      "title": "SmoothRL: Online Reinforcement Learning During Asynchronous Execution"
+    },
     "title:504122e4c6ba124fbf130666391d79df75e30dc8": {
       "arxiv_id": "2607.16506",
       "first_seen": "2026-08-29",
@@ -1290,6 +1388,12 @@
       "source": "daily-watch",
       "title": "What Matters for Latent Actions in Robot Learning"
     },
+    "title:706dc6233f1e5ff3f27b15f8a99a11d19949cdd4": {
+      "arxiv_id": "2410.21845",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "HIL-SERL: Precise and Dexterous Robotic Manipulation via Human-in-the-Loop Reinforcement Learning"
+    },
     "title:70bc4898650afac66ff7323a39f1932cad031df2": {
       "arxiv_id": "2607.15880",
       "first_seen": "2026-08-29",
@@ -1297,6 +1401,12 @@
       "score": 15,
       "source": "daily-watch",
       "title": "Dynamics-Aware Meta-Imitation for Generalization to Unseen Robotic Manipulation"
+    },
+    "title:713c32485ba200aeb8f75d8e7f1cf317b9ebe042": {
+      "arxiv_id": "2608.26053",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "R3: Training Robots to Reason in Natural Language via Reinforcement Learning"
     },
     "title:718a0cd6c310f26f53d9646d8d4c4afeeceef75e": {
       "arxiv_id": "2608.07045",
@@ -1337,6 +1447,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "RL-100: Performant Robotic Manipulation with Real-World Reinforcement Learning"
+    },
+    "title:7fba3acc87d5450e14ad9d98ea8955c49904a8eb": {
+      "arxiv_id": "2608.30122",
+      "first_seen": "2026-09-01",
+      "published": "2026-08-31",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "Aligning Multi-Trajectory Supervision with Policy Optimization for VLA Driving"
     },
     "title:8002d850af5675773926d2fe01740cd5b75358c1": {
       "arxiv_id": "2608.01573",
@@ -1405,6 +1523,12 @@
       "score": 24,
       "source": "daily-watch",
       "title": "GAINS: Leveraging Inconsistent Human Intervention Signals in Reinforcement Learning"
+    },
+    "title:8ff9dbb4fee7e01d00f8ce7b401e2d4f0d29fbf9": {
+      "arxiv_id": "2508.02644",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "D2PPO: Diffusion Policy Policy Optimization with Dispersive Loss"
     },
     "title:91bd8ebcaeb462419b6d86830ec53310d58f390b": {
       "arxiv_id": "2607.23473",
@@ -1511,6 +1635,12 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Flow Q-Learning"
+    },
+    "title:a2477ee1df6b86ccf3d88a5e3d49e0e9e2133a4a": {
+      "arxiv_id": "2302.02948",
+      "first_seen": "2026-08-29",
+      "source": "initial-survey",
+      "title": "Efficient Online Reinforcement Learning with Offline Data"
     },
     "title:a539519885b803a4ed3267c9a6da3deef919053b": {
       "arxiv_id": "2608.16978",
@@ -1841,7 +1971,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 126,
+  "total_unique_papers": 131,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
