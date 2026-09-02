@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-01T18:41:53.402180+00:00",
-  "last_report": "2026-09-01",
+  "last_new_paper_at": "2026-09-02T18:50:51.071334+00:00",
+  "last_report": "2026-09-02",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -984,6 +984,14 @@
       "source": "daily-watch",
       "title": "Aligning Multi-Trajectory Supervision with Policy Optimization for VLA Driving"
     },
+    "arxiv:2609.01596": {
+      "arxiv_id": "2609.01596",
+      "first_seen": "2026-09-02",
+      "published": "2026-09-01",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Facet-0: A Robotic Foundation Model for Contact-Rich Precise Manipulation"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -991,6 +999,14 @@
       "score": 20,
       "source": "daily-watch",
       "title": "Pointing-VLA: Typed Spatial Grounding Interfaces for Vision-Language-Action Manipulation"
+    },
+    "title:00c9627f1fc29d8fb6f5f47af098fb45f2006f0a": {
+      "arxiv_id": "2609.01596",
+      "first_seen": "2026-09-02",
+      "published": "2026-09-01",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Facet-0: A Robotic Foundation Model for Contact-Rich Precise Manipulation"
     },
     "title:02eb518dfe5ba64291e859619f89682ca3e1f429": {
       "arxiv_id": "2608.03872",
@@ -1971,7 +1987,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 131,
+  "total_unique_papers": 132,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
