@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-02T18:50:51.071334+00:00",
-  "last_report": "2026-09-02",
+  "last_new_paper_at": "2026-09-04T18:31:26.393403+00:00",
+  "last_report": "2026-09-04",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -992,6 +992,14 @@
       "source": "daily-watch",
       "title": "Facet-0: A Robotic Foundation Model for Contact-Rich Precise Manipulation"
     },
+    "arxiv:2609.03681": {
+      "arxiv_id": "2609.03681",
+      "first_seen": "2026-09-04",
+      "published": "2026-09-03",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "WISE: World-model-guided Imagination Scheduling for Efficient Post-training of Vision-Language-Action Models"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1508,6 +1516,14 @@
       "source": "daily-watch",
       "title": "CLIFT: Turning Gemini Robotics On-Device into Humanoid Specialists via Non-Invasive Closed-Loop Iterative Fine-Tuning"
     },
+    "title:8822d07865d28db17e1120341e669b4b31bf89f0": {
+      "arxiv_id": "2609.03681",
+      "first_seen": "2026-09-04",
+      "published": "2026-09-03",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "WISE: World-model-guided Imagination Scheduling for Efficient Post-training of Vision-Language-Action Models"
+    },
     "title:89f0aa6454af56c0eab771a17d5372a4869f63bd": {
       "arxiv_id": "2608.11363",
       "first_seen": "2026-08-29",
@@ -1987,7 +2003,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 132,
+  "total_unique_papers": 133,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
