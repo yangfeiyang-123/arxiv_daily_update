@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-04T18:31:26.393403+00:00",
-  "last_report": "2026-09-04",
+  "last_new_paper_at": "2026-09-07T19:19:34.651944+00:00",
+  "last_report": "2026-09-07",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1000,6 +1000,14 @@
       "source": "daily-watch",
       "title": "WISE: World-model-guided Imagination Scheduling for Efficient Post-training of Vision-Language-Action Models"
     },
+    "arxiv:2609.04355": {
+      "arxiv_id": "2609.04355",
+      "first_seen": "2026-09-07",
+      "published": "2026-09-03",
+      "score": 40,
+      "source": "daily-watch",
+      "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1820,6 +1828,14 @@
       "source": "daily-watch",
       "title": "PRIMAL3: Pathfinding via Reinforcement and Imitation Multi-Agent Learning - Leveraging LaCAM3"
     },
+    "title:d03bb820cd7f7c43a978a61756cfc4c95d25cdb6": {
+      "arxiv_id": "2609.04355",
+      "first_seen": "2026-09-07",
+      "published": "2026-09-03",
+      "score": 40,
+      "source": "daily-watch",
+      "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
+    },
     "title:d4dcd9fa0e82054705af7cd3a17c1b3bee3c6b1d": {
       "arxiv_id": "2608.07870",
       "first_seen": "2026-08-29",
@@ -2003,7 +2019,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 133,
+  "total_unique_papers": 134,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
