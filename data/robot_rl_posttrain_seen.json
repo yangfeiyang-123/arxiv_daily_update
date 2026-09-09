@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-07T19:19:34.651944+00:00",
-  "last_report": "2026-09-07",
+  "last_new_paper_at": "2026-09-09T18:45:44.153914+00:00",
+  "last_report": "2026-09-09",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1008,6 +1008,38 @@
       "source": "daily-watch",
       "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
     },
+    "arxiv:2609.06009": {
+      "arxiv_id": "2609.06009",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-05",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "How to Learn from What a Human Would Avoid? Intervention-Aware World Models with Real-World RL for Dexterous Manipulation"
+    },
+    "arxiv:2609.06114": {
+      "arxiv_id": "2609.06114",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-05",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "Where Success Breaks: Failure-Boundary Learning for Robust Vision-Language-Action Models"
+    },
+    "arxiv:2609.06591": {
+      "arxiv_id": "2609.06591",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-06",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Unifying Physics-Based Humanoid Interaction with a Context-Conditioned Interaction Prior"
+    },
+    "arxiv:2609.07445": {
+      "arxiv_id": "2609.07445",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-07",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "SMaRT-Tug: Structured Multi-Agent Reinforcement Learning for Physics-Based Tugboat-Barge Collaborative Manipulation"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1274,6 +1306,14 @@
       "source": "daily-watch",
       "title": "Force/Torque-Based Kinematic Adaptation for Robotic Manipulation Tasks"
     },
+    "title:3dda5c35a542fca8c3db151ed47fed45da342c6b": {
+      "arxiv_id": "2609.06009",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-05",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "How to Learn from What a Human Would Avoid? Intervention-Aware World Models with Real-World RL for Dexterous Manipulation"
+    },
     "title:409a7e5d16afe0b1d87a32540892ca63654688af": {
       "arxiv_id": "2608.26058",
       "first_seen": "2026-08-29",
@@ -1295,6 +1335,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Beyond Imitation: Self-Improving Robot Policies via Off-Policy Q-Planning"
+    },
+    "title:468c163e2807a542426e013b979ca515bfafdd4b": {
+      "arxiv_id": "2609.07445",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-07",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "SMaRT-Tug: Structured Multi-Agent Reinforcement Learning for Physics-Based Tugboat-Barge Collaborative Manipulation"
     },
     "title:4767737c1a9c3befb6722d883f209df4c9bb5e9f": {
       "arxiv_id": "2607.28405",
@@ -1774,6 +1822,14 @@
       "source": "daily-watch",
       "title": "Q-Learning With World Models"
     },
+    "title:bded62ea2289789bd89cfeae7d372786e3a515ff": {
+      "arxiv_id": "2609.06591",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-06",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Unifying Physics-Based Humanoid Interaction with a Context-Conditioned Interaction Prior"
+    },
     "title:be3b29b1e5a47c06074af9b368afa767d1b5b378": {
       "arxiv_id": "2608.03231",
       "first_seen": "2026-08-29",
@@ -2010,6 +2066,14 @@
       "source": "daily-watch",
       "title": "Temporal Logic Guided Universal Task Representations for Reinforcement Learning"
     },
+    "title:fe35c6ffb89707493d05e562d558367b91fee191": {
+      "arxiv_id": "2609.06114",
+      "first_seen": "2026-09-09",
+      "published": "2026-09-05",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "Where Success Breaks: Failure-Boundary Learning for Robust Vision-Language-Action Models"
+    },
     "title:ffd9d71882ab58c229167efd374df4da51ff3588": {
       "arxiv_id": "2608.09467",
       "first_seen": "2026-08-29",
@@ -2019,7 +2083,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 134,
+  "total_unique_papers": 138,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
