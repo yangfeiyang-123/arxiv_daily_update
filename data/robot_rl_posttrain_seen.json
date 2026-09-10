@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-09T18:45:44.153914+00:00",
-  "last_report": "2026-09-09",
+  "last_new_paper_at": "2026-09-10T18:36:21.176822+00:00",
+  "last_report": "2026-09-10",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1040,6 +1040,22 @@
       "source": "daily-watch",
       "title": "SMaRT-Tug: Structured Multi-Agent Reinforcement Learning for Physics-Based Tugboat-Barge Collaborative Manipulation"
     },
+    "arxiv:2609.09918": {
+      "arxiv_id": "2609.09918",
+      "first_seen": "2026-09-10",
+      "published": "2026-09-09",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "ViBe: Visual Behavior Adaptation for Perceptive Humanoid Whole-Body Control"
+    },
+    "arxiv:2609.09941": {
+      "arxiv_id": "2609.09941",
+      "first_seen": "2026-09-10",
+      "published": "2026-09-09",
+      "score": 40,
+      "source": "daily-watch",
+      "title": "HaWMPO: Hallucination-Aware World Model-based Policy Optimization for Generalist Robot Policy"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1229,6 +1245,14 @@
       "score": 14,
       "source": "daily-watch",
       "title": "LUCID: Latent-Skill Unified Control via Imagined Dynamics for Long-Horizon Humanoid Loco-Manipulation"
+    },
+    "title:2992fb2d1a393816153611ac740a10ec9516e309": {
+      "arxiv_id": "2609.09918",
+      "first_seen": "2026-09-10",
+      "published": "2026-09-09",
+      "score": 16,
+      "source": "daily-watch",
+      "title": "ViBe: Visual Behavior Adaptation for Perceptive Humanoid Whole-Body Control"
     },
     "title:2a1882c5f1f395797c883733c35f1e2d5549ba26": {
       "arxiv_id": "2409.00588",
@@ -1750,6 +1774,14 @@
       "source": "initial-survey",
       "title": "Reinforcement Learning for Flow-Matching Policies"
     },
+    "title:a7c7ed06226b657f265b6333496a5435c59aeb8b": {
+      "arxiv_id": "2609.09941",
+      "first_seen": "2026-09-10",
+      "published": "2026-09-09",
+      "score": 40,
+      "source": "daily-watch",
+      "title": "HaWMPO: Hallucination-Aware World Model-based Policy Optimization for Generalist Robot Policy"
+    },
     "title:a7e9abd48382b1dc88959c8fbd0f069bff55197a": {
       "arxiv_id": "2607.08877",
       "first_seen": "2026-08-29",
@@ -2083,7 +2115,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 138,
+  "total_unique_papers": 140,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
