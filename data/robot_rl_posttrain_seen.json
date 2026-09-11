@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-10T18:36:21.176822+00:00",
-  "last_report": "2026-09-10",
+  "last_new_paper_at": "2026-09-11T18:41:28.830726+00:00",
+  "last_report": "2026-09-11",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1056,6 +1056,22 @@
       "source": "daily-watch",
       "title": "HaWMPO: Hallucination-Aware World Model-based Policy Optimization for Generalist Robot Policy"
     },
+    "arxiv:2609.11270": {
+      "arxiv_id": "2609.11270",
+      "first_seen": "2026-09-11",
+      "published": "2026-09-10",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "Beyond Noise Steering: Dual-Latent Space Reinforcement Learning for Generative Robot Policy"
+    },
+    "arxiv:2609.11433": {
+      "arxiv_id": "2609.11433",
+      "first_seen": "2026-09-11",
+      "published": "2026-09-10",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Safety-aware Skill Adaptation for Reinforcement Learning in Dynamic Environments"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1476,6 +1492,14 @@
       "source": "daily-watch",
       "title": "Explainable Reinforcement Learning via Physics-Aware Policy Distillation"
     },
+    "title:69b8cad050c7750eb76f2895a11fa187e2287c69": {
+      "arxiv_id": "2609.11270",
+      "first_seen": "2026-09-11",
+      "published": "2026-09-10",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "Beyond Noise Steering: Dual-Latent Space Reinforcement Learning for Generative Robot Policy"
+    },
     "title:6a0c59c8ababa93e5f5b7c3efa0657818c7d1ce5": {
       "arxiv_id": "2608.13395",
       "first_seen": "2026-08-29",
@@ -1483,6 +1507,14 @@
       "score": 17,
       "source": "daily-watch",
       "title": "FIRE-VLA: Failure-Informed Self-Evolution for Vision-Language-Action Models in Autonomous Driving"
+    },
+    "title:6ace4071697254db19b11cb4ec34d138d36d58b4": {
+      "arxiv_id": "2609.11433",
+      "first_seen": "2026-09-11",
+      "published": "2026-09-10",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Safety-aware Skill Adaptation for Reinforcement Learning in Dynamic Environments"
     },
     "title:6f526523dabdf66f6ba819c0bececf489feb2a36": {
       "arxiv_id": "2608.19613",
@@ -2115,7 +2147,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 140,
+  "total_unique_papers": 142,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
