@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-11T18:41:28.830726+00:00",
-  "last_report": "2026-09-11",
+  "last_new_paper_at": "2026-09-14T19:54:07.879993+00:00",
+  "last_report": "2026-09-14",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1072,6 +1072,22 @@
       "source": "daily-watch",
       "title": "Safety-aware Skill Adaptation for Reinforcement Learning in Dynamic Environments"
     },
+    "arxiv:2609.12245": {
+      "arxiv_id": "2609.12245",
+      "first_seen": "2026-09-14",
+      "published": "2026-09-10",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "DIA: Denoising Intermediate Advantage for Diffusion Policy Optimization"
+    },
+    "arxiv:2609.12749": {
+      "arxiv_id": "2609.12749",
+      "first_seen": "2026-09-14",
+      "published": "2026-09-11",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SCQ: Stabilizing Conservative Q-Learning with Sigmoid-Bounded Entropy"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1391,6 +1407,14 @@
       "score": 16,
       "source": "daily-watch",
       "title": "QuantWAMs: Calibrating at the Right Granularity for World Action Models"
+    },
+    "title:49898e0455254ea996b60aede3efe1c8f4b5d31a": {
+      "arxiv_id": "2609.12749",
+      "first_seen": "2026-09-14",
+      "published": "2026-09-11",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SCQ: Stabilizing Conservative Q-Learning with Sigmoid-Bounded Entropy"
     },
     "title:49e2da2b3cf96d04e64f86abf21f87d738050aed": {
       "arxiv_id": "2505.18719",
@@ -1806,6 +1830,14 @@
       "source": "initial-survey",
       "title": "Reinforcement Learning for Flow-Matching Policies"
     },
+    "title:a691c382d7d6de6bae4075c1343a5a73dcf91d45": {
+      "arxiv_id": "2609.12245",
+      "first_seen": "2026-09-14",
+      "published": "2026-09-10",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "DIA: Denoising Intermediate Advantage for Diffusion Policy Optimization"
+    },
     "title:a7c7ed06226b657f265b6333496a5435c59aeb8b": {
       "arxiv_id": "2609.09941",
       "first_seen": "2026-09-10",
@@ -2147,7 +2179,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 142,
+  "total_unique_papers": 144,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
