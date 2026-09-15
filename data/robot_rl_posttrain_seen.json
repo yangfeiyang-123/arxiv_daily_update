@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-14T19:54:07.879993+00:00",
-  "last_report": "2026-09-14",
+  "last_new_paper_at": "2026-09-15T19:08:21.300657+00:00",
+  "last_report": "2026-09-15",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1088,6 +1088,38 @@
       "source": "daily-watch",
       "title": "SCQ: Stabilizing Conservative Q-Learning with Sigmoid-Bounded Entropy"
     },
+    "arxiv:2609.13231": {
+      "arxiv_id": "2609.13231",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-02",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "ShieldVLA: Feasibility-Aware Safety Alignment for Vision-Language-Action Models"
+    },
+    "arxiv:2609.13234": {
+      "arxiv_id": "2609.13234",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-02",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Harnessing human expertise for high-precision robotic assembly in industrialized construction: A sample-efficient installer-in-the-loop interactive reinforcement learning framework"
+    },
+    "arxiv:2609.14261": {
+      "arxiv_id": "2609.14261",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-13",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "VGFM: Expressive Robot Policies via Dense Value Guidance in Flow Matching"
+    },
+    "arxiv:2609.14878": {
+      "arxiv_id": "2609.14878",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-14",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "Real-World Reinforcement Learning with MPC Scaffolding for Dexterous Manipulation"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1492,6 +1524,14 @@
       "source": "daily-watch",
       "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
     },
+    "title:618409813af9bbe5fed358f82bdaa40c5e2ee647": {
+      "arxiv_id": "2609.13234",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-02",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Harnessing human expertise for high-precision robotic assembly in industrialized construction: A sample-efficient installer-in-the-loop interactive reinforcement learning framework"
+    },
     "title:62c0a4faa31f5d3f08496d035f201068180afed5": {
       "arxiv_id": "2607.15004",
       "first_seen": "2026-08-29",
@@ -1697,6 +1737,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "D2PPO: Diffusion Policy Policy Optimization with Dispersive Loss"
+    },
+    "title:905dd1880a7eb0e99e8588bdca5cd768acbe9e86": {
+      "arxiv_id": "2609.13231",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-02",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "ShieldVLA: Feasibility-Aware Safety Alignment for Vision-Language-Action Models"
     },
     "title:91bd8ebcaeb462419b6d86830ec53310d58f390b": {
       "arxiv_id": "2607.23473",
@@ -1942,6 +1990,14 @@
       "source": "daily-watch",
       "title": "LAC: Linear and Angular Compliance for Humanoid Whole-body Control"
     },
+    "title:c3dccc93aa6fb5a14cb7a676045d7fbf65e8a110": {
+      "arxiv_id": "2609.14261",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-13",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "VGFM: Expressive Robot Policies via Dense Value Guidance in Flow Matching"
+    },
     "title:c41a6875c6358a520c3e221003269590ef50f6c6": {
       "arxiv_id": "2608.05588",
       "first_seen": "2026-08-29",
@@ -2041,6 +2097,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "GRAFT: Grounded and Efficient Online Reinforcement Adaptation for Fine-Grained Robot Manipulation"
+    },
+    "title:e252d89ac493af596a811dee8b69767191529166": {
+      "arxiv_id": "2609.14878",
+      "first_seen": "2026-09-15",
+      "published": "2026-09-14",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "Real-World Reinforcement Learning with MPC Scaffolding for Dexterous Manipulation"
     },
     "title:e47be543dd81768f010f6859880a9a3b681b4d79": {
       "arxiv_id": "2608.16195",
@@ -2179,7 +2243,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 144,
+  "total_unique_papers": 148,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
