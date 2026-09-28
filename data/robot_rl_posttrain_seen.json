@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-15T19:08:21.300657+00:00",
-  "last_report": "2026-09-15",
+  "last_new_paper_at": "2026-09-28T21:18:47.175467+00:00",
+  "last_report": "2026-09-28",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1120,6 +1120,158 @@
       "source": "daily-watch",
       "title": "Real-World Reinforcement Learning with MPC Scaffolding for Dexterous Manipulation"
     },
+    "arxiv:2609.16504": {
+      "arxiv_id": "2609.16504",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-15",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "UniDex-ViTac: Learning Unified Visuo-Tactile Dexterous Manipulation Policy from Human Video Data"
+    },
+    "arxiv:2609.17210": {
+      "arxiv_id": "2609.17210",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-15",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "FluxVLA Engine: A One-Stop VLA Engineering Platform for Embodied Intelligence"
+    },
+    "arxiv:2609.18207": {
+      "arxiv_id": "2609.18207",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-16",
+      "score": 41,
+      "source": "daily-watch",
+      "title": "Reinforcement Learning for Real-Time Vision-Language-Action Policies"
+    },
+    "arxiv:2609.19666": {
+      "arxiv_id": "2609.19666",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-17",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Towards High-DoF Dexterous Manipulation through VLA Post-Training"
+    },
+    "arxiv:2609.21358": {
+      "arxiv_id": "2609.21358",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "FAN: Foresight Action Normalization for Continual Adaptation of Vision-Language-Action Models"
+    },
+    "arxiv:2609.21609": {
+      "arxiv_id": "2609.21609",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Potential-Field Action Representation for Reinforcement Learning in Contact-Rich Manipulation"
+    },
+    "arxiv:2609.21650": {
+      "arxiv_id": "2609.21650",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SynthDemo-RL: Breaking the Zero-Reward Barrier in VLA Adaptation with LLM-Guided Synthetic Demonstrations"
+    },
+    "arxiv:2609.21788": {
+      "arxiv_id": "2609.21788",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "From Pretraining to Proficiency: Real-World Subtask RL for Long-Horizon Manipulation with Minimal Human Intervention"
+    },
+    "arxiv:2609.22840": {
+      "arxiv_id": "2609.22840",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-19",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "ForceRFT: Refining VLA Actions through Force-Guided Residual Reinforcement Learning"
+    },
+    "arxiv:2609.22879": {
+      "arxiv_id": "2609.22879",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-19",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Prioritized Rollouts for Efficient World Model-based Vision-Language-Action Policy Optimization"
+    },
+    "arxiv:2609.24033": {
+      "arxiv_id": "2609.24033",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-21",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Imagine-RL: Residual-Confidence-Guided Cross-Attention for World-Model-Augmented VLA Reinforcement Learning"
+    },
+    "arxiv:2609.24511": {
+      "arxiv_id": "2609.24511",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-21",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "InsertAnything: Generalizable Contact-Rich Precision Insertion from Simulation to Reality"
+    },
+    "arxiv:2609.25630": {
+      "arxiv_id": "2609.25630",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-22",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "PAKT: Physically-Aligned Kinesthetic Teaching for Reinforcement Learning"
+    },
+    "arxiv:2609.27450": {
+      "arxiv_id": "2609.27450",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 48,
+      "source": "daily-watch",
+      "title": "BEE: Intervention-Adaptive Real-World Reinforcement Learning with Vision-Language-Action Models"
+    },
+    "arxiv:2609.28161": {
+      "arxiv_id": "2609.28161",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Dissecting Advantage-Guided Post-Training for Vision-Language-Action Policies"
+    },
+    "arxiv:2609.28807": {
+      "arxiv_id": "2609.28807",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "An Analysis of Streaming Deep Reinforcement Learning for Adaptive Continual Learning in Robotics"
+    },
+    "arxiv:2609.28838": {
+      "arxiv_id": "2609.28838",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Uncertainty-Gated Exploration Noise Suppresses Task Collapse in Online RL Fine-Tuning of a Flow-Matching Vision-Language-Action Policy"
+    },
+    "arxiv:2609.30023": {
+      "arxiv_id": "2609.30023",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-24",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Res-HIL: Human-Guided Residual Reinforcement Learning for Sample-Efficient Dexterous Manipulation"
+    },
+    "arxiv:2609.30868": {
+      "arxiv_id": "2609.30868",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-25",
+      "score": 46,
+      "source": "daily-watch",
+      "title": "VLaRL: Augmenting Vision-Language-Action Models with Simulation-Trained Latent-Conditioned Residual RL"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1202,6 +1354,14 @@
       "source": "daily-watch",
       "title": "Egocentric Station Holding of Robotic Fish in Unknown Turbulent Background Flow"
     },
+    "title:1175b4f254f2dc38ee6b10aa8a33407e7dcfe605": {
+      "arxiv_id": "2609.21609",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Potential-Field Action Representation for Reinforcement Learning in Contact-Rich Manipulation"
+    },
     "title:12999715a543a251b5a80988c7a42ab1ab498c93": {
       "arxiv_id": "2607.20399",
       "first_seen": "2026-08-29",
@@ -1233,6 +1393,14 @@
       "score": 25,
       "source": "daily-watch",
       "title": "HiFi-UMI: Learning Deployable Manipulation Policies from High-Fidelity UMI Data Alone"
+    },
+    "title:1820e407a58cf94e72e67823d5bedade94d73ebc": {
+      "arxiv_id": "2609.30868",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-25",
+      "score": 46,
+      "source": "daily-watch",
+      "title": "VLaRL: Augmenting Vision-Language-Action Models with Simulation-Trained Latent-Conditioned Residual RL"
     },
     "title:189c4383b170e46bc015aae44ee6fc0df0521be5": {
       "arxiv_id": "2607.27881",
@@ -1301,6 +1469,14 @@
       "score": 19,
       "source": "daily-watch",
       "title": "PDDL-ART: Autonomous Symbolic Abstraction From Demonstration For Long-Horizon Robotic Manipulation Using Vision-Language Models"
+    },
+    "title:28691895d1ca3fcde381ec3b2fb828a88d1ca5f3": {
+      "arxiv_id": "2609.24511",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-21",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "InsertAnything: Generalizable Contact-Rich Precision Insertion from Simulation to Reality"
     },
     "title:29194c1fabe86faa491c0df7ffcb8b399007f945": {
       "arxiv_id": "2608.07746",
@@ -1377,6 +1553,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Flow Matching Policy Gradients"
+    },
+    "title:37da57d1202b50c50e66194a49afa253fe26e9f9": {
+      "arxiv_id": "2609.21358",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "FAN: Foresight Action Normalization for Continual Adaptation of Vision-Language-Action Models"
     },
     "title:37dc2f508bd379a57db582b7474068bc7232d97a": {
       "arxiv_id": "2608.04842",
@@ -1524,6 +1708,14 @@
       "source": "daily-watch",
       "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
     },
+    "title:5d48b8f731e4b0f10d170ba59be3f4ce31807d2d": {
+      "arxiv_id": "2609.22879",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-19",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Prioritized Rollouts for Efficient World Model-based Vision-Language-Action Policy Optimization"
+    },
     "title:618409813af9bbe5fed358f82bdaa40c5e2ee647": {
       "arxiv_id": "2609.13234",
       "first_seen": "2026-09-15",
@@ -1539,6 +1731,14 @@
       "score": 24,
       "source": "daily-watch",
       "title": "CosFly-VLA: A Spatially Aware Vision-Language-Action Model for UAV Tracking"
+    },
+    "title:64ea0829d32a0af93337f04e4571155ddf90b72b": {
+      "arxiv_id": "2609.16504",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-15",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "UniDex-ViTac: Learning Unified Visuo-Tactile Dexterous Manipulation Policy from Human Video Data"
     },
     "title:667bf7864d19dcaeaba4b052a374df00b84f9091": {
       "arxiv_id": "2608.17027",
@@ -1616,6 +1816,14 @@
       "source": "daily-watch",
       "title": "C2Dex: Contact-Consistent Reconstruction and Retargeting for Dexterous Manipulation from Monocular Video"
     },
+    "title:73a5a921c057c8cfa8520df50914a115b79aa1fc": {
+      "arxiv_id": "2609.21650",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "SynthDemo-RL: Breaking the Zero-Reward Barrier in VLA Adaptation with LLM-Guided Synthetic Demonstrations"
+    },
     "title:75bbf9800aa8bf0d7bba5e88a504df10f53b2b37": {
       "arxiv_id": "2607.24008",
       "first_seen": "2026-08-29",
@@ -1624,11 +1832,27 @@
       "source": "daily-watch",
       "title": "FutureRTC: Real-Time Robot Execution with Anticipatory-Conditioned Action Chunking"
     },
+    "title:78240f9332620a4bf5dc3e8424ba35ec6d96a63d": {
+      "arxiv_id": "2609.24033",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-21",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Imagine-RL: Residual-Confidence-Guided Cross-Attention for World-Model-Augmented VLA Reinforcement Learning"
+    },
     "title:7915a1ad1806116df285e73cc68bcfaf4a0dc1f4": {
       "arxiv_id": "2605.25477",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "EXPO-FT: Sample-Efficient Reinforcement Learning Finetuning for Vision-Language-Action Models"
+    },
+    "title:791920d039d956b0f12765fabb2fdbbd651b9fc6": {
+      "arxiv_id": "2609.27450",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 48,
+      "source": "daily-watch",
+      "title": "BEE: Intervention-Adaptive Real-World Reinforcement Learning with Vision-Language-Action Models"
     },
     "title:79c13e15178d273f1856a19f4356325076b86dcc": {
       "arxiv_id": "2412.13630",
@@ -1672,6 +1896,14 @@
       "source": "daily-watch",
       "title": "Pre-training Visual Dexterity in Simulation"
     },
+    "title:8116db6e2c769a98578adb4683f0f67e815d0bc0": {
+      "arxiv_id": "2609.21788",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-18",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "From Pretraining to Proficiency: Real-World Subtask RL for Long-Horizon Manipulation with Minimal Human Intervention"
+    },
     "title:8516c07ae4dff9b93c0d99c0425acb3e64b46825": {
       "arxiv_id": "2506.15799",
       "first_seen": "2026-08-29",
@@ -1700,6 +1932,14 @@
       "source": "daily-watch",
       "title": "WISE: World-model-guided Imagination Scheduling for Efficient Post-training of Vision-Language-Action Models"
     },
+    "title:8887627679a0a50aee2a2fba27213c6fefb91a97": {
+      "arxiv_id": "2609.22840",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-19",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "ForceRFT: Refining VLA Actions through Force-Guided Residual Reinforcement Learning"
+    },
     "title:89f0aa6454af56c0eab771a17d5372a4869f63bd": {
       "arxiv_id": "2608.11363",
       "first_seen": "2026-08-29",
@@ -1715,6 +1955,14 @@
       "score": 12,
       "source": "daily-watch",
       "title": "Beyond Pairwise Feedback: Listwise Vision-Language Supervision for Preference-Based Reward Learning"
+    },
+    "title:8d80820ee692447b34f127ce3ea2b49a1b099b36": {
+      "arxiv_id": "2609.25630",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-22",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "PAKT: Physically-Aligned Kinesthetic Teaching for Reinforcement Learning"
     },
     "title:8e878a43db77d97021affc14f07b3c74e0c1fad3": {
       "arxiv_id": "2607.21725",
@@ -1922,6 +2170,14 @@
       "source": "daily-watch",
       "title": "$N_0$-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens"
     },
+    "title:acc3fe76470c6902094b33d0d188372a468b5d08": {
+      "arxiv_id": "2609.17210",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-15",
+      "score": 29,
+      "source": "daily-watch",
+      "title": "FluxVLA Engine: A One-Stop VLA Engineering Platform for Embodied Intelligence"
+    },
     "title:adcd0f394cc6c992769c7f5ba8d58d2614c522aa": {
       "arxiv_id": "2507.07969",
       "first_seen": "2026-08-29",
@@ -1982,6 +2238,14 @@
       "source": "daily-watch",
       "title": "Structure-Aware Robust Fine-Tuning: Defending Vision-Language-Action Robots Against Physical Attention Hijacking"
     },
+    "title:c03deb70e88e9d51bebe36f1d5f66096055497f7": {
+      "arxiv_id": "2609.19666",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-17",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "Towards High-DoF Dexterous Manipulation through VLA Post-Training"
+    },
     "title:c1e5af0aebac0f9804a55623897a49feb8d2b4dd": {
       "arxiv_id": "2608.25405",
       "first_seen": "2026-08-29",
@@ -2036,6 +2300,14 @@
       "source": "daily-watch",
       "title": "PRIMAL3: Pathfinding via Reinforcement and Imitation Multi-Agent Learning - Leveraging LaCAM3"
     },
+    "title:d02e14d4efd7dc5d8f973dae652890b1f4acf1e4": {
+      "arxiv_id": "2609.28838",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Uncertainty-Gated Exploration Noise Suppresses Task Collapse in Online RL Fine-Tuning of a Flow-Matching Vision-Language-Action Policy"
+    },
     "title:d03bb820cd7f7c43a978a61756cfc4c95d25cdb6": {
       "arxiv_id": "2609.04355",
       "first_seen": "2026-09-07",
@@ -2043,6 +2315,14 @@
       "score": 40,
       "source": "daily-watch",
       "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
+    },
+    "title:d477e80517b3c3263abfa550c9b3d2a3dea0d24b": {
+      "arxiv_id": "2609.30023",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-24",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Res-HIL: Human-Guided Residual Reinforcement Learning for Sample-Efficient Dexterous Manipulation"
     },
     "title:d4dcd9fa0e82054705af7cd3a17c1b3bee3c6b1d": {
       "arxiv_id": "2608.07870",
@@ -2075,6 +2355,22 @@
       "score": 29,
       "source": "daily-watch",
       "title": "CIDER: Continual Interactive Distillation for Embodied Reinforcement Learning"
+    },
+    "title:da53a9e0488aa0255c9d265cbab1dd6d24918538": {
+      "arxiv_id": "2609.28161",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 42,
+      "source": "daily-watch",
+      "title": "Dissecting Advantage-Guided Post-Training for Vision-Language-Action Policies"
+    },
+    "title:dd0be0e0a079b547524e4905cdb7985565b12009": {
+      "arxiv_id": "2609.28807",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-23",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "An Analysis of Streaming Deep Reinforcement Learning for Adaptive Continual Learning in Robotics"
     },
     "title:de5ceabcb2382cfe20b8c7063fd4eb92fc24f0cf": {
       "arxiv_id": "2608.15088",
@@ -2170,6 +2466,14 @@
       "source": "daily-watch",
       "title": "PhyAI: Real-Time Physical AI at the Edge, Scalable Rollouts in the Cloud"
     },
+    "title:f68463f278bfbfda5e8c996f2012958f6a37f828": {
+      "arxiv_id": "2609.18207",
+      "first_seen": "2026-09-28",
+      "published": "2026-09-16",
+      "score": 41,
+      "source": "daily-watch",
+      "title": "Reinforcement Learning for Real-Time Vision-Language-Action Policies"
+    },
     "title:f765fe06de97848c30c7c307a4b845fe4cb67e91": {
       "arxiv_id": "2608.02197",
       "first_seen": "2026-08-29",
@@ -2243,7 +2547,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 148,
+  "total_unique_papers": 167,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
