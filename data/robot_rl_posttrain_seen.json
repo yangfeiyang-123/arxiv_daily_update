@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-28T21:18:47.175467+00:00",
-  "last_report": "2026-09-28",
+  "last_new_paper_at": "2026-09-29T20:06:01.411085+00:00",
+  "last_report": "2026-09-29",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1272,6 +1272,94 @@
       "source": "daily-watch",
       "title": "VLaRL: Augmenting Vision-Language-Action Models with Simulation-Trained Latent-Conditioned Residual RL"
     },
+    "arxiv:2609.32064": {
+      "arxiv_id": "2609.32064",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-25",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Grasp2Twist: Learning Bimanual Dexterous Jar Opening by Reinforcement Learning"
+    },
+    "arxiv:2609.32069": {
+      "arxiv_id": "2609.32069",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-25",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Find Something You Can't Do: Agentic Real-World Reinforcement Learning for Self-Improving VLA Models"
+    },
+    "arxiv:2609.32236": {
+      "arxiv_id": "2609.32236",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-26",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "RoboFFT: Finetuning generative robot policy via online reinforcement learning with forward process"
+    },
+    "arxiv:2609.32634": {
+      "arxiv_id": "2609.32634",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-26",
+      "score": 36,
+      "source": "daily-watch",
+      "title": "PF-RL: Progress Field Reinforcement Learning via Goal-Conditioned Value Geometry for Vision-Language-Action Models"
+    },
+    "arxiv:2609.33053": {
+      "arxiv_id": "2609.33053",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "SwingRL: Adaptive Observation Reinforcement Learning with World-Model Prediction for Cable-Suspended Hoisting Control"
+    },
+    "arxiv:2609.33125": {
+      "arxiv_id": "2609.33125",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Train Together or Merge Later? Unifying VLA Experts via a Shared Action Interface"
+    },
+    "arxiv:2609.33765": {
+      "arxiv_id": "2609.33765",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "Principal Steering Subspaces for Online Adaptation of Frozen Generative Robot Policies"
+    },
+    "arxiv:2609.33882": {
+      "arxiv_id": "2609.33882",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "DexTaG: Tactile-as-Guidance in Reinforcement Learning for Dexterous Manipulation"
+    },
+    "arxiv:2609.34599": {
+      "arxiv_id": "2609.34599",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "The Low-Rank Structure of VLA Reinforcement Learning"
+    },
+    "arxiv:2609.34688": {
+      "arxiv_id": "2609.34688",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "Unified Trajectory Matching Policy Optimization: Diverse T2I Generation and VLA Generalization"
+    },
+    "arxiv:2609.35715": {
+      "arxiv_id": "2609.35715",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "X-Reset: Scaling Object-Centric Reinforcement Learning via Cross-Embodiment Resets"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1526,11 +1614,35 @@
       "source": "initial-survey",
       "title": "RL Bootstrapping of OpenVLA-OFT for a Novel Robot Embodiment"
     },
+    "title:3125f34ec782ec02bf285359b35460734820830d": {
+      "arxiv_id": "2609.32236",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-26",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "RoboFFT: Finetuning generative robot policy via online reinforcement learning with forward process"
+    },
     "title:32f5ed10dbc3231f2a940152837cb626d5f10deb": {
       "arxiv_id": "2602.09023",
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "TwinRL: Digital Twin-Driven Reinforcement Learning for Real-World Robotic Manipulation"
+    },
+    "title:341a7d8a8dc448ce5fae6e41ae79276e9e68b4b1": {
+      "arxiv_id": "2609.32064",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-25",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Grasp2Twist: Learning Bimanual Dexterous Jar Opening by Reinforcement Learning"
+    },
+    "title:34a80f33dae689596d65c01f07748a2dea3f797d": {
+      "arxiv_id": "2609.33765",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 27,
+      "source": "daily-watch",
+      "title": "Principal Steering Subspaces for Online Adaptation of Frozen Generative Robot Policies"
     },
     "title:34d69ef3d04771935d02de6cd0fb3aba715ac4eb": {
       "arxiv_id": "2608.03483",
@@ -1593,6 +1705,14 @@
       "score": 19,
       "source": "daily-watch",
       "title": "One Policy, Many Embodiments: Unified Camera-Centric Action Geometry Pre-training for Heterogeneous Embodied Manipulation"
+    },
+    "title:41c748829b6ea9953cd6895a82c9a61b3d8a31df": {
+      "arxiv_id": "2609.34688",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "Unified Trajectory Matching Policy Optimization: Diverse T2I Generation and VLA Generalization"
     },
     "title:422aa7f3be0cc34706f385881ecde81ee67240dc": {
       "arxiv_id": "2608.26053",
@@ -1801,6 +1921,14 @@
       "score": 15,
       "source": "daily-watch",
       "title": "Dynamics-Aware Meta-Imitation for Generalization to Unseen Robotic Manipulation"
+    },
+    "title:712b477876de849f8dcb8536a1788d732f4f7b9b": {
+      "arxiv_id": "2609.33053",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "SwingRL: Adaptive Observation Reinforcement Learning with World-Model Prediction for Cable-Suspended Hoisting Control"
     },
     "title:713c32485ba200aeb8f75d8e7f1cf317b9ebe042": {
       "arxiv_id": "2608.26053",
@@ -2100,6 +2228,14 @@
       "source": "initial-survey",
       "title": "Flow Q-Learning"
     },
+    "title:a0f19b46b9f6ae50d93fbf8615f089783c14aadc": {
+      "arxiv_id": "2609.33882",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "DexTaG: Tactile-as-Guidance in Reinforcement Learning for Dexterous Manipulation"
+    },
     "title:a2477ee1df6b86ccf3d88a5e3d49e0e9e2133a4a": {
       "arxiv_id": "2302.02948",
       "first_seen": "2026-08-29",
@@ -2113,6 +2249,14 @@
       "score": 12,
       "source": "daily-watch",
       "title": "VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation"
+    },
+    "title:a5a59c5d11ddf0f8cda9137d685c43331de69a05": {
+      "arxiv_id": "2609.34599",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 31,
+      "source": "daily-watch",
+      "title": "The Low-Rank Structure of VLA Reinforcement Learning"
     },
     "title:a5b047df247923e3488b77348a27b05018efabc3": {
       "arxiv_id": "2603.10263",
@@ -2192,6 +2336,14 @@
       "source": "daily-watch",
       "title": "Temporal GRPO: Beyond Trajectory-Level Credit in Vision-Language-Action Reinforcement Learning"
     },
+    "title:aeff7ab39737f533ac0daca53516d312ec9beb3d": {
+      "arxiv_id": "2609.35715",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-28",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "X-Reset: Scaling Object-Centric Reinforcement Learning via Cross-Embodiment Resets"
+    },
     "title:afe1abbe143ee699fe0eeedbdb3adb8946ec1dd0": {
       "arxiv_id": "2608.15285",
       "first_seen": "2026-08-29",
@@ -2199,6 +2351,14 @@
       "score": 22,
       "source": "daily-watch",
       "title": "PhaseLoRA: Control-Regime-Conditioned Low-Rank Adaptation for Continuous-Action Vision-Language-Action Policies"
+    },
+    "title:b21d150f4c3e69b5f2123f683cd5e75c7068b867": {
+      "arxiv_id": "2609.32069",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-25",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Find Something You Can't Do: Agentic Real-World Reinforcement Learning for Self-Improving VLA Models"
     },
     "title:b9a4f55adfb7503af55f86b8a05e836490caf867": {
       "arxiv_id": "2607.20345",
@@ -2292,6 +2452,14 @@
       "source": "daily-watch",
       "title": "Xiaomi-Robotics-1: Scaling Vision-Language-Action Models with over 100K Hours of Real-World Trajectories"
     },
+    "title:cec00666f069cae6661c2161de2b1fe21a291f4e": {
+      "arxiv_id": "2609.32634",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-26",
+      "score": 36,
+      "source": "daily-watch",
+      "title": "PF-RL: Progress Field Reinforcement Learning via Goal-Conditioned Value Geometry for Vision-Language-Action Models"
+    },
     "title:d01860b20d1e4412387f6ca18c6ed85be72bacc1": {
       "arxiv_id": "2608.04905",
       "first_seen": "2026-08-29",
@@ -2315,6 +2483,14 @@
       "score": 40,
       "source": "daily-watch",
       "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
+    },
+    "title:d3f460d3815038ad0c8a8a961131193ffa90446a": {
+      "arxiv_id": "2609.33125",
+      "first_seen": "2026-09-29",
+      "published": "2026-09-27",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Train Together or Merge Later? Unifying VLA Experts via a Shared Action Interface"
     },
     "title:d477e80517b3c3263abfa550c9b3d2a3dea0d24b": {
       "arxiv_id": "2609.30023",
@@ -2547,7 +2723,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 167,
+  "total_unique_papers": 178,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
