@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-29T20:06:01.411085+00:00",
-  "last_report": "2026-09-29",
+  "last_new_paper_at": "2026-09-30T20:11:56.357926+00:00",
+  "last_report": "2026-09-30",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1360,6 +1360,46 @@
       "source": "daily-watch",
       "title": "X-Reset: Scaling Object-Centric Reinforcement Learning via Cross-Embodiment Resets"
     },
+    "arxiv:2609.36250": {
+      "arxiv_id": "2609.36250",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-28",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Action Chunking Proximal Policy Optimization with Feedback Correction"
+    },
+    "arxiv:2609.36352": {
+      "arxiv_id": "2609.36352",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-28",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "StructRL: Online Structured Reinforcement Learning for Long-Horizon Vision-Language-Action Tasks"
+    },
+    "arxiv:2609.36588": {
+      "arxiv_id": "2609.36588",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 33,
+      "source": "daily-watch",
+      "title": "Cooperative Multi-Agent Vision-Language-Action Models via Reinforced Fine Tuning"
+    },
+    "arxiv:2609.37131": {
+      "arxiv_id": "2609.37131",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "ReF-HIL: Shaping the Critic around Human Action Neighborhoods for Efficient Human-in-the-Loop Reinforcement Learning"
+    },
+    "arxiv:2609.37432": {
+      "arxiv_id": "2609.37432",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Looped Actor: Depth-Recurrent Reasoning Models for Reinforcement Learning"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1465,6 +1505,14 @@
       "score": 28,
       "source": "daily-watch",
       "title": "JoyNexus: Service-Oriented Multi-Tenant Post-Training for VLA Models"
+    },
+    "title:1519a37b53199a3ba412eb2d87d2ac01f0dd590d": {
+      "arxiv_id": "2609.36352",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-28",
+      "score": 37,
+      "source": "daily-watch",
+      "title": "StructRL: Online Structured Reinforcement Learning for Long-Horizon Vision-Language-Action Tasks"
     },
     "title:15f59d9f56fdd97c86a242cd80489566b5d0d646": {
       "arxiv_id": "2608.11739",
@@ -1796,6 +1844,14 @@
       "source": "daily-watch",
       "title": "Foresight Residual RL for Long-Horizon Robot Manipulation with Vision-Language-Action Models"
     },
+    "title:504b0c0048898751227b23f5d69a4f6510be3b61": {
+      "arxiv_id": "2609.37432",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "Looped Actor: Depth-Recurrent Reasoning Models for Reinforcement Learning"
+    },
     "title:50eb297a21df0b37e74a9e69cf5ef55a4775dcf9": {
       "arxiv_id": "2608.19891",
       "first_seen": "2026-08-29",
@@ -1952,6 +2008,14 @@
       "source": "daily-watch",
       "title": "SynthDemo-RL: Breaking the Zero-Reward Barrier in VLA Adaptation with LLM-Guided Synthetic Demonstrations"
     },
+    "title:7493b3df3ff9a4b5389ca71249fcc7db6f4cb634": {
+      "arxiv_id": "2609.36588",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 33,
+      "source": "daily-watch",
+      "title": "Cooperative Multi-Agent Vision-Language-Action Models via Reinforced Fine Tuning"
+    },
     "title:75bbf9800aa8bf0d7bba5e88a504df10f53b2b37": {
       "arxiv_id": "2607.24008",
       "first_seen": "2026-08-29",
@@ -2067,6 +2131,14 @@
       "score": 32,
       "source": "daily-watch",
       "title": "ForceRFT: Refining VLA Actions through Force-Guided Residual Reinforcement Learning"
+    },
+    "title:88b63a4442c8accc84f4df40ac164b60d52be616": {
+      "arxiv_id": "2609.37131",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-29",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "ReF-HIL: Shaping the Critic around Human Action Neighborhoods for Efficient Human-in-the-Loop Reinforcement Learning"
     },
     "title:89f0aa6454af56c0eab771a17d5372a4869f63bd": {
       "arxiv_id": "2608.11363",
@@ -2359,6 +2431,14 @@
       "score": 34,
       "source": "daily-watch",
       "title": "Find Something You Can't Do: Agentic Real-World Reinforcement Learning for Self-Improving VLA Models"
+    },
+    "title:b4a76933d284a959d3cbcfcf893714f7063f824d": {
+      "arxiv_id": "2609.36250",
+      "first_seen": "2026-09-30",
+      "published": "2026-09-28",
+      "score": 30,
+      "source": "daily-watch",
+      "title": "Action Chunking Proximal Policy Optimization with Feedback Correction"
     },
     "title:b9a4f55adfb7503af55f86b8a05e836490caf867": {
       "arxiv_id": "2607.20345",
@@ -2723,7 +2803,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 178,
+  "total_unique_papers": 183,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
