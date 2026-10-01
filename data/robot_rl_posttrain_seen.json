@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-09-30T20:11:56.357926+00:00",
-  "last_report": "2026-09-30",
+  "last_new_paper_at": "2026-10-01T20:25:20.107277+00:00",
+  "last_report": "2026-10-01",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1400,6 +1400,30 @@
       "source": "daily-watch",
       "title": "Looped Actor: Depth-Recurrent Reasoning Models for Reinforcement Learning"
     },
+    "arxiv:2609.38641": {
+      "arxiv_id": "2609.38641",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-29",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Vision-Language-Action Autonomous Driving Agent with Language-based Memory"
+    },
+    "arxiv:2609.38855": {
+      "arxiv_id": "2609.38855",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-30",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "Online Evolution Strategy for Flow-Matching VLA Policies via Self-Supervised Trajectory Distribution Optimization"
+    },
+    "arxiv:2609.38890": {
+      "arxiv_id": "2609.38890",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-30",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "PRICE the Action Chunks: Physical Relational Credit Assignment for Embodied Reinforcement Learning"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -2378,6 +2402,14 @@
       "source": "daily-watch",
       "title": "Beyond Flat Policies: Hierarchical Post-Training for Embodied Agents in Robotic Manipulation"
     },
+    "title:aaf0d142c3814cc85a55c0d82cbbd3ae3ade5f7d": {
+      "arxiv_id": "2609.38855",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-30",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "Online Evolution Strategy for Flow-Matching VLA Policies via Self-Supervised Trajectory Distribution Optimization"
+    },
     "title:ac9d3a131f5cf283c4a0a96b164232195e630663": {
       "arxiv_id": "2607.23782",
       "first_seen": "2026-08-29",
@@ -2399,6 +2431,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Reinforcement Learning with Action Chunking"
+    },
+    "title:ae5553821083bae789b98f7144f9028781faac5a": {
+      "arxiv_id": "2609.38890",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-30",
+      "score": 15,
+      "source": "daily-watch",
+      "title": "PRICE the Action Chunks: Physical Relational Credit Assignment for Embodied Reinforcement Learning"
     },
     "title:aef239ab7c5c012aafd549ed0a8776a425c66ab6": {
       "arxiv_id": "2608.13026",
@@ -2453,6 +2493,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "TEMPO: Semantic-Action Decoupled RL Post-Training for Vision-Language-Action Models"
+    },
+    "title:bc888c5c52d79deaebce2a9797a86861b6caa122": {
+      "arxiv_id": "2609.38641",
+      "first_seen": "2026-10-01",
+      "published": "2026-09-29",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Vision-Language-Action Autonomous Driving Agent with Language-based Memory"
     },
     "title:bc91ae41bf904773bb974269bf3d010ed521dc9d": {
       "arxiv_id": "2608.17163",
@@ -2803,7 +2851,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 183,
+  "total_unique_papers": 186,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
