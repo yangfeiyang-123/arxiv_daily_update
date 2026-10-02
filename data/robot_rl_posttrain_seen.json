@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-01T20:25:20.107277+00:00",
-  "last_report": "2026-10-01",
+  "last_new_paper_at": "2026-10-02T20:03:21.737931+00:00",
+  "last_report": "2026-10-02",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1424,6 +1424,22 @@
       "source": "daily-watch",
       "title": "PRICE the Action Chunks: Physical Relational Credit Assignment for Embodied Reinforcement Learning"
     },
+    "arxiv:2610.00317": {
+      "arxiv_id": "2610.00317",
+      "first_seen": "2026-10-02",
+      "published": "2026-09-29",
+      "score": 50,
+      "source": "daily-watch",
+      "title": "DriftOPD: Sequence-Level Reverse-KL Distillation for One-Step VLA Policies"
+    },
+    "arxiv:2610.00913": {
+      "arxiv_id": "2610.00913",
+      "first_seen": "2026-10-02",
+      "published": "2026-10-01",
+      "score": 38,
+      "source": "daily-watch",
+      "title": "eRLT: Efficient VLA Reinforcement Learning via Action-Relevant Token Routing"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -2472,6 +2488,22 @@
       "source": "daily-watch",
       "title": "Find Something You Can't Do: Agentic Real-World Reinforcement Learning for Self-Improving VLA Models"
     },
+    "title:b39e5692634e33aea9c6e4f7b4a2a759c43f0aaa": {
+      "arxiv_id": "2610.00913",
+      "first_seen": "2026-10-02",
+      "published": "2026-10-01",
+      "score": 38,
+      "source": "daily-watch",
+      "title": "eRLT: Efficient VLA Reinforcement Learning via Action-Relevant Token Routing"
+    },
+    "title:b3f91e5b4baaff8094b9875d0affd9f470e36bae": {
+      "arxiv_id": "2610.00317",
+      "first_seen": "2026-10-02",
+      "published": "2026-09-29",
+      "score": 50,
+      "source": "daily-watch",
+      "title": "DriftOPD: Sequence-Level Reverse-KL Distillation for One-Step VLA Policies"
+    },
     "title:b4a76933d284a959d3cbcfcf893714f7063f824d": {
       "arxiv_id": "2609.36250",
       "first_seen": "2026-09-30",
@@ -2851,7 +2883,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 186,
+  "total_unique_papers": 188,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
