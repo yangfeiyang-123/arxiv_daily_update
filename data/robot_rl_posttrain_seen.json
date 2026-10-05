@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-02T20:03:21.737931+00:00",
-  "last_report": "2026-10-02",
+  "last_new_paper_at": "2026-10-05T22:06:33.213919+00:00",
+  "last_report": "2026-10-05",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1440,6 +1440,22 @@
       "source": "daily-watch",
       "title": "eRLT: Efficient VLA Reinforcement Learning via Action-Relevant Token Routing"
     },
+    "arxiv:2610.02527": {
+      "arxiv_id": "2610.02527",
+      "first_seen": "2026-10-05",
+      "published": "2026-10-01",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "CriticHack: Evaluating Visual Rewards Under Robot Policy Optimization"
+    },
+    "arxiv:2610.03620": {
+      "arxiv_id": "2610.03620",
+      "first_seen": "2026-10-05",
+      "published": "2026-10-02",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "UniIntervene++: An Adaptive Intervention Agent for Efficient Real-World Reinforcement Learning"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1585,6 +1601,14 @@
       "score": 32,
       "source": "daily-watch",
       "title": "RoboBRIDGE: A Modular Framework for Bridging Policies to Robust Real-World Robotic Agents"
+    },
+    "title:1cfd0630977994f7050622e4d680af5dc782df3c": {
+      "arxiv_id": "2610.03620",
+      "first_seen": "2026-10-05",
+      "published": "2026-10-02",
+      "score": 22,
+      "source": "daily-watch",
+      "title": "UniIntervene++: An Adaptive Intervention Agent for Efficient Real-World Reinforcement Learning"
     },
     "title:1df1e2122e17841e3e5ed2466dc1af82223ae13c": {
       "arxiv_id": "2608.11671",
@@ -1769,6 +1793,14 @@
       "score": 13,
       "source": "daily-watch",
       "title": "RORA: Realistic Object Reconstruction with Articulation"
+    },
+    "title:3956ac4f94fc661a4eb82291a7918e83ae026218": {
+      "arxiv_id": "2610.02527",
+      "first_seen": "2026-10-05",
+      "published": "2026-10-01",
+      "score": 17,
+      "source": "daily-watch",
+      "title": "CriticHack: Evaluating Visual Rewards Under Robot Policy Optimization"
     },
     "title:3da0d2e2120bce3f2dfde8bd3bbbaebec5bc58cd": {
       "arxiv_id": "2608.21592",
@@ -2883,7 +2915,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 188,
+  "total_unique_papers": 190,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
