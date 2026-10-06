@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-05T22:06:33.213919+00:00",
-  "last_report": "2026-10-05",
+  "last_new_paper_at": "2026-10-06T20:27:31.008903+00:00",
+  "last_report": "2026-10-06",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1456,6 +1456,46 @@
       "source": "daily-watch",
       "title": "UniIntervene++: An Adaptive Intervention Agent for Efficient Real-World Reinforcement Learning"
     },
+    "arxiv:2610.03924": {
+      "arxiv_id": "2610.03924",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-02",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Barrier-Shaped Recurrent Reinforcement Learning for Autonomous Landing on a Heaving Ship Deck"
+    },
+    "arxiv:2610.04765": {
+      "arxiv_id": "2610.04765",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-03",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PatternDex: Learning Interaction Patterns to Guide Reinforcement Learning of Bimanual Dexterous Manipulation of Articulated Objects"
+    },
+    "arxiv:2610.05087": {
+      "arxiv_id": "2610.05087",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-04",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Direction-Conditioned Policies for Online Goal-Conditioned Reinforcement Learning"
+    },
+    "arxiv:2610.05994": {
+      "arxiv_id": "2610.05994",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-05",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "How (and How Not) to Use Data Augmentation in VLA Post-Training"
+    },
+    "arxiv:2610.06129": {
+      "arxiv_id": "2610.06129",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-05",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "I-BFM: Reward-Conditioned Robust Humanoid Interaction via Unsupervised Reinforcement Learning"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1802,6 +1842,14 @@
       "source": "daily-watch",
       "title": "CriticHack: Evaluating Visual Rewards Under Robot Policy Optimization"
     },
+    "title:3c6532f2cdea5d2b107f32cde748b12a989b8bde": {
+      "arxiv_id": "2610.04765",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-03",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "PatternDex: Learning Interaction Patterns to Guide Reinforcement Learning of Bimanual Dexterous Manipulation of Articulated Objects"
+    },
     "title:3da0d2e2120bce3f2dfde8bd3bbbaebec5bc58cd": {
       "arxiv_id": "2608.21592",
       "first_seen": "2026-08-29",
@@ -1908,6 +1956,14 @@
       "source": "daily-watch",
       "title": "SmoothRL: Online Reinforcement Learning During Asynchronous Execution"
     },
+    "title:50214cb9868e8bc15320f309937e492edb9c55e5": {
+      "arxiv_id": "2610.06129",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-05",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "I-BFM: Reward-Conditioned Robust Humanoid Interaction via Unsupervised Reinforcement Learning"
+    },
     "title:504122e4c6ba124fbf130666391d79df75e30dc8": {
       "arxiv_id": "2607.16506",
       "first_seen": "2026-08-29",
@@ -1932,6 +1988,14 @@
       "source": "daily-watch",
       "title": "EXIMO: VLM Guided Exploration of VLA Policies"
     },
+    "title:511d7cacb3e522c0096504d6b6f5133a2715871b": {
+      "arxiv_id": "2610.05087",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-04",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Direction-Conditioned Policies for Online Goal-Conditioned Reinforcement Learning"
+    },
     "title:51209bc0be75941f947c4fe60ba1de2803a07b4e": {
       "arxiv_id": "2608.16074",
       "first_seen": "2026-08-29",
@@ -1955,6 +2019,14 @@
       "score": 20,
       "source": "daily-watch",
       "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
+    },
+    "title:5af4a6edb766ae90825f3c6e36125fc999690b70": {
+      "arxiv_id": "2610.03924",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-02",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Barrier-Shaped Recurrent Reinforcement Learning for Autonomous Landing on a Heaving Ship Deck"
     },
     "title:5d48b8f731e4b0f10d170ba59be3f4ce31807d2d": {
       "arxiv_id": "2609.22879",
@@ -2027,6 +2099,14 @@
       "score": 15,
       "source": "daily-watch",
       "title": "Safety-aware Skill Adaptation for Reinforcement Learning in Dynamic Environments"
+    },
+    "title:6e8b66e05788fc3a686aa45f381740b054f67a9d": {
+      "arxiv_id": "2610.05994",
+      "first_seen": "2026-10-06",
+      "published": "2026-10-05",
+      "score": 35,
+      "source": "daily-watch",
+      "title": "How (and How Not) to Use Data Augmentation in VLA Post-Training"
     },
     "title:6f526523dabdf66f6ba819c0bececf489feb2a36": {
       "arxiv_id": "2608.19613",
@@ -2915,7 +2995,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 190,
+  "total_unique_papers": 195,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
