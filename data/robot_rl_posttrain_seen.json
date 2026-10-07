@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-06T20:27:31.008903+00:00",
-  "last_report": "2026-10-06",
+  "last_new_paper_at": "2026-10-07T20:41:59.519552+00:00",
+  "last_report": "2026-10-07",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1496,6 +1496,38 @@
       "source": "daily-watch",
       "title": "I-BFM: Reward-Conditioned Robust Humanoid Interaction via Unsupervised Reinforcement Learning"
     },
+    "arxiv:2610.07527": {
+      "arxiv_id": "2610.07527",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-05",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Task-Space Imitation Guidance for Efficient Reinforcement Learning"
+    },
+    "arxiv:2610.07594": {
+      "arxiv_id": "2610.07594",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "BiGym 2.0: Benchmarking Learned and Agent-Developed Policies for Humanoid Household Manipulation"
+    },
+    "arxiv:2610.08784": {
+      "arxiv_id": "2610.08784",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "PEARS: Physical-Prior-Guided Efficient Adaptation via Failure Reasoning and Diffusion Steering for Tactile Manipulation"
+    },
+    "arxiv:2610.08789": {
+      "arxiv_id": "2610.08789",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "QF3: Fast Flow RL with Filtered Q-Gradients"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1685,6 +1717,14 @@
       "score": 20,
       "source": "daily-watch",
       "title": "TCAM for Autonomous Deformable Manipulation: The RMC2 Champion System for WBCD 2026 Track 4"
+    },
+    "title:20bf16e959323107a3d050856430c55472fa21f8": {
+      "arxiv_id": "2610.08784",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 21,
+      "source": "daily-watch",
+      "title": "PEARS: Physical-Prior-Guided Efficient Adaptation via Failure Reasoning and Diffusion Steering for Tactile Manipulation"
     },
     "title:222ec0957def579ca3b39763ba886fcbf54ca12b": {
       "arxiv_id": "2608.29828",
@@ -2036,6 +2076,14 @@
       "source": "daily-watch",
       "title": "Prioritized Rollouts for Efficient World Model-based Vision-Language-Action Policy Optimization"
     },
+    "title:5d632dc5bb617f79e32cce1101eddb88f807e451": {
+      "arxiv_id": "2610.07527",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-05",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Task-Space Imitation Guidance for Efficient Reinforcement Learning"
+    },
     "title:618409813af9bbe5fed358f82bdaa40c5e2ee647": {
       "arxiv_id": "2609.13234",
       "first_seen": "2026-09-15",
@@ -2209,6 +2257,14 @@
       "first_seen": "2026-08-29",
       "source": "initial-survey",
       "title": "Learning to Act While Waiting: RL Finetuning of Generalist Robot Policies Under Inference Latency"
+    },
+    "title:7d549a4d949b325283a91f991083748c558c433d": {
+      "arxiv_id": "2610.08789",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "QF3: Fast Flow RL with Filtered Q-Gradients"
     },
     "title:7f45084f4b50a8ffe14a93712a1c226b0fab3b77": {
       "arxiv_id": "2510.14830",
@@ -2545,6 +2601,14 @@
       "score": 23,
       "source": "daily-watch",
       "title": "$N_0$-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens"
+    },
+    "title:acb6804e9c060371402f934e51d2553a16943ddd": {
+      "arxiv_id": "2610.07594",
+      "first_seen": "2026-10-07",
+      "published": "2026-10-06",
+      "score": 19,
+      "source": "daily-watch",
+      "title": "BiGym 2.0: Benchmarking Learned and Agent-Developed Policies for Humanoid Household Manipulation"
     },
     "title:acc3fe76470c6902094b33d0d188372a468b5d08": {
       "arxiv_id": "2609.17210",
@@ -2995,7 +3059,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 195,
+  "total_unique_papers": 199,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
