@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-07T20:41:59.519552+00:00",
-  "last_report": "2026-10-07",
+  "last_new_paper_at": "2026-10-08T20:45:24.395139+00:00",
+  "last_report": "2026-10-08",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1528,6 +1528,30 @@
       "source": "daily-watch",
       "title": "QF3: Fast Flow RL with Filtered Q-Gradients"
     },
+    "arxiv:2610.08852": {
+      "arxiv_id": "2610.08852",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-03",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Autonomous Droplet Navigation via Model-Based Reinforcement Learning: Zero-Shot Transfer and Emergent Dynamics"
+    },
+    "arxiv:2610.09943": {
+      "arxiv_id": "2610.09943",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-07",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Many Ways to Succeed: Diversity-Driven RL Fine-Tuning for VLA Generalization"
+    },
+    "arxiv:2610.10437": {
+      "arxiv_id": "2610.10437",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-07",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "Q-Learning with Scalar Adjoint Matching"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1543,6 +1567,14 @@
       "score": 30,
       "source": "daily-watch",
       "title": "Facet-0: A Robotic Foundation Model for Contact-Rich Precise Manipulation"
+    },
+    "title:02dd1669a651f7efce287d09af81fc37cd329c70": {
+      "arxiv_id": "2610.09943",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-07",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Many Ways to Succeed: Diversity-Driven RL Fine-Tuning for VLA Generalization"
     },
     "title:02eb518dfe5ba64291e859619f89682ca3e1f429": {
       "arxiv_id": "2608.03872",
@@ -2304,6 +2336,14 @@
       "source": "daily-watch",
       "title": "From Pretraining to Proficiency: Real-World Subtask RL for Long-Horizon Manipulation with Minimal Human Intervention"
     },
+    "title:8509de51c027bb4e46f2dc09774d2b176561cd9e": {
+      "arxiv_id": "2610.10437",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-07",
+      "score": 26,
+      "source": "daily-watch",
+      "title": "Q-Learning with Scalar Adjoint Matching"
+    },
     "title:8516c07ae4dff9b93c0d99c0425acb3e64b46825": {
       "arxiv_id": "2506.15799",
       "first_seen": "2026-08-29",
@@ -2820,6 +2860,14 @@
       "source": "daily-watch",
       "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
     },
+    "title:d18f430923310bf96c20fb44c5cb1125cdbe7565": {
+      "arxiv_id": "2610.08852",
+      "first_seen": "2026-10-08",
+      "published": "2026-10-03",
+      "score": 14,
+      "source": "daily-watch",
+      "title": "Autonomous Droplet Navigation via Model-Based Reinforcement Learning: Zero-Shot Transfer and Emergent Dynamics"
+    },
     "title:d3f460d3815038ad0c8a8a961131193ffa90446a": {
       "arxiv_id": "2609.33125",
       "first_seen": "2026-09-29",
@@ -3059,7 +3107,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 199,
+  "total_unique_papers": 202,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
