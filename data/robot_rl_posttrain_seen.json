@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-08T20:45:24.395139+00:00",
-  "last_report": "2026-10-08",
+  "last_new_paper_at": "2026-10-09T20:12:23.096063+00:00",
+  "last_report": "2026-10-09",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1224,6 +1224,14 @@
       "source": "daily-watch",
       "title": "PAKT: Physically-Aligned Kinesthetic Teaching for Reinforcement Learning"
     },
+    "arxiv:2609.26467": {
+      "arxiv_id": "2609.26467",
+      "first_seen": "2026-10-09",
+      "published": "2026-09-22",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Generalists Act, Specialists Intervene: Modular Stage-Selective Reinforcement Learning for Vision-Language-Action Manipulation"
+    },
     "arxiv:2609.27450": {
       "arxiv_id": "2609.27450",
       "first_seen": "2026-09-28",
@@ -2091,6 +2099,14 @@
       "score": 20,
       "source": "daily-watch",
       "title": "X-NavDP: Generalizing Navigation Diffusion Policy to Novel Behavior and Embodiments with Group Q-score Reweighted Matching"
+    },
+    "title:59df278ccbbeb7d92c15b67f8a138b70c95da05d": {
+      "arxiv_id": "2609.26467",
+      "first_seen": "2026-10-09",
+      "published": "2026-09-22",
+      "score": 34,
+      "source": "daily-watch",
+      "title": "Generalists Act, Specialists Intervene: Modular Stage-Selective Reinforcement Learning for Vision-Language-Action Manipulation"
     },
     "title:5af4a6edb766ae90825f3c6e36125fc999690b70": {
       "arxiv_id": "2610.03924",
@@ -3107,7 +3123,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 202,
+  "total_unique_papers": 203,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
