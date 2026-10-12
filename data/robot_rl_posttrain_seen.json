@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-09T20:12:23.096063+00:00",
-  "last_report": "2026-10-09",
+  "last_new_paper_at": "2026-10-12T22:32:31.166202+00:00",
+  "last_report": "2026-10-12",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1560,6 +1560,22 @@
       "source": "daily-watch",
       "title": "Q-Learning with Scalar Adjoint Matching"
     },
+    "arxiv:2610.12914": {
+      "arxiv_id": "2610.12914",
+      "first_seen": "2026-10-12",
+      "published": "2026-10-09",
+      "score": 36,
+      "source": "daily-watch",
+      "title": "OGPO: Offline Goal-conditioned Policy Optimization for Recoverable Vision-Language-Action Models"
+    },
+    "arxiv:2610.13345": {
+      "arxiv_id": "2610.13345",
+      "first_seen": "2026-10-12",
+      "published": "2026-10-09",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Evo-RL: Iterative Robot Reinforcement Learning from Selective Experience"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -1713,6 +1729,14 @@
       "score": 32,
       "source": "daily-watch",
       "title": "RoboBRIDGE: A Modular Framework for Bridging Policies to Robust Real-World Robotic Agents"
+    },
+    "title:1c15f924a0ebccda201ed1935e894008c877fdc0": {
+      "arxiv_id": "2610.12914",
+      "first_seen": "2026-10-12",
+      "published": "2026-10-09",
+      "score": 36,
+      "source": "daily-watch",
+      "title": "OGPO: Offline Goal-conditioned Policy Optimization for Recoverable Vision-Language-Action Models"
     },
     "title:1cfd0630977994f7050622e4d680af5dc782df3c": {
       "arxiv_id": "2610.03620",
@@ -2836,6 +2860,14 @@
       "source": "initial-survey",
       "title": "Interactive Post-Training for Vision-Language-Action Models"
     },
+    "title:c7f04ae3be4f5a2c54e5e1151c512bdbf90942b0": {
+      "arxiv_id": "2610.13345",
+      "first_seen": "2026-10-12",
+      "published": "2026-10-09",
+      "score": 18,
+      "source": "daily-watch",
+      "title": "Evo-RL: Iterative Robot Reinforcement Learning from Selective Experience"
+    },
     "title:c8cb5e80097c7d2e11284f580bebb9315ae41743": {
       "arxiv_id": "2607.15330",
       "first_seen": "2026-08-29",
@@ -3123,7 +3155,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 203,
+  "total_unique_papers": 205,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
