@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-14T19:33:03.190870+00:00",
-  "last_report": "2026-10-14",
+  "last_new_paper_at": "2026-10-15T19:18:07.484688+00:00",
+  "last_report": "2026-10-15",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1664,6 +1664,22 @@
       "source": "daily-watch",
       "title": "ACCRUE: Continual Off-Policy Reinforcement Learning for Robot Foundation Models"
     },
+    "arxiv:2610.19143": {
+      "arxiv_id": "2610.19143",
+      "first_seen": "2026-10-15",
+      "published": "2026-10-13",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Post-Training, Finetuning, and Steering:A Field Guide for Curating Training Data"
+    },
+    "arxiv:2610.19517": {
+      "arxiv_id": "2610.19517",
+      "first_seen": "2026-10-15",
+      "published": "2026-10-14",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "VLRLA: Deployment-Time Adaptation of Vision-Language-Action Models through In-Context Reinforcement Learning"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -3036,6 +3052,14 @@
       "source": "initial-survey",
       "title": "Interactive Post-Training for Vision-Language-Action Models"
     },
+    "title:c512227b78e52452cdc6eceea34cf30107eedf18": {
+      "arxiv_id": "2610.19517",
+      "first_seen": "2026-10-15",
+      "published": "2026-10-14",
+      "score": 32,
+      "source": "daily-watch",
+      "title": "VLRLA: Deployment-Time Adaptation of Vision-Language-Action Models through In-Context Reinforcement Learning"
+    },
     "title:c7f04ae3be4f5a2c54e5e1151c512bdbf90942b0": {
       "arxiv_id": "2610.13345",
       "first_seen": "2026-10-12",
@@ -3083,6 +3107,14 @@
       "score": 40,
       "source": "daily-watch",
       "title": "VLA-Precision: Asymmetric Co-Bootstrapping for Efficient Real-World Online RL of Vision-Language-Action Models"
+    },
+    "title:d0bc94d5576a96cb5ed0f8392b2501308618c418": {
+      "arxiv_id": "2610.19143",
+      "first_seen": "2026-10-15",
+      "published": "2026-10-13",
+      "score": 23,
+      "source": "daily-watch",
+      "title": "Post-Training, Finetuning, and Steering:A Field Guide for Curating Training Data"
     },
     "title:d18f430923310bf96c20fb44c5cb1125cdbe7565": {
       "arxiv_id": "2610.08852",
@@ -3331,7 +3363,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 216,
+  "total_unique_papers": 218,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
