@@ -1,7 +1,7 @@
 {
   "issue_number": 7,
-  "last_new_paper_at": "2026-10-15T19:18:07.484688+00:00",
-  "last_report": "2026-10-15",
+  "last_new_paper_at": "2026-10-17T17:53:25.832025+00:00",
+  "last_report": "2026-10-17",
   "seeded_at": "2026-08-29T22:00:00-07:00",
   "seen": {
     "arxiv:2302.02948": {
@@ -1680,6 +1680,22 @@
       "source": "daily-watch",
       "title": "VLRLA: Deployment-Time Adaptation of Vision-Language-Action Models through In-Context Reinforcement Learning"
     },
+    "arxiv:2610.22337": {
+      "arxiv_id": "2610.22337",
+      "first_seen": "2026-10-17",
+      "published": "2026-10-15",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "Sim-to-Real Reinforcement Learning for Path-Safe Target Reaching in Robotic Harvesting of Hydroponic Lettuce"
+    },
+    "arxiv:2610.22368": {
+      "arxiv_id": "2610.22368",
+      "first_seen": "2026-10-17",
+      "published": "2026-10-15",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Value as Memory: Online Value-Guided Post-training for General Robot Policies"
+    },
     "title:0036ade437ff9374c15f315ea8d462e86b888d16": {
       "arxiv_id": "2608.23138",
       "first_seen": "2026-08-29",
@@ -3116,6 +3132,14 @@
       "source": "daily-watch",
       "title": "Post-Training, Finetuning, and Steering:A Field Guide for Curating Training Data"
     },
+    "title:d0dd1d1a34c0b66aaf7eafbdee1a179d370d7ed0": {
+      "arxiv_id": "2610.22337",
+      "first_seen": "2026-10-17",
+      "published": "2026-10-15",
+      "score": 24,
+      "source": "daily-watch",
+      "title": "Sim-to-Real Reinforcement Learning for Path-Safe Target Reaching in Robotic Harvesting of Hydroponic Lettuce"
+    },
     "title:d18f430923310bf96c20fb44c5cb1125cdbe7565": {
       "arxiv_id": "2610.08852",
       "first_seen": "2026-10-08",
@@ -3217,6 +3241,14 @@
       "score": 24,
       "source": "daily-watch",
       "title": "Real-World Reinforcement Learning with MPC Scaffolding for Dexterous Manipulation"
+    },
+    "title:e2d93e2e0c53a1c26019c6350db01c5878111ccf": {
+      "arxiv_id": "2610.22368",
+      "first_seen": "2026-10-17",
+      "published": "2026-10-15",
+      "score": 25,
+      "source": "daily-watch",
+      "title": "Value as Memory: Online Value-Guided Post-training for General Robot Policies"
     },
     "title:e47be543dd81768f010f6859880a9a3b681b4d79": {
       "arxiv_id": "2608.16195",
@@ -3363,7 +3395,7 @@
       "title": "RecoverFly: A Failure-Aware Reinforcement Learning Post-Training Framework for Aerial Vision-Language Navigation"
     }
   },
-  "total_unique_papers": 218,
+  "total_unique_papers": 220,
   "version": 1,
   "watch_name": "Robot Manipulation RL Post-Training — DICE / RL-100"
 }
